@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, date } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, date, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -12,6 +12,12 @@ export const users = pgTable("users", {
   dateOfBirth: date("date_of_birth").notNull(),
   phone: text("phone").notNull(),
   gender: text("gender").notNull(), // Mr, Mrs, Gay, Lesbienne, Trans
+  emailVerified: boolean("email_verified").notNull().default(false),
+  phoneVerified: boolean("phone_verified").notNull().default(false),
+  emailVerificationCode: text("email_verification_code"),
+  phoneVerificationCode: text("phone_verification_code"),
+  emailVerificationExpiry: timestamp("email_verification_expiry"),
+  phoneVerificationExpiry: timestamp("phone_verification_expiry"),
   // Note: NO bio field (design decision)
 });
 
@@ -65,6 +71,24 @@ export const loginUserSchema = z.object({
   password: z.string().min(1, "Mot de passe requis"),
 });
 
+// Verification schemas
+export const verifyEmailSchema = z.object({
+  email: z.string().email("Email invalide").toLowerCase(),
+  code: z.string().length(6, "Le code doit contenir 6 chiffres"),
+});
+
+export const verifyPhoneSchema = z.object({
+  phone: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Numéro invalide"),
+  code: z.string().length(6, "Le code doit contenir 6 chiffres"),
+});
+
+export const resendVerificationSchema = z.object({
+  email: z.string().email("Email invalide").toLowerCase(),
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type LoginUser = z.infer<typeof loginUserSchema>;
+export type VerifyEmail = z.infer<typeof verifyEmailSchema>;
+export type VerifyPhone = z.infer<typeof verifyPhoneSchema>;
+export type ResendVerification = z.infer<typeof resendVerificationSchema>;
 export type User = typeof users.$inferSelect;

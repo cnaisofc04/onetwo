@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Home from "@/pages/home";
 import Signup from "@/pages/signup";
 import Login from "@/pages/login";
+import VerifyEmail from "@/pages/verify-email";
+import VerifyPhone from "@/pages/verify-phone";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -14,6 +16,8 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/signup" component={Signup} />
       <Route path="/login" component={Login} />
+      <Route path="/verify-email" component={VerifyEmail} />
+      <Route path="/verify-phone" component={VerifyPhone} />
       <Route component={NotFound} />
     </Switch>
   );

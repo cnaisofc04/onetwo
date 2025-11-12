@@ -83,6 +83,120 @@ export class SupabaseStorage implements IStorage {
   async verifyPassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
     return bcrypt.compare(plainPassword, hashedPassword);
   }
+
+  async setEmailVerificationCode(email: string, code: string, expiry: Date): Promise<boolean> {
+    try {
+      const supabase = await this.findUserSupabase(email);
+      if (!supabase) return false;
+
+      const { error } = await supabase
+        .from('users')
+        .update({
+          email_verification_code: code,
+          email_verification_expiry: expiry.toISOString(),
+        })
+        .eq('email', email.toLowerCase());
+
+      return !error;
+    } catch (error) {
+      console.error('Error setting email verification code:', error);
+      return false;
+    }
+  }
+
+  async setPhoneVerificationCode(userId: string, code: string, expiry: Date): Promise<boolean> {
+    try {
+      const user = await this.getUserById(userId);
+      if (!user) return false;
+
+      const supabase = getSupabaseClient(user.gender);
+
+      const { error } = await supabase
+        .from('users')
+        .update({
+          phone_verification_code: code,
+          phone_verification_expiry: expiry.toISOString(),
+        })
+        .eq('id', userId);
+
+      return !error;
+    } catch (error) {
+      console.error('Error setting phone verification code:', error);
+      return false;
+    }
+  }
+
+  async verifyEmailCode(email: string, code: string): Promise<boolean> {
+    try {
+      const user = await this.getUserByEmail(email);
+      if (!user) return false;
+
+      const now = new Date();
+      if (!user.emailVerificationCode || !user.emailVerificationExpiry) return false;
+      if (now > new Date(user.emailVerificationExpiry)) return false;
+      if (user.emailVerificationCode !== code) return false;
+
+      const supabase = getSupabaseClient(user.gender);
+
+      const { error } = await supabase
+        .from('users')
+        .update({
+          email_verified: true,
+          email_verification_code: null,
+          email_verification_expiry: null,
+        })
+        .eq('email', email.toLowerCase());
+
+      return !error;
+    } catch (error) {
+      console.error('Error verifying email code:', error);
+      return false;
+    }
+  }
+
+  async verifyPhoneCode(userId: string, code: string): Promise<boolean> {
+    try {
+      const user = await this.getUserById(userId);
+      if (!user) return false;
+
+      const now = new Date();
+      if (!user.phoneVerificationCode || !user.phoneVerificationExpiry) return false;
+      if (now > new Date(user.phoneVerificationExpiry)) return false;
+      if (user.phoneVerificationCode !== code) return false;
+
+      const supabase = getSupabaseClient(user.gender);
+
+      const { error } = await supabase
+        .from('users')
+        .update({
+          phone_verified: true,
+          phone_verification_code: null,
+          phone_verification_expiry: null,
+        })
+        .eq('id', userId);
+
+      return !error;
+    } catch (error) {
+      console.error('Error verifying phone code:', error);
+      return false;
+    }
+  }
+
+  async isUserFullyVerified(userId: string): Promise<boolean> {
+    const user = await this.getUserById(userId);
+    if (!user) return false;
+    return user.emailVerified && user.phoneVerified;
+  }
+
+  private async findUserSupabase(email: string) {
+    let result = await supabaseMan.from('users').select('*').eq('email', email.toLowerCase()).single();
+    if (result.data) return supabaseMan;
+    
+    result = await supabaseWoman.from('users').select('*').eq('email', email.toLowerCase()).single();
+    if (result.data) return supabaseWoman;
+    
+    return null;
+  }
 }
 
 export const supabaseStorage = new SupabaseStorage();

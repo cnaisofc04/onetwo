@@ -16,6 +16,13 @@ export interface IStorage {
   
   // Auth helpers
   verifyPassword(plainPassword: string, hashedPassword: string): Promise<boolean>;
+  
+  // Verification methods
+  setEmailVerificationCode(email: string, code: string, expiry: Date): Promise<boolean>;
+  setPhoneVerificationCode(userId: string, code: string, expiry: Date): Promise<boolean>;
+  verifyEmailCode(email: string, code: string): Promise<boolean>;
+  verifyPhoneCode(userId: string, code: string): Promise<boolean>;
+  isUserFullyVerified(userId: string): Promise<boolean>;
 }
 
 // PostgreSQL Database Storage Implementation
@@ -65,6 +72,96 @@ export class DBStorage implements IStorage {
 
   async verifyPassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
     return bcrypt.compare(plainPassword, hashedPassword);
+  }
+
+  async setEmailVerificationCode(email: string, code: string, expiry: Date): Promise<boolean> {
+    try {
+      await db
+        .update(users)
+        .set({
+          emailVerificationCode: code,
+          emailVerificationExpiry: expiry,
+        })
+        .where(eq(users.email, email.toLowerCase()));
+      return true;
+    } catch (error) {
+      console.error('Error setting email verification code:', error);
+      return false;
+    }
+  }
+
+  async setPhoneVerificationCode(userId: string, code: string, expiry: Date): Promise<boolean> {
+    try {
+      await db
+        .update(users)
+        .set({
+          phoneVerificationCode: code,
+          phoneVerificationExpiry: expiry,
+        })
+        .where(eq(users.id, userId));
+      return true;
+    } catch (error) {
+      console.error('Error setting phone verification code:', error);
+      return false;
+    }
+  }
+
+  async verifyEmailCode(email: string, code: string): Promise<boolean> {
+    try {
+      const user = await this.getUserByEmail(email);
+      if (!user) return false;
+
+      const now = new Date();
+      if (!user.emailVerificationCode || !user.emailVerificationExpiry) return false;
+      if (now > user.emailVerificationExpiry) return false;
+      if (user.emailVerificationCode !== code) return false;
+
+      await db
+        .update(users)
+        .set({
+          emailVerified: true,
+          emailVerificationCode: null,
+          emailVerificationExpiry: null,
+        })
+        .where(eq(users.email, email.toLowerCase()));
+
+      return true;
+    } catch (error) {
+      console.error('Error verifying email code:', error);
+      return false;
+    }
+  }
+
+  async verifyPhoneCode(userId: string, code: string): Promise<boolean> {
+    try {
+      const user = await this.getUserById(userId);
+      if (!user) return false;
+
+      const now = new Date();
+      if (!user.phoneVerificationCode || !user.phoneVerificationExpiry) return false;
+      if (now > user.phoneVerificationExpiry) return false;
+      if (user.phoneVerificationCode !== code) return false;
+
+      await db
+        .update(users)
+        .set({
+          phoneVerified: true,
+          phoneVerificationCode: null,
+          phoneVerificationExpiry: null,
+        })
+        .where(eq(users.id, userId));
+
+      return true;
+    } catch (error) {
+      console.error('Error verifying phone code:', error);
+      return false;
+    }
+  }
+
+  async isUserFullyVerified(userId: string): Promise<boolean> {
+    const user = await this.getUserById(userId);
+    if (!user) return false;
+    return user.emailVerified && user.phoneVerified;
   }
 }
 

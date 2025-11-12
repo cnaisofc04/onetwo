@@ -54,12 +54,17 @@ export default function Signup() {
         body: JSON.stringify(data),
       });
     },
-    onSuccess: async () => {
+    onSuccess: async (response: Response) => {
+      const data = await response.json();
+      
+      // Store email for verification flow
+      localStorage.setItem("verification_email", data.user.email);
+      
       toast({
-        title: "Compte créé avec succès!",
-        description: "Vous pouvez maintenant vous connecter",
+        title: "Compte créé !",
+        description: "Vérifiez votre email pour continuer",
       });
-      setLocation("/login");
+      setLocation("/verify-email");
     },
     onError: (error: any) => {
       toast({

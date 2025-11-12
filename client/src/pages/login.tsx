@@ -38,14 +38,51 @@ export default function Login() {
     },
     onSuccess: async (response: Response) => {
       const data = await response.json();
+      
+      // Check if account is verified
+      if (data.requiresVerification) {
+        localStorage.setItem("verification_email", data.user.email);
+        toast({
+          title: "Compte non vérifié",
+          description: "Veuillez vérifier votre email et téléphone",
+          variant: "destructive",
+        });
+        setLocation("/verify-email");
+        return;
+      }
+      
       toast({
         title: "Connexion réussie!",
         description: `Bienvenue ${data.user.pseudonyme}`,
       });
-      // TODO: Redirect to main app (future feature)
-      // For now, just show success
+      // TODO: Redirect to main app (Phase 2)
     },
-    onError: (error: any) => {
+    onError: async (error: any) => {
+      // Handle 403 verification errors
+      if (error.message && error.message.includes("403")) {
+        try {
+          const response = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(form.getValues()),
+          });
+          
+          if (response.status === 403) {
+            const data = await response.json();
+            if (data.requiresVerification && data.user) {
+              localStorage.setItem("verification_email", data.user.email);
+              toast({
+                title: "Compte non vérifié",
+                description: "Redirection vers la vérification...",
+                variant: "destructive",
+              });
+              setLocation("/verify-email");
+              return;
+            }
+          }
+        } catch {}
+      }
+      
       toast({
         title: "Erreur de connexion",
         description: error.message || "Email ou mot de passe incorrect",
