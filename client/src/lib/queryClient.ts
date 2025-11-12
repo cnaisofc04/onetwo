@@ -7,16 +7,10 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-export async function apiRequest(
-  endpoint: string,
-  method: string,
-  data?: unknown,
-) {
+export async function apiRequest(endpoint: string, options?: RequestInit) {
   const response = await fetch(endpoint, {
-    method: method,
-    headers: data ? { "Content-Type": "application/json" } : undefined,
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
+    method: options?.method || 'POST',
+    ...options,
   });
 
   await throwIfResNotOk(response);
