@@ -42,6 +42,7 @@ export default function Signup() {
       confirmPassword: "",
       phone: "",
       pseudonyme: "",
+      gender: undefined,
     },
   });
 
@@ -81,18 +82,21 @@ export default function Signup() {
         fieldsToValidate = ["dateOfBirth"];
         break;
       case 3:
-        fieldsToValidate = ["email"];
+        fieldsToValidate = ["gender"];
         break;
       case 4:
-        fieldsToValidate = ["password", "confirmPassword"];
+        fieldsToValidate = ["email"];
         break;
       case 5:
+        fieldsToValidate = ["password", "confirmPassword"];
+        break;
+      case 6:
         fieldsToValidate = ["phone"];
         break;
     }
 
     const isValid = await form.trigger(fieldsToValidate);
-    if (isValid && step < 5) {
+    if (isValid && step < 6) {
       setStep(step + 1);
     }
   };
@@ -113,7 +117,7 @@ export default function Signup() {
             Créer votre compte
           </h1>
           <p className="text-sm text-muted-foreground">
-            Étape {step} sur 5
+            Étape {step} sur 6
           </p>
         </div>
 
@@ -163,8 +167,40 @@ export default function Signup() {
               />
             )}
 
-            {/* Step 3: Email */}
+            {/* Step 3: Gender Selection */}
             {step === 3 && (
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-medium">Je suis</FormLabel>
+                    <FormControl>
+                      <div className="grid grid-cols-2 gap-3">
+                        {["Mr", "Mrs", "Gay", "Lesbienne", "Trans"].map((option) => (
+                          <Button
+                            key={option}
+                            type="button"
+                            variant={field.value === option ? "default" : "outline"}
+                            className={`h-14 text-base font-semibold border-2 ${
+                              option === "Trans" ? "col-span-2" : ""
+                            }`}
+                            onClick={() => field.onChange(option)}
+                            data-testid={`button-gender-${option.toLowerCase()}`}
+                          >
+                            {option}
+                          </Button>
+                        ))}
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {/* Step 4: Email */}
+            {step === 4 && (
               <FormField
                 control={form.control}
                 name="email"
@@ -186,8 +222,8 @@ export default function Signup() {
               />
             )}
 
-            {/* Step 4: Password & Confirm */}
-            {step === 4 && (
+            {/* Step 5: Password & Confirm */}
+            {step === 5 && (
               <div className="space-y-4">
                 <FormField
                   control={form.control}
@@ -230,8 +266,8 @@ export default function Signup() {
               </div>
             )}
 
-            {/* Step 5: Phone */}
-            {step === 5 && (
+            {/* Step 6: Phone */}
+            {step === 6 && (
               <FormField
                 control={form.control}
                 name="phone"
@@ -267,7 +303,7 @@ export default function Signup() {
                 </Button>
               )}
               
-              {step < 5 ? (
+              {step < 6 ? (
                 <Button
                   type="button"
                   onClick={nextStep}
