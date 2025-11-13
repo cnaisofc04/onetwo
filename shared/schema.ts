@@ -86,9 +86,84 @@ export const resendVerificationSchema = z.object({
   email: z.string().email("Email invalide").toLowerCase(),
 });
 
+// Signup Sessions table - Temporary storage during registration
+export const signupSessions = pgTable("signup_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  pseudonyme: text("pseudonyme").notNull(),
+  dateOfBirth: date("date_of_birth").notNull(),
+  email: text("email").notNull(),
+  emailVerified: boolean("email_verified").notNull().default(false),
+  emailVerificationCode: text("email_verification_code"),
+  emailVerificationExpiry: timestamp("email_verification_expiry"),
+  phone: text("phone"),
+  phoneVerificationCode: text("phone_verification_code"),
+  phoneVerificationExpiry: timestamp("phone_verification_expiry"),
+  phoneVerified: boolean("phone_verified").notNull().default(false),
+  gender: text("gender"),
+  password: text("password"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Insert schema for signup session
+export const insertSignupSessionSchema = createInsertSchema(signupSessions).omit({
+  id: true,
+  emailVerified: true,
+  emailVerificationCode: true,
+  emailVerificationExpiry: true,
+  phoneVerified: true,
+  phoneVerificationCode: true,
+  phoneVerificationExpiry: true,
+  createdAt: true,
+}).extend({
+  pseudonyme: z.string()
+    .min(2, "Le pseudonyme doit contenir au moins 2 caractères")
+    .max(30, "Le pseudonyme ne peut pas dépasser 30 caractères")
+    .regex(/^[a-zA-Z0-9_-]+$/, "Le pseudonyme ne peut contenir que des lettres, chiffres, tirets et underscores"),
+  
+  email: z.string()
+    .email("Email invalide")
+    .toLowerCase(),
+  
+  dateOfBirth: z.string().refine((date) => {
+    const birth = new Date(date);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age >= 18 && age <= 100;
+  }, "Vous devez avoir au moins 18 ans"),
+  
+  phone: z.string()
+    .regex(/^\+?[1-9]\d{1,14}$/, "Numéro de téléphone invalide (format international requis)")
+    .optional(),
+  
+  gender: z.enum(["Mr", "Mrs", "Homosexuel", "Homosexuelle", "Transgenre", "Bisexuel", "MARQUE"]).optional(),
+  
+  password: z.string().optional(),
+});
+
+// Schema for updating signup session
+export const updateSignupSessionSchema = z.object({
+  gender: z.enum(["Mr", "Mrs", "Homosexuel", "Homosexuelle", "Transgenre", "Bisexuel", "MARQUE"]).optional(),
+  password: z.string()
+    .min(8, "Le mot de passe doit contenir au moins 8 caractères")
+    .regex(/[A-Z]/, "Le mot de passe doit contenir au moins une majuscule")
+    .regex(/[a-z]/, "Le mot de passe doit contenir au moins une minuscule")
+    .regex(/[0-9]/, "Le mot de passe doit contenir au moins un chiffre")
+    .optional(),
+  phone: z.string()
+    .regex(/^\+?[1-9]\d{1,14}$/, "Numéro de téléphone invalide (format international requis)")
+    .optional(),
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type LoginUser = z.infer<typeof loginUserSchema>;
 export type VerifyEmail = z.infer<typeof verifyEmailSchema>;
 export type VerifyPhone = z.infer<typeof verifyPhoneSchema>;
 export type ResendVerification = z.infer<typeof resendVerificationSchema>;
 export type User = typeof users.$inferSelect;
+export type SignupSession = typeof signupSessions.$inferSelect;
+export type InsertSignupSession = z.infer<typeof insertSignupSessionSchema>;
+export type UpdateSignupSession = z.infer<typeof updateSignupSessionSchema>;
