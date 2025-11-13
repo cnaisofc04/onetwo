@@ -16,11 +16,30 @@ export const supabaseWoman = createClient(SUPABASE_WOMAN_URL, SUPABASE_WOMAN_ANO
 
 /**
  * Determine which Supabase instance to use based on gender
- * Mr, Gay, Trans → supabaseMan
- * Mrs, Lesbienne → supabaseWoman
+ * 
+ * Woman database: Mrs, Homosexuelle (+ legacy: Lesbienne)
+ * Man database: Mr, Homosexuel, Transgenre, Bisexuel, MARQUE (+ legacy: Gay, Trans)
+ * 
+ * Note: Legacy values are supported for backward compatibility but should be migrated
  */
 function getSupabaseClient(gender: string) {
-  return ['Mrs', 'Lesbienne'].includes(gender) ? supabaseWoman : supabaseMan;
+  // Woman database routing (new + legacy values)
+  const womanGenders = ['Mrs', 'Homosexuelle', 'Lesbienne']; // Include legacy 'Lesbienne'
+  
+  // Man database routing (new + legacy values)
+  const manGenders = ['Mr', 'Homosexuel', 'Transgenre', 'Bisexuel', 'MARQUE', 'Gay', 'Trans']; // Include legacy
+  
+  if (womanGenders.includes(gender)) {
+    return supabaseWoman;
+  }
+  
+  if (manGenders.includes(gender)) {
+    return supabaseMan;
+  }
+  
+  // Defensive handling for unknown values
+  console.error(`Unknown gender value: "${gender}". Defaulting to supabaseMan but this should be investigated.`);
+  return supabaseMan; // Safe fallback
 }
 
 export class SupabaseStorage implements IStorage {

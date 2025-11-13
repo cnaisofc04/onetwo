@@ -186,20 +186,27 @@ export default function Signup() {
                     <FormLabel className="text-base font-medium">Je suis</FormLabel>
                     <FormControl>
                       <div className="grid grid-cols-2 gap-3">
-                        {["Mr", "Mrs", "Gay", "Lesbienne", "Trans"].map((option) => (
+                        {["Mr", "Mrs", "Homosexuel", "Homosexuelle", "Transgenre", "Bisexuel"].map((option) => (
                           <Button
                             key={option}
                             type="button"
                             variant={field.value === option ? "default" : "outline"}
-                            className={`h-14 text-base font-semibold border-2 ${
-                              option === "Trans" ? "col-span-2" : ""
-                            }`}
+                            className="h-14 text-base font-semibold border-2"
                             onClick={() => field.onChange(option)}
                             data-testid={`button-gender-${option.toLowerCase()}`}
                           >
                             {option}
                           </Button>
                         ))}
+                        <Button
+                          type="button"
+                          variant={field.value === "MARQUE" ? "default" : "outline"}
+                          className="h-14 text-base font-semibold border-2 col-span-2"
+                          onClick={() => field.onChange("MARQUE")}
+                          data-testid="button-gender-marque"
+                        >
+                          MARQUE (Professionnel)
+                        </Button>
                       </div>
                     </FormControl>
                     <FormMessage />

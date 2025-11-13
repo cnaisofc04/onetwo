@@ -11,7 +11,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   dateOfBirth: date("date_of_birth").notNull(),
   phone: text("phone").notNull(),
-  gender: text("gender").notNull(), // Mr, Mrs, Gay, Lesbienne, Trans
+  gender: text("gender").notNull(), // Mr, Mrs, Homosexuel, Homosexuelle, Transgenre, Bisexuel, MARQUE
   emailVerified: boolean("email_verified").notNull().default(false),
   phoneVerified: boolean("phone_verified").notNull().default(false),
   emailVerificationCode: text("email_verification_code"),
@@ -60,7 +60,7 @@ export const insertUserSchema = createInsertSchema(users).omit({
   phone: z.string()
     .regex(/^\+?[1-9]\d{1,14}$/, "Numéro de téléphone invalide (format international requis)"),
   
-  gender: z.enum(["Mr", "Mrs", "Gay", "Lesbienne", "Trans"], {
+  gender: z.enum(["Mr", "Mrs", "Homosexuel", "Homosexuelle", "Transgenre", "Bisexuel", "MARQUE"], {
     errorMap: () => ({ message: "Veuillez sélectionner votre identité" })
   }),
 });
