@@ -1,7 +1,7 @@
 
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID;
 const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN;
 const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
@@ -31,6 +31,10 @@ export class VerificationService {
    * Envoie un code de vérification par email via Resend
    */
   static async sendEmailVerification(email: string, code: string): Promise<boolean> {
+    if (!resend) {
+      console.warn('Email verification skipped: RESEND_API_KEY not configured');
+      return false;
+    }
     try {
       await resend.emails.send({
         from: 'OneTwo <noreply@onetwo.app>',
@@ -60,6 +64,10 @@ export class VerificationService {
    * Envoie un code de vérification par SMS via Twilio
    */
   static async sendPhoneVerification(phone: string, code: string): Promise<boolean> {
+    if (!twilioAccountSid || !twilioAuthToken || !twilioPhoneNumber) {
+      console.warn('Phone verification skipped: Twilio credentials not configured');
+      return false;
+    }
     try {
       const twilio = require('twilio')(twilioAccountSid, twilioAuthToken);
       
