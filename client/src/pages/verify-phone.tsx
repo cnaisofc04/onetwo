@@ -39,6 +39,9 @@ export default function VerifyPhone() {
       });
     },
     onSuccess: async () => {
+      // Nettoyer le localStorage après succès
+      localStorage.removeItem("verification_email");
+      
       toast({
         title: "Compte activé !",
         description: "Vous pouvez maintenant vous connecter",

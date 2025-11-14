@@ -71,10 +71,20 @@ export class VerificationService {
     try {
       const twilio = require('twilio')(twilioAccountSid, twilioAuthToken);
       
+      // Normaliser le numéro au format international si nécessaire
+      let normalizedPhone = phone;
+      if (phone.startsWith('0')) {
+        // Convertir format français 06... en +336...
+        normalizedPhone = '+33' + phone.substring(1);
+      } else if (!phone.startsWith('+')) {
+        // Ajouter le préfixe + si manquant
+        normalizedPhone = '+' + phone;
+      }
+      
       await twilio.messages.create({
         body: `Votre code de vérification OneTwo est : ${code}. Ce code expire dans 15 minutes.`,
         from: twilioPhoneNumber,
-        to: phone,
+        to: normalizedPhone,
       });
       
       return true;

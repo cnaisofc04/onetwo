@@ -46,6 +46,12 @@ export default function Signup() {
     },
   });
 
+  // Validation téléphone en temps réel
+  const validatePhone = (phone: string) => {
+    const phoneRegex = /^(\+33|0)[1-9](\d{8})$/;
+    return phoneRegex.test(phone) || "Format invalide (ex: 0612345678 ou +33612345678)";
+  };
+
   const signupMutation = useMutation({
     mutationFn: async (data: InsertUser) => {
       return apiRequest("/api/auth/signup", {
@@ -56,10 +62,10 @@ export default function Signup() {
     },
     onSuccess: async (response: Response) => {
       const data = await response.json();
-      
+
       // Store email for verification flow
       localStorage.setItem("verification_email", data.user.email);
-      
+
       toast({
         title: "Compte créé !",
         description: "Vérifiez votre email pour continuer",
@@ -82,7 +88,7 @@ export default function Signup() {
 
   const nextStep = async () => {
     let fieldsToValidate: (keyof SignupFormData)[] = [];
-    
+
     switch (step) {
       case 1:
         fieldsToValidate = ["pseudonyme"];
@@ -292,11 +298,18 @@ export default function Signup() {
                     <FormLabel className="text-base font-medium">Téléphone</FormLabel>
                     <FormControl>
                       <Input
-                        {...field}
                         type="tel"
-                        placeholder="+33 6 12 34 56 78"
-                        className="h-12 text-base"
-                        data-testid="input-phone"
+                        placeholder="0612345678 ou +33612345678"
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          const validation = validatePhone(e.target.value);
+                          if (validation !== true) {
+                            form.setError("phone", { message: validation });
+                          } else {
+                            form.clearErrors("phone");
+                          }
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -318,7 +331,7 @@ export default function Signup() {
                   Retour
                 </Button>
               )}
-              
+
               {step < 6 ? (
                 <Button
                   type="button"

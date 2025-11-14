@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -39,12 +38,15 @@ export default function VerifyEmail() {
         body: JSON.stringify(data),
       });
     },
-    onSuccess: async () => {
+    onSuccess: async (response) => {
       toast({
         title: "Email vérifié !",
-        description: "Code SMS envoyé à votre téléphone",
+        description: "Vérification du téléphone en cours...",
       });
-      setLocation("/verify-phone");
+      // Attendre 1 seconde pour que l'utilisateur voie le message de succès
+      setTimeout(() => {
+        setLocation("/verify-phone");
+      }, 1000);
     },
     onError: (error: any) => {
       toast({
