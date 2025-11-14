@@ -1,10 +1,16 @@
 
 import { Resend } from 'resend';
+import { Twilio } from 'twilio';
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID;
 const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN;
 const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
+
+// Initialiser Twilio client si credentials disponibles
+const twilioClient = (twilioAccountSid && twilioAuthToken) 
+  ? new Twilio(twilioAccountSid, twilioAuthToken)
+  : null;
 
 /**
  * Service de vérification complètement indépendant et modulaire
@@ -95,13 +101,20 @@ export class VerificationService {
    * Envoie un code de vérification par SMS via Twilio
    */
   static async sendPhoneVerification(phone: string, code: string): Promise<boolean> {
-    if (!twilioAccountSid || !twilioAuthToken || !twilioPhoneNumber) {
-      console.warn('Phone verification skipped: Twilio credentials not configured');
+    console.log('📱 [SMS] Tentative d\'envoi de SMS...');
+    console.log('📱 [SMS] Destinataire:', phone);
+    console.log('📱 [SMS] Code:', code);
+    console.log('📱 [SMS] Twilio configuré?', !!twilioClient);
+    
+    if (!twilioClient || !twilioPhoneNumber) {
+      console.error('❌ [SMS] Twilio non configuré - SMS NON envoyé');
+      console.error('❌ [SMS] TWILIO_ACCOUNT_SID:', !!twilioAccountSid);
+      console.error('❌ [SMS] TWILIO_AUTH_TOKEN:', !!twilioAuthToken);
+      console.error('❌ [SMS] TWILIO_PHONE_NUMBER:', !!twilioPhoneNumber);
       return false;
     }
+    
     try {
-      const twilio = require('twilio')(twilioAccountSid, twilioAuthToken);
-      
       // Normaliser le numéro au format international si nécessaire
       let normalizedPhone = phone;
       if (phone.startsWith('0')) {
@@ -112,15 +125,24 @@ export class VerificationService {
         normalizedPhone = '+' + phone;
       }
       
-      await twilio.messages.create({
+      console.log('📱 [SMS] Numéro normalisé:', normalizedPhone);
+      console.log('📱 [SMS] Depuis:', twilioPhoneNumber);
+      
+      const result = await twilioClient.messages.create({
         body: `Votre code de vérification OneTwo est : ${code}. Ce code expire dans 15 minutes.`,
         from: twilioPhoneNumber,
         to: normalizedPhone,
       });
       
+      console.log('✅ [SMS] SMS envoyé avec succès!');
+      console.log('✅ [SMS] Message SID:', result.sid);
       return true;
-    } catch (error) {
-      console.error('Phone verification error:', error);
+    } catch (error: any) {
+      console.error('❌ [SMS] EXCEPTION lors de l\'envoi:', error);
+      console.error('❌ [SMS] Message d\'erreur:', error.message);
+      if (error.code) {
+        console.error('❌ [SMS] Code erreur Twilio:', error.code);
+      }
       return false;
     }
   }
