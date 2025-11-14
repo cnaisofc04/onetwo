@@ -60,11 +60,28 @@ export class VerificationService {
           </div>
         `,
       });
+      // Vérifier si l'envoi a réussi ou échoué
+      if (result.error) {
+        console.error('❌ [EMAIL] ÉCHEC - Email rejeté par Resend');
+        console.error('❌ [EMAIL] Erreur:', result.error.message);
+        console.error('❌ [EMAIL] Détails:', JSON.stringify(result.error, null, 2));
+        
+        // Vérifier si c'est une erreur de validation de domaine
+        if (result.error.message.includes('verify a domain')) {
+          console.error('⚠️  [EMAIL] LIMITATION COMPTE GRATUIT RESEND:');
+          console.error('⚠️  Vous ne pouvez envoyer des emails QU\'À votre propre adresse email Resend');
+          console.error('⚠️  Pour envoyer à d\'autres adresses, vous devez:');
+          console.error('⚠️  1. Vérifier un domaine sur resend.com/domains');
+          console.error('⚠️  2. OU tester avec l\'email de votre compte Resend');
+        }
+        return false;
+      }
+      
       console.log('✅ [EMAIL] Email envoyé avec succès!');
       console.log('✅ [EMAIL] Résultat Resend:', JSON.stringify(result, null, 2));
       return true;
     } catch (error: any) {
-      console.error('❌ [EMAIL] ERREUR lors de l\'envoi:', error);
+      console.error('❌ [EMAIL] EXCEPTION lors de l\'envoi:', error);
       console.error('❌ [EMAIL] Message d\'erreur:', error.message);
       console.error('❌ [EMAIL] Stack:', error.stack);
       if (error.response) {

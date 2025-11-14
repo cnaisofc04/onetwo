@@ -336,6 +336,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!emailSent) {
         console.error('❌ [SIGNUP] ÉCHEC de l\'envoi de l\'email de vérification');
+        console.error('⚠️  [SIGNUP] MODE DEV: Code affiché en console pour test');
+        console.error('📧 [SIGNUP] EMAIL:', user.email);
+        console.error('🔑 [SIGNUP] CODE:', emailCode);
+        console.error('⏰ [SIGNUP] EXPIRE:', emailExpiry.toISOString());
       } else {
         console.log('✅ [SIGNUP] Email de vérification envoyé avec succès');
       }
