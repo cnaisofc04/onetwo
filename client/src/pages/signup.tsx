@@ -61,10 +61,8 @@ export default function Signup() {
       });
     },
     onSuccess: async (response: Response) => {
-      const data = await response.json();
-
-      // Store email for verification flow
-      localStorage.setItem("verification_email", data.user.email);
+      // Sauvegarder l'email pour reprendre la vérification
+      localStorage.setItem("verification_email", form.getValues("email"));
 
       toast({
         title: "Compte créé !",

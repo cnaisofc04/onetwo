@@ -390,11 +390,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const isVerified = await storage.isUserFullyVerified(user.id);
       if (!isVerified) {
         const { password: _, ...userWithoutPassword } = user;
+        
+        // Déterminer quelle étape n'est pas complétée
+        let nextStep = "/verify-email";
+        if (user.emailVerified && !user.phoneVerified) {
+          nextStep = "/verify-phone";
+        }
+        
         return res.status(403).json({ 
           error: "Compte non vérifié",
-          message: "Veuillez vérifier votre email et téléphone",
+          message: "Veuillez compléter la vérification de votre compte",
           user: userWithoutPassword,
-          requiresVerification: true
+          requiresVerification: true,
+          nextStep: nextStep
         });
       }
 
@@ -495,6 +503,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Phone verification error:", error);
       return res.status(500).json({ error: "Erreur lors de la vérification" });
+    }
+  });
+
+  // POST /api/auth/resend-phone - Resend phone verification code
+  app.post("/api/auth/resend-phone", async (req: Request, res: Response) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ error: "Email requis" });
+      }
+
+      const user = await storage.getUserByEmail(email);
+
+      if (!user) {
+        return res.status(404).json({ error: "Utilisateur non trouvé" });
+      }
+
+      if (!user.emailVerified) {
+        return res.status(400).json({ error: "Veuillez d'abord vérifier votre email" });
+      }
+
+      if (user.phoneVerified) {
+        return res.status(400).json({ error: "Téléphone déjà vérifié" });
+      }
+
+      const phoneCode = VerificationService.generateVerificationCode();
+      const phoneExpiry = VerificationService.getCodeExpiry();
+      
+      await storage.setPhoneVerificationCode(user.id, phoneCode, phoneExpiry);
+      const smsSent = await VerificationService.sendPhoneVerification(user.phone, phoneCode);
+
+      if (!smsSent) {
+        console.warn('Failed to send verification SMS');
+        console.log('📱 CODE SMS (pour test):', phoneCode);
+      }
+
+      return res.status(200).json({ 
+        message: "Code renvoyé par SMS",
+        phone: user.phone
+      });
+
+    } catch (error) {
+      console.error("Resend phone error:", error);
+      return res.status(500).json({ error: "Erreur lors du renvoi" });
     }
   });
 

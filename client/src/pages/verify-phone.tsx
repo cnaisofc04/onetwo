@@ -30,6 +30,14 @@ export default function VerifyPhone() {
     },
   });
 
+  // Charger le téléphone depuis localStorage si disponible
+  useEffect(() => {
+    const storedPhone = localStorage.getItem("verification_phone");
+    if (storedPhone) {
+      form.setValue("phone", storedPhone);
+    }
+  }, []);
+
   const verifyMutation = useMutation({
     mutationFn: async (data: VerifyPhone & { email: string }) => {
       return apiRequest("/api/auth/verify-phone", {
@@ -41,6 +49,7 @@ export default function VerifyPhone() {
     onSuccess: async () => {
       // Nettoyer le localStorage après succès
       localStorage.removeItem("verification_email");
+      localStorage.removeItem("verification_phone");
       
       toast({
         title: "Compte activé !",
@@ -57,10 +66,48 @@ export default function VerifyPhone() {
     },
   });
 
+  const resendMutation = useMutation({
+    mutationFn: async (email: string) => {
+      return apiRequest("/api/auth/resend-phone", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Code renvoyé",
+        description: "Vérifiez votre téléphone",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de renvoyer le code",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = async (data: VerifyPhone) => {
     // Get email from localStorage (set during signup)
     const email = localStorage.getItem("verification_email") || "";
+    // Sauvegarder le téléphone pour la prochaine fois
+    localStorage.setItem("verification_phone", data.phone);
     await verifyMutation.mutateAsync({ ...data, email });
+  };
+
+  const handleResend = () => {
+    const email = localStorage.getItem("verification_email") || "";
+    if (email) {
+      resendMutation.mutate(email);
+    } else {
+      toast({
+        title: "Erreur",
+        description: "Email non trouvé. Veuillez vous reconnecter.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -124,6 +171,16 @@ export default function VerifyPhone() {
                 className="w-full h-14 text-base font-semibold"
               >
                 {verifyMutation.isPending ? "Vérification..." : "Vérifier"}
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleResend}
+                disabled={resendMutation.isPending}
+                className="w-full h-14 text-base font-semibold border-2"
+              >
+                {resendMutation.isPending ? "Envoi..." : "Renvoyer le code"}
               </Button>
             </div>
           </form>

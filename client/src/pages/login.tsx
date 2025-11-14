@@ -38,7 +38,7 @@ export default function Login() {
     },
     onSuccess: async (response: Response) => {
       const data = await response.json();
-      
+
       // Check if account is verified
       if (data.requiresVerification) {
         localStorage.setItem("verification_email", data.user.email);
@@ -50,41 +50,39 @@ export default function Login() {
         setLocation("/verify-email");
         return;
       }
-      
+
       toast({
         title: "Connexion réussie!",
         description: `Bienvenue ${data.user.pseudonyme}`,
       });
       // TODO: Redirect to main app (Phase 2)
     },
-    onError: async (error: any) => {
-      // Handle 403 verification errors
-      if (error.message && error.message.includes("403")) {
+    onError: (error: any) => {
+      // Si le compte nécessite une vérification, rediriger vers la bonne étape
+      if (error.message.includes("Compte non vérifié")) {
         try {
-          const response = await fetch("/api/auth/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(form.getValues()),
-          });
-          
-          if (response.status === 403) {
-            const data = await response.json();
-            if (data.requiresVerification && data.user) {
-              localStorage.setItem("verification_email", data.user.email);
-              toast({
-                title: "Compte non vérifié",
-                description: "Redirection vers la vérification...",
-                variant: "destructive",
-              });
-              setLocation("/verify-email");
-              return;
-            }
+          const errorData = JSON.parse(error.message.split(': ')[1]);
+          if (errorData.nextStep) {
+            // Sauvegarder l'email pour la vérification
+            localStorage.setItem("verification_email", form.getValues("email"));
+
+            toast({
+              title: "Vérification requise",
+              description: "Redirection vers la vérification...",
+            });
+
+            setTimeout(() => {
+              setLocation(errorData.nextStep);
+            }, 1000);
+            return;
           }
-        } catch {}
+        } catch (e) {
+          // Si on ne peut pas parser, afficher l'erreur normale
+        }
       }
-      
+
       toast({
-        title: "Erreur de connexion",
+        title: "Erreur",
         description: error.message || "Email ou mot de passe incorrect",
         variant: "destructive",
       });
