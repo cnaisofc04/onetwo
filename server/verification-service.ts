@@ -1,6 +1,6 @@
 
 import { Resend } from 'resend';
-import { Twilio } from 'twilio';
+import twilio from 'twilio';
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -9,7 +9,7 @@ const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
 
 // Initialiser Twilio client si credentials disponibles
 const twilioClient = (twilioAccountSid && twilioAuthToken) 
-  ? new Twilio(twilioAccountSid, twilioAuthToken)
+  ? twilio(twilioAccountSid, twilioAuthToken)
   : null;
 
 /**
