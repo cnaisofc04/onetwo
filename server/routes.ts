@@ -9,13 +9,15 @@ import {
   resendVerificationSchema,
   insertSignupSessionSchema,
   updateSignupSessionSchema,
+  updateConsentsSchema,
   type InsertUser, 
   type LoginUser,
   type VerifyEmail,
   type VerifyPhone,
   type ResendVerification,
   type InsertSignupSession,
-  type UpdateSignupSession
+  type UpdateSignupSession,
+  type UpdateConsents
 } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 import { VerificationService } from "./verification-service";
@@ -167,6 +169,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // POST /api/auth/signup/session/:id/send-email - Resend email verification code
+  app.post("/api/auth/signup/session/:id/send-email", async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+
+      const session = await storage.getSignupSession(id);
+      if (!session) {
+        return res.status(404).json({ error: "Session non trouvée" });
+      }
+
+      // Generate and send email verification code
+      const emailCode = VerificationService.generateVerificationCode();
+      const emailExpiry = VerificationService.getCodeExpiry();
+      
+      await storage.setSessionEmailVerificationCode(session.id, emailCode, emailExpiry);
+      const emailSent = await VerificationService.sendEmailVerification(session.email, emailCode);
+
+      if (!emailSent) {
+        console.warn('Failed to send verification email');
+      }
+
+      return res.status(200).json({ 
+        message: "Code email renvoyé",
+        email: session.email
+      });
+
+    } catch (error) {
+      console.error("Send email error:", error);
+      return res.status(500).json({ error: "Erreur lors de l'envoi de l'email" });
+    }
+  });
+
   // POST /api/auth/signup/session/:id/send-sms - Generate and send SMS code
   app.post("/api/auth/signup/session/:id/send-sms", async (req: Request, res: Response) => {
     try {
@@ -229,6 +263,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // PATCH /api/auth/signup/session/:id/consents - Update consent preferences
+  app.patch("/api/auth/signup/session/:id/consents", async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+
+      // Validate consent updates
+      const validationResult = updateConsentsSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        const validationError = fromZodError(validationResult.error);
+        return res.status(400).json({ 
+          error: validationError.message,
+          details: validationResult.error.flatten()
+        });
+      }
+
+      const consents: UpdateConsents = validationResult.data;
+
+      // Get existing session
+      const session = await storage.getSignupSession(id);
+      if (!session) {
+        return res.status(404).json({ error: "Session non trouvée" });
+      }
+
+      // Check if phone is verified before allowing consent updates
+      if (!session.phoneVerified) {
+        return res.status(403).json({ error: "Téléphone non vérifié" });
+      }
+
+      // Update consents
+      const updatedSession = await storage.updateSessionConsents(id, consents);
+
+      if (!updatedSession) {
+        return res.status(500).json({ error: "Erreur lors de la mise à jour des consentements" });
+      }
+
+      return res.status(200).json({ 
+        message: "Consentements mis à jour",
+        consents: {
+          geolocationConsent: updatedSession.geolocationConsent,
+          termsAccepted: updatedSession.termsAccepted,
+          deviceBindingConsent: updatedSession.deviceBindingConsent
+        }
+      });
+
+    } catch (error) {
+      console.error("Update consents error:", error);
+      return res.status(500).json({ error: "Erreur lors de la mise à jour des consentements" });
+    }
+  });
+
   // POST /api/auth/signup/session/:id/complete - Complete signup and create final user
   app.post("/api/auth/signup/session/:id/complete", async (req: Request, res: Response) => {
     try {
@@ -252,10 +337,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Informations manquantes" });
       }
 
+      // Verify all consents are given
+      const allConsentsGiven = await storage.verifyAllConsentsGiven(id);
+      if (!allConsentsGiven) {
+        return res.status(403).json({ 
+          error: "Consentements manquants",
+          message: "Vous devez accepter tous les consentements pour finaliser votre inscription"
+        });
+      }
+
       // Hash password before creating user
       const hashedPassword = await bcrypt.hash(session.password, 10);
 
-      // Create final user
+      // Create final user with consents
       const user = await storage.createUser({
         pseudonyme: session.pseudonyme,
         email: session.email,
@@ -265,6 +359,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         password: hashedPassword,
         emailVerified: true,
         phoneVerified: true,
+        geolocationConsent: session.geolocationConsent,
+        termsAccepted: session.termsAccepted,
+        deviceBindingConsent: session.deviceBindingConsent,
       });
 
       // Delete signup session

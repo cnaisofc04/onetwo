@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type SignupSession, type InsertSignupSession, type UpdateSignupSession } from "@shared/schema";
+import { type User, type InsertUser, type SignupSession, type InsertSignupSession, type UpdateSignupSession, type UpdateConsents } from "@shared/schema";
 import { db } from "./db";
 import { users, signupSessions } from "@shared/schema";
 import { eq } from "drizzle-orm";
@@ -33,6 +33,10 @@ export interface IStorage {
   verifySessionEmailCode(sessionId: string, code: string): Promise<boolean>;
   setSessionPhoneVerificationCode(sessionId: string, code: string, expiry: Date): Promise<boolean>;
   verifySessionPhoneCode(sessionId: string, code: string): Promise<boolean>;
+  
+  // Consent methods
+  updateSessionConsents(id: string, consents: UpdateConsents): Promise<SignupSession | undefined>;
+  verifyAllConsentsGiven(sessionId: string): Promise<boolean>;
 }
 
 // PostgreSQL Database Storage Implementation
@@ -300,6 +304,36 @@ export class DBStorage implements IStorage {
       return true;
     } catch (error) {
       console.error('Error verifying session phone code:', error);
+      return false;
+    }
+  }
+
+  async updateSessionConsents(id: string, consents: UpdateConsents): Promise<SignupSession | undefined> {
+    try {
+      const [session] = await db
+        .update(signupSessions)
+        .set(consents)
+        .where(eq(signupSessions.id, id))
+        .returning();
+      return session;
+    } catch (error) {
+      console.error('Error updating session consents:', error);
+      return undefined;
+    }
+  }
+
+  async verifyAllConsentsGiven(sessionId: string): Promise<boolean> {
+    try {
+      const session = await this.getSignupSession(sessionId);
+      if (!session) return false;
+      
+      return !!(
+        session.geolocationConsent &&
+        session.termsAccepted &&
+        session.deviceBindingConsent
+      );
+    } catch (error) {
+      console.error('Error verifying consents:', error);
       return false;
     }
   }

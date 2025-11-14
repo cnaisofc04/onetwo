@@ -39,23 +39,23 @@ export default function VerifyPhone() {
   }, []);
 
   const verifyMutation = useMutation({
-    mutationFn: async (data: VerifyPhone & { email: string }) => {
-      return apiRequest("/api/auth/verify-phone", {
+    mutationFn: async (code: string) => {
+      const sessionId = localStorage.getItem("signup_session_id");
+      if (!sessionId) {
+        throw new Error("Session non trouvée");
+      }
+      return apiRequest(`/api/auth/signup/session/${sessionId}/verify-phone`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ code }),
       });
     },
     onSuccess: async () => {
-      // Nettoyer le localStorage après succès
-      localStorage.removeItem("verification_email");
-      localStorage.removeItem("verification_phone");
-      
       toast({
-        title: "Compte activé !",
-        description: "Vous pouvez maintenant vous connecter",
+        title: "Téléphone vérifié !",
+        description: "Passons aux consentements",
       });
-      setLocation("/login");
+      setLocation("/consent-geolocation");
     },
     onError: (error: any) => {
       toast({
@@ -67,11 +67,14 @@ export default function VerifyPhone() {
   });
 
   const resendMutation = useMutation({
-    mutationFn: async (email: string) => {
-      return apiRequest("/api/auth/resend-phone", {
+    mutationFn: async () => {
+      const sessionId = localStorage.getItem("signup_session_id");
+      if (!sessionId) {
+        throw new Error("Session non trouvée");
+      }
+      return apiRequest(`/api/auth/signup/session/${sessionId}/send-sms`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
       });
     },
     onSuccess: () => {
@@ -90,24 +93,11 @@ export default function VerifyPhone() {
   });
 
   const onSubmit = async (data: VerifyPhone) => {
-    // Get email from localStorage (set during signup)
-    const email = localStorage.getItem("verification_email") || "";
-    // Sauvegarder le téléphone pour la prochaine fois
-    localStorage.setItem("verification_phone", data.phone);
-    await verifyMutation.mutateAsync({ ...data, email });
+    await verifyMutation.mutateAsync(data.code);
   };
 
   const handleResend = () => {
-    const email = localStorage.getItem("verification_email") || "";
-    if (email) {
-      resendMutation.mutate(email);
-    } else {
-      toast({
-        title: "Erreur",
-        description: "Email non trouvé. Veuillez vous reconnecter.",
-        variant: "destructive",
-      });
-    }
+    resendMutation.mutate();
   };
 
   return (

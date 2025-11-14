@@ -8,6 +8,9 @@ import Signup from "@/pages/signup";
 import Login from "@/pages/login";
 import VerifyEmail from "@/pages/verify-email";
 import VerifyPhone from "@/pages/verify-phone";
+import ConsentGeolocation from "@/pages/consent-geolocation";
+import ConsentTerms from "@/pages/consent-terms";
+import ConsentDevice from "@/pages/consent-device";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -18,6 +21,9 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/verify-email" component={VerifyEmail} />
       <Route path="/verify-phone" component={VerifyPhone} />
+      <Route path="/consent-geolocation" component={ConsentGeolocation} />
+      <Route path="/consent-terms" component={ConsentTerms} />
+      <Route path="/consent-device" component={ConsentDevice} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -31,19 +31,22 @@ export default function VerifyEmail() {
   });
 
   const verifyMutation = useMutation({
-    mutationFn: async (data: VerifyEmail) => {
-      return apiRequest("/api/auth/verify-email", {
+    mutationFn: async (code: string) => {
+      const sessionId = localStorage.getItem("signup_session_id");
+      if (!sessionId) {
+        throw new Error("Session non trouvée");
+      }
+      return apiRequest(`/api/auth/signup/session/${sessionId}/verify-email`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ code }),
       });
     },
     onSuccess: async (response) => {
       toast({
         title: "Email vérifié !",
-        description: "Vérification du téléphone en cours...",
+        description: "Passons à la vérification du téléphone",
       });
-      // Attendre 1 seconde pour que l'utilisateur voie le message de succès
       setTimeout(() => {
         setLocation("/verify-phone");
       }, 1000);
@@ -58,11 +61,14 @@ export default function VerifyEmail() {
   });
 
   const resendMutation = useMutation({
-    mutationFn: async (email: string) => {
-      return apiRequest("/api/auth/resend-email", {
+    mutationFn: async () => {
+      const sessionId = localStorage.getItem("signup_session_id");
+      if (!sessionId) {
+        throw new Error("Session non trouvée");
+      }
+      return apiRequest(`/api/auth/signup/session/${sessionId}/send-email`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
       });
     },
     onSuccess: () => {
@@ -81,14 +87,11 @@ export default function VerifyEmail() {
   });
 
   const onSubmit = async (data: VerifyEmail) => {
-    await verifyMutation.mutateAsync(data);
+    await verifyMutation.mutateAsync(data.code);
   };
 
   const handleResend = () => {
-    const emailValue = form.getValues("email");
-    if (emailValue) {
-      resendMutation.mutate(emailValue);
-    }
+    resendMutation.mutate();
   };
 
   return (

@@ -18,6 +18,9 @@ export const users = pgTable("users", {
   phoneVerificationCode: text("phone_verification_code"),
   emailVerificationExpiry: timestamp("email_verification_expiry"),
   phoneVerificationExpiry: timestamp("phone_verification_expiry"),
+  geolocationConsent: boolean("geolocation_consent").notNull().default(false),
+  termsAccepted: boolean("terms_accepted").notNull().default(false),
+  deviceBindingConsent: boolean("device_binding_consent").notNull().default(false),
   // Note: NO bio field (design decision)
 });
 
@@ -101,6 +104,9 @@ export const signupSessions = pgTable("signup_sessions", {
   phoneVerified: boolean("phone_verified").notNull().default(false),
   gender: text("gender"),
   password: text("password"),
+  geolocationConsent: boolean("geolocation_consent").notNull().default(false),
+  termsAccepted: boolean("terms_accepted").notNull().default(false),
+  deviceBindingConsent: boolean("device_binding_consent").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -158,6 +164,13 @@ export const updateSignupSessionSchema = z.object({
     .optional(),
 });
 
+// Consent update schema
+export const updateConsentsSchema = z.object({
+  geolocationConsent: z.boolean().optional(),
+  termsAccepted: z.boolean().optional(),
+  deviceBindingConsent: z.boolean().optional(),
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type LoginUser = z.infer<typeof loginUserSchema>;
 export type VerifyEmail = z.infer<typeof verifyEmailSchema>;
@@ -167,3 +180,4 @@ export type User = typeof users.$inferSelect;
 export type SignupSession = typeof signupSessions.$inferSelect;
 export type InsertSignupSession = z.infer<typeof insertSignupSessionSchema>;
 export type UpdateSignupSession = z.infer<typeof updateSignupSessionSchema>;
+export type UpdateConsents = z.infer<typeof updateConsentsSchema>;
