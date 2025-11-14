@@ -37,7 +37,7 @@ export class VerificationService {
     }
     try {
       await resend.emails.send({
-        from: 'OneTwo <noreply@onetwo.app>',
+        from: 'OneTwo <onboarding@resend.dev>',
         to: email,
         subject: 'Code de vérification OneTwo',
         html: `
