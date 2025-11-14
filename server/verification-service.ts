@@ -31,12 +31,19 @@ export class VerificationService {
    * Envoie un code de vérification par email via Resend
    */
   static async sendEmailVerification(email: string, code: string): Promise<boolean> {
+    console.log('🔷 [EMAIL] Tentative d\'envoi d\'email...');
+    console.log('🔷 [EMAIL] Destinataire:', email);
+    console.log('🔷 [EMAIL] Code:', code);
+    console.log('🔷 [EMAIL] RESEND_API_KEY configurée?', !!resend);
+    
     if (!resend) {
-      console.warn('Email verification skipped: RESEND_API_KEY not configured');
+      console.error('❌ [EMAIL] RESEND_API_KEY non configurée - Email NON envoyé');
       return false;
     }
+    
     try {
-      await resend.emails.send({
+      console.log('🔷 [EMAIL] Appel API Resend en cours...');
+      const result = await resend.emails.send({
         from: 'OneTwo <onboarding@resend.dev>',
         to: email,
         subject: 'Code de vérification OneTwo',
@@ -53,9 +60,16 @@ export class VerificationService {
           </div>
         `,
       });
+      console.log('✅ [EMAIL] Email envoyé avec succès!');
+      console.log('✅ [EMAIL] Résultat Resend:', JSON.stringify(result, null, 2));
       return true;
-    } catch (error) {
-      console.error('Email verification error:', error);
+    } catch (error: any) {
+      console.error('❌ [EMAIL] ERREUR lors de l\'envoi:', error);
+      console.error('❌ [EMAIL] Message d\'erreur:', error.message);
+      console.error('❌ [EMAIL] Stack:', error.stack);
+      if (error.response) {
+        console.error('❌ [EMAIL] Réponse API:', error.response);
+      }
       return false;
     }
   }

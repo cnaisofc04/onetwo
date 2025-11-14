@@ -315,17 +315,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Create user (password is hashed in storage layer)
+      console.log('🟢 [SIGNUP] Création de l\'utilisateur...');
       const user = await storage.createUser(userData);
+      console.log('🟢 [SIGNUP] Utilisateur créé:', user.email);
 
       // Generate and send email verification code
+      console.log('🟢 [SIGNUP] Génération du code de vérification...');
       const emailCode = VerificationService.generateVerificationCode();
       const emailExpiry = VerificationService.getCodeExpiry();
+      console.log('🟢 [SIGNUP] Code généré:', emailCode);
+      console.log('🟢 [SIGNUP] Expiration:', emailExpiry);
       
+      console.log('🟢 [SIGNUP] Enregistrement du code en base de données...');
       await storage.setEmailVerificationCode(user.email, emailCode, emailExpiry);
+      console.log('🟢 [SIGNUP] Code enregistré en base de données');
+      
+      console.log('🟢 [SIGNUP] Envoi de l\'email de vérification...');
       const emailSent = await VerificationService.sendEmailVerification(user.email, emailCode);
+      console.log('🟢 [SIGNUP] Résultat envoi email:', emailSent ? 'SUCCÈS' : 'ÉCHEC');
 
       if (!emailSent) {
-        console.error('Failed to send verification email');
+        console.error('❌ [SIGNUP] ÉCHEC de l\'envoi de l\'email de vérification');
+      } else {
+        console.log('✅ [SIGNUP] Email de vérification envoyé avec succès');
       }
 
       // Don't send password in response
