@@ -59,33 +59,43 @@ export default function Login() {
     },
     onError: (error: any) => {
       // Si le compte nécessite une vérification, rediriger vers la bonne étape
-      if (error.message.includes("Compte non vérifié")) {
+      if (error.message.includes("non vérifié")) {
+        // Essayer d'extraire les informations de l'erreur
         try {
-          const errorData = JSON.parse(error.message.split(': ')[1]);
-          if (errorData.nextStep) {
-            // Sauvegarder l'email pour la vérification
-            localStorage.setItem("verification_email", form.getValues("email"));
+          const errorData = JSON.parse(error.message.split(': ')[1] || '{}');
+
+          if (errorData.user) {
+            // Sauvegarder les informations pour la reprise
+            localStorage.setItem("verification_email", errorData.user.email);
+            if (errorData.user.phone) {
+              localStorage.setItem("verification_phone", errorData.user.phone);
+            }
 
             toast({
-              title: "Vérification requise",
-              description: "Redirection vers la vérification...",
+              title: "Inscription incomplète",
+              description: "Reprise de la vérification de votre compte...",
             });
 
+            // Rediriger vers l'étape appropriée
+            const nextStep = errorData.nextStep || "/verify-email";
             setTimeout(() => {
-              setLocation(errorData.nextStep);
-            }, 1000);
-            return;
+              setLocation(nextStep);
+            }, 1500);
           }
-        } catch (e) {
-          // Si on ne peut pas parser, afficher l'erreur normale
+        } catch (parseError) {
+          toast({
+            title: "Compte non vérifié",
+            description: "Veuillez compléter votre inscription",
+            variant: "destructive",
+          });
         }
+      } else {
+        toast({
+          title: "Erreur de connexion",
+          description: error.message,
+          variant: "destructive",
+        });
       }
-
-      toast({
-        title: "Erreur",
-        description: error.message || "Email ou mot de passe incorrect",
-        variant: "destructive",
-      });
     },
   });
 
