@@ -85,9 +85,13 @@ export default function Signup() {
 
       toast({
         title: "Session créée",
-        description: "Vérification de l'email en cours...",
+        description: "Redirection vers la vérification email...",
       });
-      setStep(4); // Passer à la vérification email
+
+      // Rediriger vers la page de vérification email avec le sessionId
+      setTimeout(() => {
+        setLocation(`/verify-email?sessionId=${newSessionId}`);
+      }, 500);
     },
     onError: (error: any) => {
       toast({
