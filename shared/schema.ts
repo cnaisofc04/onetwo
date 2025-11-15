@@ -63,7 +63,17 @@ export const insertUserSchema = createInsertSchema(users).omit({
   phone: z.string()
     .regex(/^\+?[1-9]\d{1,14}$/, "Numéro de téléphone invalide (format international requis)"),
   
-  gender: z.enum(["Mr", "Mrs", "Homosexuel", "Homosexuelle", "Transgenre", "Bisexuel", "MARQUE"], {
+  gender: z.enum([
+    "Mr",                // Homme hétérosexuel
+    "Mr_Homosexuel",     // Homme gay
+    "Mr_Bisexuel",       // Homme bisexuel
+    "Mr_Transgenre",     // Homme transgenre
+    "Mrs",               // Femme hétérosexuelle
+    "Mrs_Homosexuelle",  // Femme lesbienne
+    "Mrs_Bisexuelle",    // Femme bisexuelle
+    "Mrs_Transgenre",    // Femme transgenre
+    "MARQUE"             // Compte entreprise/organisation
+  ], {
     errorMap: () => ({ message: "Veuillez sélectionner votre identité" })
   }),
 });

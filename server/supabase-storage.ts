@@ -4,69 +4,108 @@ import type { IStorage } from './storage';
 import type { InsertUser, User } from '@shared/schema';
 import bcrypt from 'bcryptjs';
 
-// Supabase configuration for dual database architecture
-const SUPABASE_MAN_URL = process.env.SUPABASE_MAN_URL || '';
-const SUPABASE_MAN_ANON_KEY = process.env.SUPABASE_MAN_ANON_KEY || '';
-const SUPABASE_WOMAN_URL = process.env.SUPABASE_WOMAN_URL || '';
-const SUPABASE_WOMAN_ANON_KEY = process.env.SUPABASE_WOMAN_ANON_KEY || '';
+// Supabase configuration for triple database architecture
+const SUPABASE_MAN_URL = process.env.profil_man_supabase_URL || '';
+const SUPABASE_MAN_ANON_KEY = process.env.profil_man_supabase_API_anon_public || '';
+const SUPABASE_WOMAN_URL = process.env.profil_woman_supabase_URL || '';
+const SUPABASE_WOMAN_ANON_KEY = process.env.profil_woman_supabase_API_anon_public || '';
+const SUPABASE_BRAND_URL = process.env.profil_brand_supabase_URL || '';
+const SUPABASE_BRAND_ANON_KEY = process.env.profil_brand_supabase_API_anon_public || '';
 
 // Create Supabase clients
 export const supabaseMan = createClient(SUPABASE_MAN_URL, SUPABASE_MAN_ANON_KEY);
 export const supabaseWoman = createClient(SUPABASE_WOMAN_URL, SUPABASE_WOMAN_ANON_KEY);
+export const supabaseBrand = createClient(SUPABASE_BRAND_URL, SUPABASE_BRAND_ANON_KEY);
 
 /**
  * Determine which Supabase instance to use based on gender
  * 
- * Woman database: Mrs, Homosexuelle (+ legacy: Lesbienne)
- * Man database: Mr, Homosexuel, Transgenre, Bisexuel, MARQUE (+ legacy: Gay, Trans)
+ * Architecture à 3 bases:
+ * - Man database: Mr, Mr_Homosexuel, Mr_Bisexuel, Mr_Transgenre
+ * - Woman database: Mrs, Mrs_Homosexuelle, Mrs_Bisexuelle, Mrs_Transgenre
+ * - Brand database: MARQUE
  * 
- * Note: Legacy values are supported for backward compatibility but should be migrated
+ * Legacy values supported for backward compatibility
  */
 function getSupabaseClient(gender: string) {
-  // Woman database routing (new + legacy values)
-  const womanGenders = ['Mrs', 'Homosexuelle', 'Lesbienne']; // Include legacy 'Lesbienne'
+  // Brand database routing
+  if (gender === 'MARQUE') {
+    if (!SUPABASE_BRAND_URL || !SUPABASE_BRAND_ANON_KEY) {
+      console.error('⚠️ Supabase Brand not configured. User MARQUE cannot be created.');
+      throw new Error('Configuration Supabase Brand manquante');
+    }
+    return supabaseBrand;
+  }
   
   // Man database routing (new + legacy values)
-  const manGenders = ['Mr', 'Homosexuel', 'Transgenre', 'Bisexuel', 'MARQUE', 'Gay', 'Trans']; // Include legacy
+  const manGenders = [
+    'Mr',
+    'Mr_Homosexuel',
+    'Mr_Bisexuel',
+    'Mr_Transgenre',
+    // Legacy values
+    'Homosexuel',
+    'Gay',
+    'Trans'
+  ];
   
-  if (womanGenders.includes(gender)) {
-    return supabaseWoman;
-  }
+  // Woman database routing (new + legacy values)
+  const womanGenders = [
+    'Mrs',
+    'Mrs_Homosexuelle',
+    'Mrs_Bisexuelle',
+    'Mrs_Transgenre',
+    // Legacy values
+    'Homosexuelle',
+    'Lesbienne'
+  ];
   
   if (manGenders.includes(gender)) {
     return supabaseMan;
   }
   
-  // Defensive handling for unknown values
-  console.error(`Unknown gender value: "${gender}". Defaulting to supabaseMan but this should be investigated.`);
-  return supabaseMan; // Safe fallback
+  if (womanGenders.includes(gender)) {
+    return supabaseWoman;
+  }
+  
+  // Unknown value - throw error instead of defaulting
+  throw new Error(`Genre inconnu: "${gender}". Valeurs valides: ${[...manGenders, ...womanGenders, 'MARQUE'].join(', ')}`);
 }
 
 export class SupabaseStorage implements IStorage {
   async getUserById(id: string): Promise<User | null> {
-    // Try both databases (for login where we don't know gender)
+    // Try all three databases (for login where we don't know gender)
     let result = await supabaseMan.from('users').select('*').eq('id', id).single();
     if (result.data) return result.data as User;
     
     result = await supabaseWoman.from('users').select('*').eq('id', id).single();
+    if (result.data) return result.data as User;
+    
+    result = await supabaseBrand.from('users').select('*').eq('id', id).single();
     return result.data as User | null;
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
-    // Try both databases
+    // Try all three databases
     let result = await supabaseMan.from('users').select('*').eq('email', email.toLowerCase()).single();
     if (result.data) return result.data as User;
     
     result = await supabaseWoman.from('users').select('*').eq('email', email.toLowerCase()).single();
+    if (result.data) return result.data as User;
+    
+    result = await supabaseBrand.from('users').select('*').eq('email', email.toLowerCase()).single();
     return result.data as User | null;
   }
 
   async getUserByPseudonyme(pseudonyme: string): Promise<User | null> {
-    // Try both databases
+    // Try all three databases
     let result = await supabaseMan.from('users').select('*').eq('pseudonyme', pseudonyme).single();
     if (result.data) return result.data as User;
     
     result = await supabaseWoman.from('users').select('*').eq('pseudonyme', pseudonyme).single();
+    if (result.data) return result.data as User;
+    
+    result = await supabaseBrand.from('users').select('*').eq('pseudonyme', pseudonyme).single();
     return result.data as User | null;
   }
 
@@ -213,6 +252,9 @@ export class SupabaseStorage implements IStorage {
     
     result = await supabaseWoman.from('users').select('*').eq('email', email.toLowerCase()).single();
     if (result.data) return supabaseWoman;
+    
+    result = await supabaseBrand.from('users').select('*').eq('email', email.toLowerCase()).single();
+    if (result.data) return supabaseBrand;
     
     return null;
   }
