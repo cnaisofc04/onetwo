@@ -2,12 +2,16 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Configuration Supabase Man
-const supabaseManUrl = process.env.profil_man_supabase_url;
-const supabaseManKey = process.env.profil_man_supabase_key;
+const supabaseManUrl = process.env.profil_man_supabase_URL;
+const supabaseManKey = process.env.profil_man_supabase_API_anon_public;
 
 // Configuration Supabase Woman
-const supabaseWomanUrl = process.env.profil_woman_supabase_url;
-const supabaseWomanKey = process.env.profil_woman_supabase_key;
+const supabaseWomanUrl = process.env.profil_woman_supabase_URL;
+const supabaseWomanKey = process.env.profil_woman_supabase_API_anon_public;
+
+// Configuration Supabase Brand
+const supabaseBrandUrl = process.env.profil_brand_supabase_URL;
+const supabaseBrandKey = process.env.profil_brand_supabase_API_anon_public;
 
 if (!supabaseManUrl || !supabaseManKey || !supabaseWomanUrl || !supabaseWomanKey) {
   console.error('❌ Variables d\'environnement Supabase manquantes');
@@ -16,6 +20,9 @@ if (!supabaseManUrl || !supabaseManKey || !supabaseWomanUrl || !supabaseWomanKey
 
 const supabaseMan = createClient(supabaseManUrl, supabaseManKey);
 const supabaseWoman = createClient(supabaseWomanUrl, supabaseWomanKey);
+const supabaseBrand = supabaseBrandUrl && supabaseBrandKey 
+  ? createClient(supabaseBrandUrl, supabaseBrandKey) 
+  : null;
 
 async function cleanDatabase(supabase: any, dbName: string) {
   console.log(`\n🧹 Nettoyage de la base ${dbName}...`);
@@ -24,7 +31,7 @@ async function cleanDatabase(supabase: any, dbName: string) {
     // Supprimer tous les utilisateurs
     const { data: users, error: fetchError } = await supabase
       .from('users')
-      .select('id, email, pseudonyme');
+      .select('id, email, pseudonyme, gender');
     
     if (fetchError) {
       console.error(`❌ Erreur lors de la récupération des utilisateurs de ${dbName}:`, fetchError.message);
@@ -38,7 +45,7 @@ async function cleanDatabase(supabase: any, dbName: string) {
 
     console.log(`📊 ${dbName}: ${users.length} utilisateur(s) trouvé(s)`);
     users.forEach((user: any) => {
-      console.log(`   - ${user.email} (${user.pseudonyme})`);
+      console.log(`   - ${user.email} (${user.pseudonyme}) [${user.gender}]`);
     });
 
     // Supprimer tous les utilisateurs
@@ -69,9 +76,16 @@ async function main() {
   // Nettoyer base Woman
   await cleanDatabase(supabaseWoman, 'SUPABASE WOMAN');
   
+  // Nettoyer base Brand si configurée
+  if (supabaseBrand) {
+    await cleanDatabase(supabaseBrand, 'SUPABASE BRAND');
+  } else {
+    console.log('\n⚠️ SUPABASE BRAND: Non configuré (ignoré)');
+  }
+  
   console.log('\n✅ NETTOYAGE TERMINÉ');
   console.log('==========================================');
-  console.log('Vous pouvez maintenant tester avec: cnaisofc04@gmail.com');
+  console.log('Vous pouvez maintenant effectuer de nouveaux tests d\'inscription');
 }
 
 main();

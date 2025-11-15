@@ -33,36 +33,36 @@ export const insertUserSchema = createInsertSchema(users).omit({
     .min(2, "Le pseudonyme doit contenir au moins 2 caractères")
     .max(30, "Le pseudonyme ne peut pas dépasser 30 caractères")
     .regex(/^[a-zA-Z0-9_-]+$/, "Le pseudonyme ne peut contenir que des lettres, chiffres, tirets et underscores"),
-  
+
   email: z.string()
     .email("Email invalide")
     .toLowerCase(),
-  
+
   password: z.string()
     .min(8, "Le mot de passe doit contenir au moins 8 caractères")
     .regex(/[A-Z]/, "Le mot de passe doit contenir au moins une majuscule")
     .regex(/[a-z]/, "Le mot de passe doit contenir au moins une minuscule")
     .regex(/[0-9]/, "Le mot de passe doit contenir au moins un chiffre"),
-  
+
   dateOfBirth: z.string().refine((date) => {
     const birth = new Date(date);
     const today = new Date();
-    
+
     // Calculate exact age considering month and day
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
-    
+
     // If birthday hasn't occurred this year yet, subtract 1 from age
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
       age--;
     }
-    
+
     return age >= 18 && age <= 100;
   }, "Vous devez avoir au moins 18 ans"),
-  
+
   phone: z.string()
     .regex(/^\+?[1-9]\d{1,14}$/, "Numéro de téléphone invalide (format international requis)"),
-  
+
   gender: z.enum([
     "Mr",                // Homme hétérosexuel
     "Mr_Homosexuel",     // Homme gay
@@ -135,11 +135,11 @@ export const insertSignupSessionSchema = createInsertSchema(signupSessions).omit
     .min(2, "Le pseudonyme doit contenir au moins 2 caractères")
     .max(30, "Le pseudonyme ne peut pas dépasser 30 caractères")
     .regex(/^[a-zA-Z0-9_-]+$/, "Le pseudonyme ne peut contenir que des lettres, chiffres, tirets et underscores"),
-  
+
   email: z.string()
     .email("Email invalide")
     .toLowerCase(),
-  
+
   dateOfBirth: z.string().refine((date) => {
     const birth = new Date(date);
     const today = new Date();
@@ -150,19 +150,39 @@ export const insertSignupSessionSchema = createInsertSchema(signupSessions).omit
     }
     return age >= 18 && age <= 100;
   }, "Vous devez avoir au moins 18 ans"),
-  
+
   phone: z.string()
     .regex(/^\+?[1-9]\d{1,14}$/, "Numéro de téléphone invalide (format international requis)")
     .optional(),
-  
-  gender: z.enum(["Mr", "Mrs", "Homosexuel", "Homosexuelle", "Transgenre", "Bisexuel", "MARQUE"]).optional(),
-  
+
+  gender: z.enum([
+    "Mr",
+    "Mr_Homosexuel",
+    "Mr_Bisexuel",
+    "Mr_Transgenre",
+    "Mrs",
+    "Mrs_Homosexuelle",
+    "Mrs_Bisexuelle",
+    "Mrs_Transgenre",
+    "MARQUE"
+  ]).optional(),
+
   password: z.string().optional(),
 });
 
 // Schema for updating signup session
 export const updateSignupSessionSchema = z.object({
-  gender: z.enum(["Mr", "Mrs", "Homosexuel", "Homosexuelle", "Transgenre", "Bisexuel", "MARQUE"]).optional(),
+  gender: z.enum([
+    "Mr",
+    "Mr_Homosexuel",
+    "Mr_Bisexuel",
+    "Mr_Transgenre",
+    "Mrs",
+    "Mrs_Homosexuelle",
+    "Mrs_Bisexuelle",
+    "Mrs_Transgenre",
+    "MARQUE"
+  ]).optional(),
   password: z.string()
     .min(8, "Le mot de passe doit contenir au moins 8 caractères")
     .regex(/[A-Z]/, "Le mot de passe doit contenir au moins une majuscule")

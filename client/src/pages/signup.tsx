@@ -189,28 +189,106 @@ export default function Signup() {
                   <FormItem>
                     <FormLabel className="text-base font-medium">Je suis</FormLabel>
                     <FormControl>
-                      <div className="grid grid-cols-2 gap-3">
-                        {["Mr", "Mrs", "Homosexuel", "Homosexuelle", "Transgenre", "Bisexuel"].map((option) => (
+                      <div className="space-y-4">
+                        {/* Section Homme */}
+                        <div className="space-y-2">
+                          <p className="text-sm text-muted-foreground font-medium">Homme</p>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              type="button"
+                              variant={field.value === "Mr" ? "default" : "outline"}
+                              className="h-12 text-sm font-semibold border-2"
+                              onClick={() => field.onChange("Mr")}
+                              data-testid="button-gender-mr"
+                            >
+                              Hétéro
+                            </Button>
+                            <Button
+                              type="button"
+                              variant={field.value === "Mr_Homosexuel" ? "default" : "outline"}
+                              className="h-12 text-sm font-semibold border-2"
+                              onClick={() => field.onChange("Mr_Homosexuel")}
+                              data-testid="button-gender-mr-homosexuel"
+                            >
+                              Gay
+                            </Button>
+                            <Button
+                              type="button"
+                              variant={field.value === "Mr_Bisexuel" ? "default" : "outline"}
+                              className="h-12 text-sm font-semibold border-2"
+                              onClick={() => field.onChange("Mr_Bisexuel")}
+                              data-testid="button-gender-mr-bisexuel"
+                            >
+                              Bisexuel
+                            </Button>
+                            <Button
+                              type="button"
+                              variant={field.value === "Mr_Transgenre" ? "default" : "outline"}
+                              className="h-12 text-sm font-semibold border-2"
+                              onClick={() => field.onChange("Mr_Transgenre")}
+                              data-testid="button-gender-mr-transgenre"
+                            >
+                              Transgenre
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Section Femme */}
+                        <div className="space-y-2">
+                          <p className="text-sm text-muted-foreground font-medium">Femme</p>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              type="button"
+                              variant={field.value === "Mrs" ? "default" : "outline"}
+                              className="h-12 text-sm font-semibold border-2"
+                              onClick={() => field.onChange("Mrs")}
+                              data-testid="button-gender-mrs"
+                            >
+                              Hétéro
+                            </Button>
+                            <Button
+                              type="button"
+                              variant={field.value === "Mrs_Homosexuelle" ? "default" : "outline"}
+                              className="h-12 text-sm font-semibold border-2"
+                              onClick={() => field.onChange("Mrs_Homosexuelle")}
+                              data-testid="button-gender-mrs-homosexuelle"
+                            >
+                              Lesbienne
+                            </Button>
+                            <Button
+                              type="button"
+                              variant={field.value === "Mrs_Bisexuelle" ? "default" : "outline"}
+                              className="h-12 text-sm font-semibold border-2"
+                              onClick={() => field.onChange("Mrs_Bisexuelle")}
+                              data-testid="button-gender-mrs-bisexuelle"
+                            >
+                              Bisexuelle
+                            </Button>
+                            <Button
+                              type="button"
+                              variant={field.value === "Mrs_Transgenre" ? "default" : "outline"}
+                              className="h-12 text-sm font-semibold border-2"
+                              onClick={() => field.onChange("Mrs_Transgenre")}
+                              data-testid="button-gender-mrs-transgenre"
+                            >
+                              Transgenre
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Section Professionnel */}
+                        <div className="space-y-2">
+                          <p className="text-sm text-muted-foreground font-medium">Professionnel</p>
                           <Button
-                            key={option}
                             type="button"
-                            variant={field.value === option ? "default" : "outline"}
-                            className="h-14 text-base font-semibold border-2"
-                            onClick={() => field.onChange(option)}
-                            data-testid={`button-gender-${option.toLowerCase()}`}
+                            variant={field.value === "MARQUE" ? "default" : "outline"}
+                            className="h-12 text-sm font-semibold border-2 w-full"
+                            onClick={() => field.onChange("MARQUE")}
+                            data-testid="button-gender-marque"
                           >
-                            {option}
+                            Compte Entreprise
                           </Button>
-                        ))}
-                        <Button
-                          type="button"
-                          variant={field.value === "MARQUE" ? "default" : "outline"}
-                          className="h-14 text-base font-semibold border-2 col-span-2"
-                          onClick={() => field.onChange("MARQUE")}
-                          data-testid="button-gender-marque"
-                        >
-                          MARQUE (Professionnel)
-                        </Button>
+                        </div>
                       </div>
                     </FormControl>
                     <FormMessage />

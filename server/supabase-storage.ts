@@ -31,8 +31,9 @@ function getSupabaseClient(gender: string) {
   // Brand database routing
   if (gender === 'MARQUE') {
     if (!SUPABASE_BRAND_URL || !SUPABASE_BRAND_ANON_KEY) {
-      console.error('⚠️ Supabase Brand not configured. User MARQUE cannot be created.');
-      throw new Error('Configuration Supabase Brand manquante');
+      console.error('⚠️ Supabase Brand not configured. Defaulting to supabaseMan.');
+      console.warn('⚠️ Please configure profil_brand_supabase_URL and profil_brand_supabase_API_anon_public secrets');
+      return supabaseMan; // Fallback temporaire
     }
     return supabaseBrand;
   }
@@ -43,10 +44,12 @@ function getSupabaseClient(gender: string) {
     'Mr_Homosexuel',
     'Mr_Bisexuel',
     'Mr_Transgenre',
-    // Legacy values
+    // Legacy values for backward compatibility
     'Homosexuel',
     'Gay',
-    'Trans'
+    'Trans',
+    'Bisexuel',
+    'Transgenre'
   ];
   
   // Woman database routing (new + legacy values)
@@ -55,7 +58,7 @@ function getSupabaseClient(gender: string) {
     'Mrs_Homosexuelle',
     'Mrs_Bisexuelle',
     'Mrs_Transgenre',
-    // Legacy values
+    // Legacy values for backward compatibility
     'Homosexuelle',
     'Lesbienne'
   ];
@@ -68,8 +71,10 @@ function getSupabaseClient(gender: string) {
     return supabaseWoman;
   }
   
-  // Unknown value - throw error instead of defaulting
-  throw new Error(`Genre inconnu: "${gender}". Valeurs valides: ${[...manGenders, ...womanGenders, 'MARQUE'].join(', ')}`);
+  // Unknown value - log warning and default to supabaseMan
+  console.error(`⚠️ Genre inconnu: "${gender}". Routage vers supabaseMan par défaut.`);
+  console.warn('Valeurs valides:', [...manGenders, ...womanGenders, 'MARQUE'].join(', '));
+  return supabaseMan;
 }
 
 export class SupabaseStorage implements IStorage {
