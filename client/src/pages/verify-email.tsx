@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { verifyEmailSchema, type VerifyEmail } from "@shared/schema";
+import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
@@ -22,10 +22,9 @@ export default function VerifyEmail() {
   const { toast } = useToast();
   const [email, setEmail] = useState<string>("");
 
-  const form = useForm<VerifyEmail>({
-    resolver: zodResolver(verifyEmailSchema),
+  const form = useForm<{ code: string }>({
+    resolver: zodResolver(z.object({ code: z.string().length(6) })),
     defaultValues: {
-      email: "",
       code: "",
     },
   });
@@ -109,25 +108,6 @@ export default function VerifyEmail() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base font-medium">Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="email"
-                      placeholder="votre@email.com"
-                      className="h-12 text-base"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <FormField
               control={form.control}
               name="code"

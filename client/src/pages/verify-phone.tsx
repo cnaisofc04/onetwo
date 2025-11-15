@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { verifyPhoneSchema, type VerifyPhone } from "@shared/schema";
+import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
@@ -22,21 +22,12 @@ export default function VerifyPhone() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
-  const form = useForm<VerifyPhone>({
-    resolver: zodResolver(verifyPhoneSchema),
+  const form = useForm<{ code: string }>({
+    resolver: zodResolver(z.object({ code: z.string().length(6) })),
     defaultValues: {
-      phone: "",
       code: "",
     },
   });
-
-  // Charger le téléphone depuis localStorage si disponible
-  useEffect(() => {
-    const storedPhone = localStorage.getItem("verification_phone");
-    if (storedPhone) {
-      form.setValue("phone", storedPhone);
-    }
-  }, []);
 
   const verifyMutation = useMutation({
     mutationFn: async (code: string) => {
@@ -115,25 +106,6 @@ export default function VerifyPhone() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base font-medium">Téléphone</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="tel"
-                      placeholder="+33 6 12 34 56 78"
-                      className="h-12 text-base"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <FormField
               control={form.control}
               name="code"
