@@ -2,9 +2,6 @@ import { createClient } from '@supabase/supabase-js';
 import { Pool } from '@neondatabase/serverless';
 import ws from "ws";
 import { neonConfig } from '@neondatabase/serverless';
-import { db } from "../server/db";
-import { users, signupSessions } from "@shared/schema";
-import { eq } from "drizzle-orm";
 
 neonConfig.webSocketConstructor = ws;
 
@@ -34,23 +31,23 @@ async function deleteFromPostgres(email: string) {
     const client = await pool.connect();
 
     try {
+      // Supprimer de signup_sessions D'ABORD (pour éviter les conflits)
+      const sessionsResult = await client.query(
+        'DELETE FROM signup_sessions WHERE LOWER(email) = LOWER($1) RETURNING pseudonyme, email',
+        [email]
+      );
+
       // Supprimer de users
       const usersResult = await client.query(
-        'DELETE FROM users WHERE email = $1 RETURNING pseudonyme, email, gender',
-        [email.toLowerCase()]
+        'DELETE FROM users WHERE LOWER(email) = LOWER($1) RETURNING pseudonyme, email, gender',
+        [email]
       );
 
-      // Supprimer de signup_sessions
-      const sessionsResult = await client.query(
-        'DELETE FROM signup_sessions WHERE email = $1 RETURNING pseudonyme, email',
-        [email.toLowerCase()]
-      );
-
+      if (sessionsResult.rowCount > 0) {
+        console.log(`✅ PostgreSQL - Session signup supprimée:`, sessionsResult.rows[0]);
+      }
       if (usersResult.rowCount > 0) {
         console.log(`✅ PostgreSQL - Utilisateur supprimé:`, usersResult.rows[0]);
-      }
-      if (sessionsResult.rowCount > 0) {
-        console.log(`✅ PostgreSQL - Session supprimée:`, sessionsResult.rows[0]);
       }
       if (usersResult.rowCount === 0 && sessionsResult.rowCount === 0) {
         console.log(`ℹ️  PostgreSQL - Aucune donnée trouvée pour ${email}`);
@@ -99,75 +96,21 @@ async function main() {
   if (SUPABASE_MAN_URL && SUPABASE_MAN_KEY) {
     console.log('\n📊 Supabase Man');
     const supabaseMan = createClient(SUPABASE_MAN_URL, SUPABASE_MAN_KEY);
-    // Supprimer aussi des sessions de signup si elles existent
-      const { error: sessionError } = await db
-        .delete(signupSessions)
-        .where(eq(signupSessions.email, emailToDelete.toLowerCase()));
-
-      if (!sessionError) {
-        console.log('✅ PostgreSQL - Sessions de signup supprimées');
-      }
-
-      const { error: supabaseManError } = await supabaseMan
-        .from('users')
-        .delete()
-        .eq('email', emailToDelete.toLowerCase());
-
-      if (supabaseManError && !supabaseManError.message.includes('table')) {
-        console.error('❌ Supabase Man - Erreur:', supabaseManError.message);
-      } else if (!supabaseManError) {
-        console.log('✅ Supabase Man - Utilisateur supprimé');
-      }
+    await deleteFromSupabase(supabaseMan, 'Supabase Man', emailToDelete);
   }
 
   // Supprimer de Supabase Woman
   if (SUPABASE_WOMAN_URL && SUPABASE_WOMAN_KEY) {
     console.log('\n📊 Supabase Woman');
     const supabaseWoman = createClient(SUPABASE_WOMAN_URL, SUPABASE_WOMAN_KEY);
-    // Supprimer aussi des sessions de signup si elles existent
-      const { error: sessionError } = await db
-        .delete(signupSessions)
-        .where(eq(signupSessions.email, emailToDelete.toLowerCase()));
-
-      if (!sessionError) {
-        console.log('✅ PostgreSQL - Sessions de signup supprimées');
-      }
-
-      const { error: supabaseWomanError } = await supabaseWoman
-        .from('users')
-        .delete()
-        .eq('email', emailToDelete.toLowerCase());
-
-      if (supabaseWomanError && !supabaseWomanError.message.includes('table')) {
-        console.error('❌ Supabase Woman - Erreur:', supabaseWomanError.message);
-      } else if (!supabaseWomanError) {
-        console.log('✅ Supabase Woman - Utilisateur supprimé');
-      }
+    await deleteFromSupabase(supabaseWoman, 'Supabase Woman', emailToDelete);
   }
 
   // Supprimer de Supabase Brand
   if (SUPABASE_BRAND_URL && SUPABASE_BRAND_KEY) {
     console.log('\n📊 Supabase Brand');
     const supabaseBrand = createClient(SUPABASE_BRAND_URL, SUPABASE_BRAND_KEY);
-    // Supprimer aussi des sessions de signup si elles existent
-      const { error: sessionError } = await db
-        .delete(signupSessions)
-        .where(eq(signupSessions.email, emailToDelete.toLowerCase()));
-
-      if (!sessionError) {
-        console.log('✅ PostgreSQL - Sessions de signup supprimées');
-      }
-
-      const { error: supabaseBrandError } = await supabaseBrand
-        .from('users')
-        .delete()
-        .eq('email', emailToDelete.toLowerCase());
-
-      if (supabaseBrandError && !supabaseBrandError.message.includes('table')) {
-        console.error('❌ Supabase Brand - Erreur:', supabaseBrandError.message);
-      } else if (!supabaseBrandError) {
-        console.log('✅ Supabase Brand - Utilisateur supprimé');
-      }
+    await deleteFromSupabase(supabaseBrand, 'Supabase Brand', emailToDelete);
   }
 
   console.log('\n✅ SUPPRESSION TERMINÉE');
