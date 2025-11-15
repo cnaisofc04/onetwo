@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -83,7 +82,7 @@ export default function Signup() {
       setSessionId(newSessionId);
       localStorage.setItem("signup_session_id", newSessionId);
       localStorage.setItem("verification_email", form.getValues("email"));
-      
+
       toast({
         title: "Session créée",
         description: "Vérification de l'email en cours...",

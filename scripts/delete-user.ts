@@ -70,6 +70,11 @@ async function deleteFromSupabase(supabase: any, dbName: string, email: string) 
       .select();
 
     if (error) {
+      // Ignorer l'erreur si la table n'existe pas encore
+      if (error.message.includes('Could not find the table')) {
+        console.log(`ℹ️  ${dbName} - Table users non configurée (normal en développement)`);
+        return;
+      }
       console.error(`❌ ${dbName} - Erreur:`, error.message);
       return;
     }

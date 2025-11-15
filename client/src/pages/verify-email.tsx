@@ -31,7 +31,10 @@ export default function VerifyEmail() {
 
   const verifyMutation = useMutation({
     mutationFn: async (code: string) => {
-      const sessionId = localStorage.getItem("signup_session_id");
+      // Get session ID from URL params first, fallback to localStorage
+      const urlParams = new URLSearchParams(window.location.search);
+      const sessionId = urlParams.get('sessionId') || localStorage.getItem('signup_session_id');
+
       if (!sessionId) {
         throw new Error("Session non trouvée");
       }
@@ -61,7 +64,10 @@ export default function VerifyEmail() {
 
   const resendMutation = useMutation({
     mutationFn: async () => {
-      const sessionId = localStorage.getItem("signup_session_id");
+      // Get session ID from URL params first, fallback to localStorage
+      const urlParams = new URLSearchParams(window.location.search);
+      const sessionId = urlParams.get('sessionId') || localStorage.getItem('signup_session_id');
+
       if (!sessionId) {
         throw new Error("Session non trouvée");
       }
@@ -85,7 +91,7 @@ export default function VerifyEmail() {
     },
   });
 
-  const onSubmit = async (data: VerifyEmail) => {
+  const onSubmit = async (data: { code: string }) => {
     await verifyMutation.mutateAsync(data.code);
   };
 
