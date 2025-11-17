@@ -21,6 +21,7 @@ import {
 } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 import { VerificationService } from "./verification-service";
+import { SupermemoryService } from "./supermemory-service";
 import bcrypt from "bcrypt";
 import { z } from "zod";
 
@@ -692,6 +693,117 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/auth/me", async (req: Request, res: Response) => {
     // TODO: Implement session management with express-session
     return res.status(501).json({ error: "Session management not yet implemented" });
+  });
+
+  // Supermemory API Routes
+
+  // POST /api/memory/add - Ajouter un document à la mémoire
+  app.post("/api/memory/add", async (req: Request, res: Response) => {
+    try {
+      const { content, type, tags, userId } = req.body;
+
+      if (!content) {
+        return res.status(400).json({ error: "Contenu requis" });
+      }
+
+      const document = await SupermemoryService.addDocument({
+        content,
+        type: type || 'text',
+        tags,
+        userId
+      });
+
+      return res.status(201).json({ 
+        message: "Document ajouté à la mémoire",
+        document 
+      });
+    } catch (error) {
+      console.error("Erreur ajout mémoire:", error);
+      return res.status(500).json({ 
+        error: "Erreur lors de l'ajout à la mémoire",
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // GET /api/memory/search - Rechercher dans la mémoire
+  app.get("/api/memory/search", async (req: Request, res: Response) => {
+    try {
+      const { query, limit, userId } = req.query;
+
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ error: "Requête de recherche requise" });
+      }
+
+      const results = await SupermemoryService.search({
+        query,
+        limit: limit ? parseInt(limit as string) : 10,
+        userId: userId as string
+      });
+
+      return res.status(200).json(results);
+    } catch (error) {
+      console.error("Erreur recherche mémoire:", error);
+      return res.status(500).json({ 
+        error: "Erreur lors de la recherche",
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // GET /api/memory/documents/:id - Obtenir un document
+  app.get("/api/memory/documents/:id", async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const document = await SupermemoryService.getDocument(id);
+
+      return res.status(200).json({ document });
+    } catch (error) {
+      console.error("Erreur récupération document:", error);
+      return res.status(500).json({ 
+        error: "Document non trouvé",
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // DELETE /api/memory/documents/:id - Supprimer un document
+  app.delete("/api/memory/documents/:id", async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const deleted = await SupermemoryService.deleteDocument(id);
+
+      if (deleted) {
+        return res.status(200).json({ message: "Document supprimé" });
+      } else {
+        return res.status(404).json({ error: "Document non trouvé" });
+      }
+    } catch (error) {
+      console.error("Erreur suppression document:", error);
+      return res.status(500).json({ 
+        error: "Erreur lors de la suppression",
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // GET /api/memory/documents - Lister tous les documents
+  app.get("/api/memory/documents", async (req: Request, res: Response) => {
+    try {
+      const { userId } = req.query;
+      const documents = await SupermemoryService.listDocuments(userId as string);
+
+      return res.status(200).json({ 
+        documents,
+        total: documents.length 
+      });
+    } catch (error) {
+      console.error("Erreur liste documents:", error);
+      return res.status(500).json({ 
+        error: "Erreur lors de la récupération des documents",
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
   });
 
   const httpServer = createServer(app);
