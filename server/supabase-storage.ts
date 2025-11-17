@@ -13,8 +13,8 @@ const SUPABASE_MAN_URL = process.env.profil_man_supabase_URL || '';
 const SUPABASE_MAN_ANON_KEY = process.env.profil_man_supabase_API_anon_public || '';
 const SUPABASE_WOMAN_URL = process.env.profil_woman_supabase_URL || '';
 const SUPABASE_WOMAN_ANON_KEY = process.env.profil_woman_supabase_API_anon_public || '';
-const SUPABASE_BRAND_URL = process.env.profil_brand_supabase_URL || '';
-const SUPABASE_BRAND_ANON_KEY = process.env.profil_brand_supabase_API_anon_public || '';
+const SUPABASE_BRAND_URL = process.env.SUPABASE_USER_BRAND_Project_URL || '';
+const SUPABASE_BRAND_ANON_KEY = process.env.SUPABASE_USER_BRAND_API_anon_public || '';
 
 // Create Supabase clients
 export const supabaseMan = createClient(SUPABASE_MAN_URL, SUPABASE_MAN_ANON_KEY);

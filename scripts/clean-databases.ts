@@ -10,8 +10,8 @@ const supabaseWomanUrl = process.env.profil_woman_supabase_URL;
 const supabaseWomanKey = process.env.profil_woman_supabase_API_anon_public;
 
 // Configuration Supabase Brand
-const supabaseBrandUrl = process.env.profil_brand_supabase_URL;
-const supabaseBrandKey = process.env.profil_brand_supabase_API_anon_public;
+const supabaseBrandUrl = process.env.SUPABASE_USER_BRAND_Project_URL;
+const supabaseBrandKey = process.env.SUPABASE_USER_BRAND_API_anon_public;
 
 if (!supabaseManUrl || !supabaseManKey || !supabaseWomanUrl || !supabaseWomanKey) {
   console.error('❌ Variables d\'environnement Supabase manquantes');
