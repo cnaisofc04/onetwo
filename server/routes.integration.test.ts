@@ -1,8 +1,9 @@
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import { registerRoutes } from './routes';
+import { VerificationService } from './verification-service';
 
 describe('Signup Integration Tests', () => {
   let app: express.Express;
@@ -20,13 +21,18 @@ describe('Signup Integration Tests', () => {
     }
   });
 
+  beforeEach(() => {
+    vi.spyOn(VerificationService, 'sendEmailVerification').mockResolvedValue(true);
+    vi.spyOn(VerificationService, 'sendPhoneVerification').mockResolvedValue(true);
+  });
+
   describe('POST /api/auth/signup', () => {
     it('should create Mr user in supabaseMan', async () => {
       const response = await request(app)
         .post('/api/auth/signup')
         .send({
-          pseudonyme: 'TestMr',
-          email: 'testmr@test.com',
+          pseudonyme: 'TestMr' + Date.now(),
+          email: `testmr${Date.now()}@test.com`,
           password: 'Test1234',
           dateOfBirth: '1990-01-01',
           phone: '+33612345678',
@@ -40,11 +46,11 @@ describe('Signup Integration Tests', () => {
       const response = await request(app)
         .post('/api/auth/signup')
         .send({
-          pseudonyme: 'TestMrs',
-          email: 'testmrs@test.com',
+          pseudonyme: 'TestMrs' + Date.now(),
+          email: `testmrs${Date.now()}@test.com`,
           password: 'Test1234',
           dateOfBirth: '1990-01-01',
-          phone: '+33612345679',
+          phone: `+3361234${Date.now().toString().slice(-4)}`,
           gender: 'Mrs'
         });
       
@@ -55,11 +61,11 @@ describe('Signup Integration Tests', () => {
       const response = await request(app)
         .post('/api/auth/signup')
         .send({
-          pseudonyme: 'TestGay',
-          email: 'testgay@test.com',
+          pseudonyme: 'TestGay' + Date.now(),
+          email: `testgay${Date.now()}@test.com`,
           password: 'Test1234',
           dateOfBirth: '1990-01-01',
-          phone: '+33612345680',
+          phone: `+3361235${Date.now().toString().slice(-4)}`,
           gender: 'Mr_Homosexuel'
         });
       
@@ -70,11 +76,11 @@ describe('Signup Integration Tests', () => {
       const response = await request(app)
         .post('/api/auth/signup')
         .send({
-          pseudonyme: 'TestLesbian',
-          email: 'testlesbian@test.com',
+          pseudonyme: 'TestLesbian' + Date.now(),
+          email: `testlesbian${Date.now()}@test.com`,
           password: 'Test1234',
           dateOfBirth: '1990-01-01',
-          phone: '+33612345681',
+          phone: `+3361236${Date.now().toString().slice(-4)}`,
           gender: 'Mrs_Homosexuelle'
         });
       

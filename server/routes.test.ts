@@ -1,8 +1,12 @@
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import { registerRoutes } from './routes';
+import { VerificationService } from './verification-service';
+import { db } from './db';
+import { users } from '@shared/schema';
+import { eq } from 'drizzle-orm';
 
 describe('API Routes - Authentication', () => {
   let app: express.Express;
@@ -16,6 +20,11 @@ describe('API Routes - Authentication', () => {
 
   afterAll(() => {
     server.close();
+  });
+
+  beforeEach(() => {
+    vi.spyOn(VerificationService, 'sendEmailVerification').mockResolvedValue(true);
+    vi.spyOn(VerificationService, 'sendPhoneVerification').mockResolvedValue(true);
   });
 
   describe('POST /api/auth/signup', () => {
@@ -41,18 +50,19 @@ describe('API Routes - Authentication', () => {
     });
 
     it('should reject duplicate email', async () => {
-      const email = `duplicate${Date.now()}@example.com`;
+      const timestamp = Date.now();
+      const email = `duplicate${timestamp}@example.com`;
       const userData = {
-        pseudonyme: 'user1',
+        pseudonyme: 'user1' + timestamp,
         email,
         password: 'Password123',
         dateOfBirth: '2000-01-01',
-        phone: '+33612345678',
+        phone: `+3361299${timestamp.toString().slice(-4)}`,
         gender: 'Mr'
       };
 
       await request(app).post('/api/auth/signup').send(userData).expect(201);
-      await request(app).post('/api/auth/signup').send({...userData, pseudonyme: 'user2'}).expect(409);
+      await request(app).post('/api/auth/signup').send({...userData, pseudonyme: 'user2' + timestamp}).expect(409);
     });
 
     it('should reject invalid password', async () => {
@@ -103,6 +113,14 @@ describe('API Routes - Authentication', () => {
 
     beforeAll(async () => {
       await request(app).post('/api/auth/signup').send(testUser);
+      
+      await db
+        .update(users)
+        .set({
+          emailVerified: true,
+          phoneVerified: true
+        })
+        .where(eq(users.email, testUser.email.toLowerCase()));
     });
 
     it('should login with valid credentials', async () => {
