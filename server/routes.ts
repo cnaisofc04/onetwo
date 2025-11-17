@@ -123,26 +123,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // POST /api/auth/signup/session/:id/verify-email - Verify email code
   app.post("/api/auth/signup/session/:id/verify-email", async (req: Request, res: Response) => {
+    console.log('\n🔵 [VERIFY-EMAIL-API] Début vérification email');
+    console.log('🔵 [VERIFY-EMAIL-API] SessionId:', req.params.id);
+    console.log('🔵 [VERIFY-EMAIL-API] Body:', JSON.stringify(req.body, null, 2));
+    
     try {
       const { id } = req.params;
       const { code } = req.body;
 
       if (!code || code.length !== 6) {
+        console.log('❌ [VERIFY-EMAIL-API] Code invalide (longueur)');
         return res.status(400).json({ error: "Code invalide" });
       }
 
+      console.log('🔍 [VERIFY-EMAIL-API] Vérification du code:', code);
       const isValid = await storage.verifySessionEmailCode(id, code);
 
       if (!isValid) {
+        console.log('❌ [VERIFY-EMAIL-API] Code invalide ou expiré');
         return res.status(400).json({ error: "Code invalide ou expiré" });
       }
 
+      console.log('✅ [VERIFY-EMAIL-API] Email vérifié avec succès!');
       return res.status(200).json({ 
         message: "Email vérifié avec succès"
       });
 
     } catch (error) {
-      console.error("Verify session email error:", error);
+      console.error("❌ [VERIFY-EMAIL-API] Exception:", error);
       return res.status(500).json({ error: "Erreur lors de la vérification" });
     }
   });

@@ -20,7 +20,35 @@ import { useToast } from "@/hooks/use-toast";
 export default function VerifyEmail() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [email, setEmail] = useState<string>("");
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isReady, setIsReady] = useState(false);
+
+  // Récupérer le sessionId au chargement
+  useState(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlSessionId = urlParams.get('sessionId');
+    const localSessionId = localStorage.getItem('signup_session_id');
+    
+    console.log('🔍 [VERIFY-EMAIL] Récupération sessionId...');
+    console.log('🔍 [VERIFY-EMAIL] URL sessionId:', urlSessionId);
+    console.log('🔍 [VERIFY-EMAIL] LocalStorage sessionId:', localSessionId);
+    
+    const finalSessionId = urlSessionId || localSessionId;
+    
+    if (!finalSessionId) {
+      console.error('❌ [VERIFY-EMAIL] Aucun sessionId trouvé!');
+      toast({
+        title: "Erreur",
+        description: "Session introuvable. Retour à l'inscription.",
+        variant: "destructive",
+      });
+      setTimeout(() => setLocation("/signup"), 2000);
+    } else {
+      console.log('✅ [VERIFY-EMAIL] SessionId trouvé:', finalSessionId);
+      setSessionId(finalSessionId);
+      setIsReady(true);
+    }
+  });
 
   const form = useForm<{ code: string }>({
     resolver: zodResolver(z.object({ code: z.string().length(6) })),
@@ -31,13 +59,13 @@ export default function VerifyEmail() {
 
   const verifyMutation = useMutation({
     mutationFn: async (code: string) => {
-      // Get session ID from URL params first, fallback to localStorage
-      const urlParams = new URLSearchParams(window.location.search);
-      const sessionId = urlParams.get('sessionId') || localStorage.getItem('signup_session_id');
-
       if (!sessionId) {
         throw new Error("Session non trouvée");
       }
+      
+      console.log('📤 [VERIFY-EMAIL] Envoi vérification code:', code);
+      console.log('📤 [VERIFY-EMAIL] Pour sessionId:', sessionId);
+      
       return apiRequest(`/api/auth/signup/session/${sessionId}/verify-email`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -64,13 +92,12 @@ export default function VerifyEmail() {
 
   const resendMutation = useMutation({
     mutationFn: async () => {
-      // Get session ID from URL params first, fallback to localStorage
-      const urlParams = new URLSearchParams(window.location.search);
-      const sessionId = urlParams.get('sessionId') || localStorage.getItem('signup_session_id');
-
       if (!sessionId) {
         throw new Error("Session non trouvée");
       }
+      
+      console.log('📧 [VERIFY-EMAIL] Renvoi code email pour sessionId:', sessionId);
+      
       return apiRequest(`/api/auth/signup/session/${sessionId}/send-email`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -99,6 +126,23 @@ export default function VerifyEmail() {
     resendMutation.mutate();
   };
 
+  // Afficher un loader si pas encore prêt
+  if (!isReady || !sessionId) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background px-6">
+        <div className="w-full max-w-md text-center">
+          <div className="text-5xl mb-3">☯️</div>
+          <h1 className="text-3xl font-semibold text-foreground mb-2">
+            Chargement...
+          </h1>
+          <p className="text-base text-muted-foreground">
+            Récupération de votre session
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background px-6">
       <div className="w-full max-w-md">
@@ -110,6 +154,11 @@ export default function VerifyEmail() {
           <p className="text-base text-muted-foreground">
             Entrez le code reçu par email
           </p>
+          {sessionId && (
+            <p className="text-xs text-muted-foreground mt-2">
+              Session: {sessionId.substring(0, 8)}...
+            </p>
+          )}
         </div>
 
         <Form {...form}>

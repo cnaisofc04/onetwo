@@ -91,7 +91,7 @@ export default function Signup() {
       // Rediriger vers la page de vérification email avec le sessionId
       setTimeout(() => {
         setLocation(`/verify-email?sessionId=${newSessionId}`);
-      }, 500);
+      }, 1000);
     },
     onError: (error: any) => {
       toast({

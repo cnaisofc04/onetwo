@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,8 +18,37 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 export default function VerifyPhone() {
-  const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isReady, setIsReady] = useState(false);
+
+  // Récupérer le sessionId au chargement
+  useState(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlSessionId = urlParams.get('sessionId');
+    const localSessionId = localStorage.getItem('signup_session_id');
+
+    console.log('🔍 [VERIFY-PHONE] Récupération sessionId...');
+    console.log('🔍 [VERIFY-PHONE] URL sessionId:', urlSessionId);
+    console.log('🔍 [VERIFY-PHONE] LocalStorage sessionId:', localSessionId);
+
+    const finalSessionId = urlSessionId || localSessionId;
+
+    if (!finalSessionId) {
+      console.error('❌ [VERIFY-PHONE] Aucun sessionId trouvé!');
+      toast({
+        title: "Erreur",
+        description: "Session introuvable. Retour à l'inscription.",
+        variant: "destructive",
+      });
+      setTimeout(() => setLocation("/signup"), 2000);
+    } else {
+      console.log('✅ [VERIFY-PHONE] SessionId trouvé:', finalSessionId);
+      setSessionId(finalSessionId);
+      setIsReady(true);
+    }
+  });
 
   const form = useForm<{ code: string }>({
     resolver: zodResolver(z.object({ code: z.string().length(6) })),
@@ -31,7 +59,6 @@ export default function VerifyPhone() {
 
   const verifyMutation = useMutation({
     mutationFn: async (code: string) => {
-      const sessionId = localStorage.getItem("signup_session_id");
       if (!sessionId) {
         throw new Error("Session non trouvée");
       }
@@ -59,7 +86,6 @@ export default function VerifyPhone() {
 
   const resendMutation = useMutation({
     mutationFn: async () => {
-      const sessionId = localStorage.getItem("signup_session_id");
       if (!sessionId) {
         throw new Error("Session non trouvée");
       }
@@ -83,13 +109,17 @@ export default function VerifyPhone() {
     },
   });
 
-  const onSubmit = async (data: VerifyPhone) => {
+  const onSubmit = async (data: { code: string }) => {
     await verifyMutation.mutateAsync(data.code);
   };
 
   const handleResend = () => {
     resendMutation.mutate();
   };
+
+  if (!isReady) {
+    return null; // Ou un loader
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background px-6">
