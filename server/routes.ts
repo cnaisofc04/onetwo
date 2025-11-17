@@ -349,13 +349,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Hash password before creating user
       const hashedPassword = await bcrypt.hash(session.password, 10);
 
+      // Validate gender value matches expected enum
+      const validGenders = ["Mr", "Mr_Homosexuel", "Mr_Bisexuel", "Mr_Transgenre", "Mrs", "Mrs_Homosexuelle", "Mrs_Bisexuelle", "Mrs_Transgenre", "MARQUE"] as const;
+      if (!validGenders.includes(session.gender as any)) {
+        return res.status(400).json({ error: "Valeur de genre invalide" });
+      }
+
       // Create final user with consents
       const user = await storage.createUser({
         pseudonyme: session.pseudonyme,
         email: session.email,
         dateOfBirth: session.dateOfBirth,
         phone: session.phone,
-        gender: session.gender,
+        gender: session.gender as typeof validGenders[number],
         password: hashedPassword,
         emailVerified: true,
         phoneVerified: true,

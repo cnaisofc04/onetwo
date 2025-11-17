@@ -1,8 +1,12 @@
 
 import { createClient } from '@supabase/supabase-js';
 import type { IStorage } from './storage';
-import type { InsertUser, User } from '@shared/schema';
+import type { InsertUser, User, SignupSession, InsertSignupSession, UpdateConsents } from '@shared/schema';
+import type { UpdateSignupSession } from '@shared/schema';
 import bcrypt from 'bcryptjs';
+import { db } from './db';
+import { signupSessions } from '@shared/schema';
+import { eq } from 'drizzle-orm';
 
 // Supabase configuration for triple database architecture
 const SUPABASE_MAN_URL = process.env.profil_man_supabase_URL || '';
@@ -78,7 +82,7 @@ function getSupabaseClient(gender: string) {
 }
 
 export class SupabaseStorage implements IStorage {
-  async getUserById(id: string): Promise<User | null> {
+  async getUserById(id: string): Promise<User | undefined> {
     // Try all three databases (for login where we don't know gender)
     let result = await supabaseMan.from('users').select('*').eq('id', id).single();
     if (result.data) return result.data as User;
@@ -87,10 +91,10 @@ export class SupabaseStorage implements IStorage {
     if (result.data) return result.data as User;
     
     result = await supabaseBrand.from('users').select('*').eq('id', id).single();
-    return result.data as User | null;
+    return result.data as User | undefined;
   }
 
-  async getUserByEmail(email: string): Promise<User | null> {
+  async getUserByEmail(email: string): Promise<User | undefined> {
     // Try all three databases
     let result = await supabaseMan.from('users').select('*').eq('email', email.toLowerCase()).single();
     if (result.data) return result.data as User;
@@ -99,10 +103,10 @@ export class SupabaseStorage implements IStorage {
     if (result.data) return result.data as User;
     
     result = await supabaseBrand.from('users').select('*').eq('email', email.toLowerCase()).single();
-    return result.data as User | null;
+    return result.data as User | undefined;
   }
 
-  async getUserByPseudonyme(pseudonyme: string): Promise<User | null> {
+  async getUserByPseudonyme(pseudonyme: string): Promise<User | undefined> {
     // Try all three databases
     let result = await supabaseMan.from('users').select('*').eq('pseudonyme', pseudonyme).single();
     if (result.data) return result.data as User;
@@ -111,7 +115,7 @@ export class SupabaseStorage implements IStorage {
     if (result.data) return result.data as User;
     
     result = await supabaseBrand.from('users').select('*').eq('pseudonyme', pseudonyme).single();
-    return result.data as User | null;
+    return result.data as User | undefined;
   }
 
   async createUser(userData: InsertUser): Promise<User> {
@@ -249,6 +253,167 @@ export class SupabaseStorage implements IStorage {
     const user = await this.getUserById(userId);
     if (!user) return false;
     return user.emailVerified && user.phoneVerified;
+  }
+
+  // Signup session methods - stored in PostgreSQL (temporary data)
+  async createSignupSession(data: InsertSignupSession): Promise<SignupSession> {
+    const [session] = await db
+      .insert(signupSessions)
+      .values({
+        ...data,
+        email: data.email.toLowerCase(),
+      })
+      .returning();
+    return session;
+  }
+
+  async getSignupSession(id: string): Promise<SignupSession | undefined> {
+    const [session] = await db
+      .select()
+      .from(signupSessions)
+      .where(eq(signupSessions.id, id))
+      .limit(1);
+    return session;
+  }
+
+  async updateSignupSession(id: string, updates: Partial<SignupSession>): Promise<SignupSession | undefined> {
+    try {
+      const [session] = await db
+        .update(signupSessions)
+        .set(updates)
+        .where(eq(signupSessions.id, id))
+        .returning();
+      return session;
+    } catch (error) {
+      console.error('Error updating signup session:', error);
+      return undefined;
+    }
+  }
+
+  async deleteSignupSession(id: string): Promise<boolean> {
+    try {
+      await db
+        .delete(signupSessions)
+        .where(eq(signupSessions.id, id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting signup session:', error);
+      return false;
+    }
+  }
+
+  async setSessionEmailVerificationCode(sessionId: string, code: string, expiry: Date): Promise<boolean> {
+    try {
+      await db
+        .update(signupSessions)
+        .set({
+          emailVerificationCode: code,
+          emailVerificationExpiry: expiry,
+        })
+        .where(eq(signupSessions.id, sessionId));
+      return true;
+    } catch (error) {
+      console.error('Error setting session email verification code:', error);
+      return false;
+    }
+  }
+
+  async verifySessionEmailCode(sessionId: string, code: string): Promise<boolean> {
+    try {
+      const session = await this.getSignupSession(sessionId);
+      if (!session) return false;
+
+      const now = new Date();
+      if (!session.emailVerificationCode || !session.emailVerificationExpiry) return false;
+      if (now > session.emailVerificationExpiry) return false;
+      if (session.emailVerificationCode !== code) return false;
+
+      await db
+        .update(signupSessions)
+        .set({
+          emailVerified: true,
+          emailVerificationCode: null,
+          emailVerificationExpiry: null,
+        })
+        .where(eq(signupSessions.id, sessionId));
+
+      return true;
+    } catch (error) {
+      console.error('Error verifying session email code:', error);
+      return false;
+    }
+  }
+
+  async setSessionPhoneVerificationCode(sessionId: string, code: string, expiry: Date): Promise<boolean> {
+    try {
+      await db
+        .update(signupSessions)
+        .set({
+          phoneVerificationCode: code,
+          phoneVerificationExpiry: expiry,
+        })
+        .where(eq(signupSessions.id, sessionId));
+      return true;
+    } catch (error) {
+      console.error('Error setting session phone verification code:', error);
+      return false;
+    }
+  }
+
+  async verifySessionPhoneCode(sessionId: string, code: string): Promise<boolean> {
+    try {
+      const session = await this.getSignupSession(sessionId);
+      if (!session) return false;
+
+      const now = new Date();
+      if (!session.phoneVerificationCode || !session.phoneVerificationExpiry) return false;
+      if (now > session.phoneVerificationExpiry) return false;
+      if (session.phoneVerificationCode !== code) return false;
+
+      await db
+        .update(signupSessions)
+        .set({
+          phoneVerified: true,
+          phoneVerificationCode: null,
+          phoneVerificationExpiry: null,
+        })
+        .where(eq(signupSessions.id, sessionId));
+
+      return true;
+    } catch (error) {
+      console.error('Error verifying session phone code:', error);
+      return false;
+    }
+  }
+
+  async updateSessionConsents(id: string, consents: UpdateConsents): Promise<SignupSession | undefined> {
+    try {
+      const [session] = await db
+        .update(signupSessions)
+        .set(consents)
+        .where(eq(signupSessions.id, id))
+        .returning();
+      return session;
+    } catch (error) {
+      console.error('Error updating session consents:', error);
+      return undefined;
+    }
+  }
+
+  async verifyAllConsentsGiven(sessionId: string): Promise<boolean> {
+    try {
+      const session = await this.getSignupSession(sessionId);
+      if (!session) return false;
+      
+      return !!(
+        session.geolocationConsent &&
+        session.termsAccepted &&
+        session.deviceBindingConsent
+      );
+    } catch (error) {
+      console.error('Error verifying consents:', error);
+      return false;
+    }
   }
 
   private async findUserSupabase(email: string) {
