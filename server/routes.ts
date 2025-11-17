@@ -31,6 +31,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // POST /api/auth/signup/session - Create signup session with pseudonyme, dateOfBirth, email
   app.post("/api/auth/signup/session", async (req: Request, res: Response) => {
+    console.log('\n🟢 [SESSION] Début création session');
+    console.log('📝 [SESSION] Body:', JSON.stringify(req.body, null, 2));
+    
     try {
       // Validate with minimal schema for step 3
       const createSessionSchema = z.object({
@@ -42,6 +45,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validationResult = createSessionSchema.safeParse(req.body);
       
       if (!validationResult.success) {
+        console.log('❌ [SESSION] Validation échouée');
         const validationError = fromZodError(validationResult.error);
         return res.status(400).json({ 
           error: validationError.message,
@@ -50,37 +54,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { pseudonyme, dateOfBirth, email } = validationResult.data;
+      console.log('✅ [SESSION] Validation réussie');
+      console.log(`📧 [SESSION] Email: ${email}`);
+      console.log(`👤 [SESSION] Pseudonyme: ${pseudonyme}`);
 
       // Check if email already exists in users table
+      console.log('🔍 [SESSION] Vérification email existant...');
       const existingEmail = await storage.getUserByEmail(email);
       if (existingEmail) {
+        console.log('❌ [SESSION] Email déjà utilisé');
         return res.status(409).json({ error: "Cet email est déjà utilisé" });
       }
+      console.log('✅ [SESSION] Email disponible');
 
       // Check if pseudonyme already exists in users table
+      console.log('🔍 [SESSION] Vérification pseudonyme existant...');
       const existingPseudonyme = await storage.getUserByPseudonyme(pseudonyme);
       if (existingPseudonyme) {
+        console.log('❌ [SESSION] Pseudonyme déjà pris');
         return res.status(409).json({ error: "Ce pseudonyme est déjà pris" });
       }
+      console.log('✅ [SESSION] Pseudonyme disponible');
 
       // Create signup session
+      console.log('💾 [SESSION] Création en base de données...');
       const session = await storage.createSignupSession({
         pseudonyme,
         dateOfBirth,
         email,
       });
+      console.log('✅ [SESSION] Session créée:', session.id);
 
       // Generate and send email verification code
+      console.log('🔑 [SESSION] Génération code email...');
       const emailCode = VerificationService.generateVerificationCode();
       const emailExpiry = VerificationService.getCodeExpiry();
+      console.log(`📬 [SESSION] Code: ${emailCode} (expire: ${emailExpiry.toISOString()})`);
       
+      console.log('💾 [SESSION] Enregistrement code en base...');
       await storage.setSessionEmailVerificationCode(session.id, emailCode, emailExpiry);
+      console.log('✅ [SESSION] Code enregistré');
+      
+      console.log('📧 [SESSION] Envoi email...');
       const emailSent = await VerificationService.sendEmailVerification(session.email, emailCode);
+      console.log(`${emailSent ? '✅' : '❌'} [SESSION] Email ${emailSent ? 'envoyé' : 'ÉCHEC'}`);
 
       if (!emailSent) {
-        console.warn('Failed to send verification email');
+        console.warn('⚠️  [SESSION] Code visible en console pour test:', emailCode);
       }
 
+      console.log('🎉 [SESSION] Réponse envoyée au client\n');
       return res.status(201).json({ 
         message: "Session créée. Code envoyé par email.",
         sessionId: session.id,
