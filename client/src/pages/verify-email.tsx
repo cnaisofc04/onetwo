@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { useLocation } from "wouter";
+import { useLocation, useNavigate } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,7 +18,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 export default function VerifyEmail() {
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
@@ -28,13 +29,13 @@ export default function VerifyEmail() {
     const urlParams = new URLSearchParams(window.location.search);
     const urlSessionId = urlParams.get('sessionId');
     const localSessionId = localStorage.getItem('signup_session_id');
-    
+
     console.log('🔍 [VERIFY-EMAIL] Récupération sessionId...');
     console.log('🔍 [VERIFY-EMAIL] URL sessionId:', urlSessionId);
     console.log('🔍 [VERIFY-EMAIL] LocalStorage sessionId:', localSessionId);
-    
+
     const finalSessionId = urlSessionId || localSessionId;
-    
+
     if (!finalSessionId) {
       console.error('❌ [VERIFY-EMAIL] Aucun sessionId trouvé!');
       toast({
@@ -42,7 +43,7 @@ export default function VerifyEmail() {
         description: "Session introuvable. Retour à l'inscription.",
         variant: "destructive",
       });
-      setTimeout(() => setLocation("/signup"), 2000);
+      setTimeout(() => navigate("/signup"), 2000);
     } else {
       console.log('✅ [VERIFY-EMAIL] SessionId trouvé:', finalSessionId);
       setSessionId(finalSessionId);
@@ -62,10 +63,10 @@ export default function VerifyEmail() {
       if (!sessionId) {
         throw new Error("Session non trouvée");
       }
-      
+
       console.log('📤 [VERIFY-EMAIL] Envoi vérification code:', code);
       console.log('📤 [VERIFY-EMAIL] Pour sessionId:', sessionId);
-      
+
       return apiRequest(`/api/auth/signup/session/${sessionId}/verify-email`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -78,7 +79,7 @@ export default function VerifyEmail() {
         description: "Passons à la vérification du téléphone",
       });
       setTimeout(() => {
-        setLocation("/verify-phone");
+        navigate("/verify-phone");
       }, 1000);
     },
     onError: (error: any) => {
@@ -95,9 +96,9 @@ export default function VerifyEmail() {
       if (!sessionId) {
         throw new Error("Session non trouvée");
       }
-      
+
       console.log('📧 [VERIFY-EMAIL] Renvoi code email pour sessionId:', sessionId);
-      
+
       return apiRequest(`/api/auth/signup/session/${sessionId}/send-email`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

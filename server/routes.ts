@@ -28,12 +28,12 @@ import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // New Signup Session Flow Routes
-  
+
   // POST /api/auth/signup/session - Create signup session with pseudonyme, dateOfBirth, email
   app.post("/api/auth/signup/session", async (req: Request, res: Response) => {
     console.log('\n🟢 [SESSION] Début création session');
     console.log('📝 [SESSION] Body:', JSON.stringify(req.body, null, 2));
-    
+
     try {
       // Validate with minimal schema for step 3
       const createSessionSchema = z.object({
@@ -43,7 +43,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const validationResult = createSessionSchema.safeParse(req.body);
-      
+
       if (!validationResult.success) {
         console.log('❌ [SESSION] Validation échouée');
         const validationError = fromZodError(validationResult.error);
@@ -90,11 +90,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const emailCode = VerificationService.generateVerificationCode();
       const emailExpiry = VerificationService.getCodeExpiry();
       console.log(`📬 [SESSION] Code: ${emailCode} (expire: ${emailExpiry.toISOString()})`);
-      
+
       console.log('💾 [SESSION] Enregistrement code en base...');
       await storage.setSessionEmailVerificationCode(session.id, emailCode, emailExpiry);
       console.log('✅ [SESSION] Code enregistré');
-      
+
       console.log('📧 [SESSION] Envoi email...');
       const emailSent = await VerificationService.sendEmailVerification(session.email, emailCode);
       console.log(`${emailSent ? '✅' : '❌'} [SESSION] Email ${emailSent ? 'envoyé' : 'ÉCHEC'}`);
@@ -126,7 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('\n🔵 [VERIFY-EMAIL-API] Début vérification email');
     console.log('🔵 [VERIFY-EMAIL-API] SessionId:', req.params.id);
     console.log('🔵 [VERIFY-EMAIL-API] Body:', JSON.stringify(req.body, null, 2));
-    
+
     try {
       const { id } = req.params;
       const { code } = req.body;
@@ -162,7 +162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate updates
       const validationResult = updateSignupSessionSchema.safeParse(req.body);
-      
+
       if (!validationResult.success) {
         const validationError = fromZodError(validationResult.error);
         return res.status(400).json({ 
@@ -220,7 +220,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate and send email verification code
       const emailCode = VerificationService.generateVerificationCode();
       const emailExpiry = VerificationService.getCodeExpiry();
-      
+
       await storage.setSessionEmailVerificationCode(session.id, emailCode, emailExpiry);
       const emailSent = await VerificationService.sendEmailVerification(session.email, emailCode);
 
@@ -256,7 +256,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate and send SMS verification code
       const smsCode = VerificationService.generateVerificationCode();
       const smsExpiry = VerificationService.getCodeExpiry();
-      
+
       await storage.setSessionPhoneVerificationCode(session.id, smsCode, smsExpiry);
       const smsSent = await VerificationService.sendPhoneVerification(session.phone, smsCode);
 
@@ -308,7 +308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate consent updates
       const validationResult = updateConsentsSchema.safeParse(req.body);
-      
+
       if (!validationResult.success) {
         const validationError = fromZodError(validationResult.error);
         return res.status(400).json({ 
@@ -430,64 +430,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // POST /api/auth/signup - Create new user account
   app.post("/api/auth/signup", async (req: Request, res: Response) => {
     try {
-      // Validate request body
-      const validationResult = insertUserSchema.safeParse(req.body);
-      
-      if (!validationResult.success) {
-        const validationError = fromZodError(validationResult.error);
+      console.log('🟢 [SIGNUP] === DÉBUT PROCESSUS INSCRIPTION ===');
+      console.log('🟢 [SIGNUP] Body reçu:', JSON.stringify(req.body, null, 2));
+
+      const result = insertUserSchema.safeParse(req.body);
+
+      if (!result.success) {
+        console.log('❌ [SIGNUP] Échec de validation du schéma Zod.');
+        const validationError = fromZodError(result.error);
+        console.error('❌ [SIGNUP] Détails de l\'erreur:', validationError.message);
+        console.error('❌ [SIGNUP] Erreurs aplaties:', result.error.flatten());
         return res.status(400).json({ 
           error: validationError.message,
-          details: validationResult.error.flatten()
+          details: result.error.flatten()
         });
       }
 
-      const userData: InsertUser = validationResult.data;
+      const userData: InsertUser = result.data;
+      console.log('✅ [SIGNUP] Validation Zod réussie.');
 
       // Check if email already exists
+      console.log('🔍 [SIGNUP] Vérification si l\'email existe déjà...');
       const existingEmail = await storage.getUserByEmail(userData.email);
       if (existingEmail) {
+        console.log('❌ [SIGNUP] Email déjà utilisé:', userData.email);
         return res.status(409).json({ error: "Cet email est déjà utilisé" });
       }
+      console.log('✅ [SIGNUP] Email disponible:', userData.email);
 
       // Check if pseudonyme already exists
+      console.log('🔍 [SIGNUP] Vérification si le pseudonyme existe déjà...');
       const existingPseudonyme = await storage.getUserByPseudonyme(userData.pseudonyme);
       if (existingPseudonyme) {
+        console.log('❌ [SIGNUP] Pseudonyme déjà pris:', userData.pseudonyme);
         return res.status(409).json({ error: "Ce pseudonyme est déjà pris" });
       }
+      console.log('✅ [SIGNUP] Pseudonyme disponible:', userData.pseudonyme);
 
       // Create user (password is hashed in storage layer)
-      console.log('🟢 [SIGNUP] Création de l\'utilisateur...');
+      console.log('🟢 [SIGNUP] Création de l\'utilisateur dans la base de données...');
       const user = await storage.createUser(userData);
-      console.log('🟢 [SIGNUP] Utilisateur créé:', user.email);
+      console.log('🟢 [SIGNUP] Utilisateur créé avec succès. ID:', user.id, 'Email:', user.email);
 
       // Generate and send email verification code
-      console.log('🟢 [SIGNUP] Génération du code de vérification...');
+      console.log('🟢 [SIGNUP] Génération du code de vérification par email...');
       const emailCode = VerificationService.generateVerificationCode();
       const emailExpiry = VerificationService.getCodeExpiry();
       console.log('🟢 [SIGNUP] Code généré:', emailCode);
-      console.log('🟢 [SIGNUP] Expiration:', emailExpiry);
-      
-      console.log('🟢 [SIGNUP] Enregistrement du code en base de données...');
+      console.log('🟢 [SIGNUP] Code expirera le:', emailExpiry.toISOString());
+
+      console.log('🟢 [SIGNUP] Enregistrement du code de vérification en base de données...');
       await storage.setEmailVerificationCode(user.email, emailCode, emailExpiry);
-      console.log('🟢 [SIGNUP] Code enregistré en base de données');
-      
-      console.log('🟢 [SIGNUP] Envoi de l\'email de vérification...');
+      console.log('🟢 [SIGNUP] Code de vérification enregistré en base de données.');
+
+      console.log('🟢 [SIGNUP] Tentative d\'envoi de l\'email de vérification...');
       const emailSent = await VerificationService.sendEmailVerification(user.email, emailCode);
-      console.log('🟢 [SIGNUP] Résultat envoi email:', emailSent ? 'SUCCÈS' : 'ÉCHEC');
+      console.log('🟢 [SIGNUP] Résultat de l\'envoi de l\'email:', emailSent ? 'SUCCÈS' : 'ÉCHEC');
 
       if (!emailSent) {
-        console.error('❌ [SIGNUP] ÉCHEC de l\'envoi de l\'email de vérification');
-        console.error('⚠️  [SIGNUP] MODE DEV: Code affiché en console pour test');
-        console.error('📧 [SIGNUP] EMAIL:', user.email);
-        console.error('🔑 [SIGNUP] CODE:', emailCode);
-        console.error('⏰ [SIGNUP] EXPIRE:', emailExpiry.toISOString());
+        console.error('❌ [SIGNUP] ÉCHEC de l\'envoi de l\'email de vérification.');
+        console.error('⚠️  [SIGNUP] MODE DEV: Le code de vérification est affiché en console pour faciliter les tests.');
+        console.error('📧 [SIGNUP] EMAIL DESTINATAIRE:', user.email);
+        console.error('🔑 [SIGNUP] CODE DE VÉRIFICATION:', emailCode);
+        console.error('⏰ [SIGNUP] EXPIRATION DU CODE:', emailExpiry.toISOString());
       } else {
-        console.log('✅ [SIGNUP] Email de vérification envoyé avec succès');
+        console.log('✅ [SIGNUP] Email de vérification envoyé avec succès.');
       }
 
       // Don't send password in response
       const { password, ...userWithoutPassword } = user;
 
+      console.log('🟢 [SIGNUP] === FIN PROCESSUS INSCRIPTION ===');
       return res.status(201).json({ 
         message: "Compte créé. Veuillez vérifier votre email et téléphone.",
         user: userWithoutPassword,
@@ -496,6 +509,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error("Signup error:", error);
+      await MemoryContext.rememberErrorSolution(
+        `Erreur signup: ${error instanceof Error ? error.message : 'Unknown'}`,
+        'Vérifier les schémas Zod, la connexion à la base de données, et le service d\'envoi d\'email.',
+        ['signup', 'error']
+      );
       return res.status(500).json({ error: "Erreur lors de la création du compte" });
     }
   });
@@ -505,7 +523,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Validate request body
       const validationResult = loginUserSchema.safeParse(req.body);
-      
+
       if (!validationResult.success) {
         const validationError = fromZodError(validationResult.error);
         return res.status(400).json({ 
@@ -531,13 +549,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const isVerified = await storage.isUserFullyVerified(user.id);
       if (!isVerified) {
         const { password: _, ...userWithoutPassword } = user;
-        
+
         // Déterminer quelle étape n'est pas complétée
         let nextStep = "/verify-email";
         if (user.emailVerified && !user.phoneVerified) {
           nextStep = "/verify-phone";
         }
-        
+
         return res.status(403).json({ 
           error: "Compte non vérifié",
           message: "Veuillez compléter la vérification de votre compte",
@@ -557,6 +575,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error("Login error:", error);
+      await MemoryContext.rememberErrorSolution(
+        `Erreur login: ${error instanceof Error ? error.message : 'Unknown'}`,
+        'Vérifier les identifiants, la connexion à la base de données, et l\'état de vérification de l\'utilisateur.',
+        ['login', 'error']
+      );
       return res.status(500).json({ error: "Erreur lors de la connexion" });
     }
   });
@@ -572,7 +595,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/verify-email", async (req: Request, res: Response) => {
     try {
       const validationResult = verifyEmailSchema.safeParse(req.body);
-      
+
       if (!validationResult.success) {
         const validationError = fromZodError(validationResult.error);
         return res.status(400).json({ error: validationError.message });
@@ -590,7 +613,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (user) {
         const phoneCode = VerificationService.generateVerificationCode();
         const phoneExpiry = VerificationService.getCodeExpiry();
-        
+
         await storage.setPhoneVerificationCode(user.id, phoneCode, phoneExpiry);
         await VerificationService.sendPhoneVerification(user.phone, phoneCode);
       }
@@ -602,6 +625,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error("Email verification error:", error);
+      await MemoryContext.rememberErrorSolution(
+        `Erreur vérification email: ${error instanceof Error ? error.message : 'Unknown'}`,
+        'Vérifier le code, l\'expiration, la base de données et le service SMS.',
+        ['verify-email', 'error']
+      );
       return res.status(500).json({ error: "Erreur lors de la vérification" });
     }
   });
@@ -610,22 +638,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/verify-phone", async (req: Request, res: Response) => {
     try {
       const validationResult = verifyPhoneSchema.safeParse(req.body);
-      
+
       if (!validationResult.success) {
         const validationError = fromZodError(validationResult.error);
         return res.status(400).json({ error: validationError.message });
       }
 
       const { phone, code }: VerifyPhone = validationResult.data;
+
+      // Find user by phone (NOTE: storage.getUserByEmail is used as a placeholder, needs to be implemented)
+      const users = await storage.getUserByEmail(""); 
       
-      // Find user by phone
-      const users = await storage.getUserByEmail(""); // Workaround
-      // Note: You might want to add getUserByPhone method
-      
-      // For now, we'll need the email too
-      const email = req.body.email;
+      // For now, we'll need the email too, assuming it's sent in the body
+      const email = req.body.email; // This assumes email is sent in the request body
       const user = await storage.getUserByEmail(email);
-      
+
       if (!user) {
         return res.status(404).json({ error: "Utilisateur non trouvé" });
       }
@@ -636,6 +663,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Code invalide ou expiré" });
       }
 
+      // Mark phone as verified in the database
+      await storage.markPhoneAsVerified(user.id);
+
       return res.status(200).json({ 
         message: "Téléphone vérifié. Votre compte est activé !",
         verified: true
@@ -643,6 +673,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error("Phone verification error:", error);
+      await MemoryContext.rememberErrorSolution(
+        `Erreur vérification téléphone: ${error instanceof Error ? error.message : 'Unknown'}`,
+        'Vérifier le code, l\'expiration, la base de données et la correspondance utilisateur.',
+        ['verify-phone', 'error']
+      );
       return res.status(500).json({ error: "Erreur lors de la vérification" });
     }
   });
@@ -651,7 +686,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/resend-phone", async (req: Request, res: Response) => {
     try {
       const { email } = req.body;
-      
+
       if (!email) {
         return res.status(400).json({ error: "Email requis" });
       }
@@ -672,7 +707,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const phoneCode = VerificationService.generateVerificationCode();
       const phoneExpiry = VerificationService.getCodeExpiry();
-      
+
       await storage.setPhoneVerificationCode(user.id, phoneCode, phoneExpiry);
       const smsSent = await VerificationService.sendPhoneVerification(user.phone, phoneCode);
 
@@ -688,6 +723,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error("Resend phone error:", error);
+      await MemoryContext.rememberErrorSolution(
+        `Erreur renvoi code SMS: ${error instanceof Error ? error.message : 'Unknown'}`,
+        'Vérifier l\'utilisateur, la base de données et le service SMS.',
+        ['resend-phone', 'error']
+      );
       return res.status(500).json({ error: "Erreur lors du renvoi" });
     }
   });
@@ -696,8 +736,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/resend-email", async (req: Request, res: Response) => {
     try {
       const validationResult = resendVerificationSchema.safeParse(req.body);
-      
+
       if (!validationResult.success) {
+        console.error("Invalid request body for resend-email:", validationResult.error.flatten());
         return res.status(400).json({ error: "Email invalide" });
       }
 
@@ -714,7 +755,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const emailCode = VerificationService.generateVerificationCode();
       const emailExpiry = VerificationService.getCodeExpiry();
-      
+
       await storage.setEmailVerificationCode(email, emailCode, emailExpiry);
       await VerificationService.sendEmailVerification(email, emailCode);
 
@@ -722,6 +763,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error("Resend email error:", error);
+      await MemoryContext.rememberErrorSolution(
+        `Erreur renvoi code email: ${error instanceof Error ? error.message : 'Unknown'}`,
+        'Vérifier l\'utilisateur, la base de données et le service d\'email.',
+        ['resend-email', 'error']
+      );
       return res.status(500).json({ error: "Erreur lors du renvoi" });
     }
   });
@@ -756,6 +802,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Erreur ajout mémoire:", error);
+      await MemoryContext.rememberErrorSolution(
+        `Erreur ajout document mémoire: ${error instanceof Error ? error.message : 'Unknown'}`,
+        'Vérifier la connexion au service Supermemory et le format des données.',
+        ['supermemory', 'add', 'error']
+      );
       return res.status(500).json({ 
         error: "Erreur lors de l'ajout à la mémoire",
         details: error instanceof Error ? error.message : 'Unknown error'
@@ -781,6 +832,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(200).json(results);
     } catch (error) {
       console.error("Erreur recherche mémoire:", error);
+      await MemoryContext.rememberErrorSolution(
+        `Erreur recherche mémoire: ${error instanceof Error ? error.message : 'Unknown'}`,
+        'Vérifier la connexion au service Supermemory et la validité de la requête.',
+        ['supermemory', 'search', 'error']
+      );
       return res.status(500).json({ 
         error: "Erreur lors de la recherche",
         details: error instanceof Error ? error.message : 'Unknown error'
@@ -794,11 +850,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const document = await SupermemoryService.getDocument(id);
 
+      if (!document) {
+        return res.status(404).json({ error: "Document non trouvé" });
+      }
+
       return res.status(200).json({ document });
     } catch (error) {
       console.error("Erreur récupération document:", error);
+      await MemoryContext.rememberErrorSolution(
+        `Erreur récupération document mémoire: ${error instanceof Error ? error.message : 'Unknown'}`,
+        'Vérifier l\'existence du document et la connexion au service Supermemory.',
+        ['supermemory', 'getDocument', 'error']
+      );
       return res.status(500).json({ 
-        error: "Document non trouvé",
+        error: "Erreur lors de la récupération du document",
         details: error instanceof Error ? error.message : 'Unknown error'
       });
     }
@@ -817,6 +882,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       console.error("Erreur suppression document:", error);
+      await MemoryContext.rememberErrorSolution(
+        `Erreur suppression document mémoire: ${error instanceof Error ? error.message : 'Unknown'}`,
+        'Vérifier l\'existence du document et la connexion au service Supermemory.',
+        ['supermemory', 'deleteDocument', 'error']
+      );
       return res.status(500).json({ 
         error: "Erreur lors de la suppression",
         details: error instanceof Error ? error.message : 'Unknown error'
@@ -836,6 +906,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Erreur liste documents:", error);
+      await MemoryContext.rememberErrorSolution(
+        `Erreur liste documents mémoire: ${error instanceof Error ? error.message : 'Unknown'}`,
+        'Vérifier la connexion au service Supermemory.',
+        ['supermemory', 'listDocuments', 'error']
+      );
       return res.status(500).json({ 
         error: "Erreur lors de la récupération des documents",
         details: error instanceof Error ? error.message : 'Unknown error'
@@ -850,6 +925,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(200).json({ context });
     } catch (error) {
       console.error("Erreur contexte:", error);
+      await MemoryContext.rememberErrorSolution(
+        `Erreur récupération contexte mémoire: ${error instanceof Error ? error.message : 'Unknown'}`,
+        'Vérifier la configuration du contexte et les sources de données.',
+        ['supermemory', 'context', 'error']
+      );
       return res.status(500).json({ 
         error: "Erreur lors de la récupération du contexte",
         details: error instanceof Error ? error.message : 'Unknown error'
@@ -865,6 +945,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(200).json({ memories, total: memories.length });
     } catch (error) {
       console.error("Erreur recall:", error);
+      await MemoryContext.rememberErrorSolution(
+        `Erreur rappel mémoire: ${error instanceof Error ? error.message : 'Unknown'}`,
+        'Vérifier la requête de recherche et la logique de rappel.',
+        ['supermemory', 'recall', 'error']
+      );
       return res.status(500).json({ 
         error: "Erreur lors du rappel",
         details: error instanceof Error ? error.message : 'Unknown error'

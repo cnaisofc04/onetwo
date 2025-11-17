@@ -10,8 +10,10 @@
     "build:server": "esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/index.js",
     "start": "NODE_ENV=production node dist/index.js",
     "db:push": "drizzle-kit push",
+    "postinstall": "npm run memory:init",
     "memory:init": "tsx scripts/initialize-memory.ts",
     "memory:test": "tsx scripts/test-super-memory-api.ts",
+    "secrets:test": "tsx scripts/test-all-secrets.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui"

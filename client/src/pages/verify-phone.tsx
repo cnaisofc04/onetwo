@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { useLocation } from "wouter";
+import { useLocation, useNavigate } from "wouter"; // Added useNavigate
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -19,9 +19,12 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function VerifyPhone() {
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate(); // Initialized useNavigate
+  const location = useLocation(); // Initialized useLocation
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // Added from changes
+  const [otp, setOtp] = useState(""); // Added from changes
 
   // Récupérer le sessionId au chargement
   useState(() => {
@@ -50,6 +53,24 @@ export default function VerifyPhone() {
     }
   });
 
+  // Added useEffect from changes
+  const userId = location.state?.userId || localStorage.getItem('signup_userId');
+
+  useEffect(() => {
+    console.log('📱 Page verify-phone chargée');
+    console.log('User ID:', userId);
+
+    if (!userId) {
+      console.error('❌ Aucun ID utilisateur trouvé, redirection vers signup');
+      toast({
+        title: "Erreur",
+        description: "Veuillez d'abord créer un compte",
+        variant: "destructive"
+      });
+      navigate('/signup');
+    }
+  }, [userId, navigate]);
+
   const form = useForm<{ code: string }>({
     resolver: zodResolver(z.object({ code: z.string().length(6) })),
     defaultValues: {
@@ -73,7 +94,8 @@ export default function VerifyPhone() {
         title: "Téléphone vérifié !",
         description: "Passons aux consentements",
       });
-      setLocation("/consent-geolocation");
+      // Use navigate for redirection
+      navigate("/consent-geolocation");
     },
     onError: (error: any) => {
       toast({
@@ -110,11 +132,15 @@ export default function VerifyPhone() {
   });
 
   const onSubmit = async (data: { code: string }) => {
+    setIsLoading(true); // Set loading state
     await verifyMutation.mutateAsync(data.code);
+    setIsLoading(false); // Reset loading state
   };
 
   const handleResend = () => {
+    setIsLoading(true); // Set loading state
     resendMutation.mutate();
+    setIsLoading(false); // Reset loading state
   };
 
   if (!isReady) {
@@ -159,20 +185,20 @@ export default function VerifyPhone() {
             <div className="flex flex-col gap-4 pt-4">
               <Button
                 type="submit"
-                disabled={verifyMutation.isPending}
+                disabled={verifyMutation.isPending || isLoading} // Added isLoading to disabled state
                 className="w-full h-14 text-base font-semibold"
               >
-                {verifyMutation.isPending ? "Vérification..." : "Vérifier"}
+                {verifyMutation.isPending || isLoading ? "Vérification..." : "Vérifier"}
               </Button>
 
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleResend}
-                disabled={resendMutation.isPending}
+                disabled={resendMutation.isPending || isLoading} // Added isLoading to disabled state
                 className="w-full h-14 text-base font-semibold border-2"
               >
-                {resendMutation.isPending ? "Envoi..." : "Renvoyer le code"}
+                {resendMutation.isPending || isLoading ? "Envoi..." : "Renvoyer le code"}
               </Button>
             </div>
           </form>
