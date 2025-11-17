@@ -22,6 +22,7 @@ import {
 import { fromZodError } from "zod-validation-error";
 import { VerificationService } from "./verification-service";
 import { SupermemoryService } from "./supermemory-service";
+import { MemoryContext } from "./memory-context";
 import bcrypt from "bcrypt";
 import { z } from "zod";
 
@@ -88,6 +89,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error("Create signup session error:", error);
+      await MemoryContext.rememberErrorSolution(
+        `Erreur création session: ${error instanceof Error ? error.message : 'Unknown'}`,
+        'Vérifier validation email/pseudonyme, disponibilité base de données',
+        ['signup', 'session', 'error']
+      );
       return res.status(500).json({ error: "Erreur lors de la création de la session" });
     }
   });
@@ -801,6 +807,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Erreur liste documents:", error);
       return res.status(500).json({ 
         error: "Erreur lors de la récupération des documents",
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // GET /api/memory/context - Obtenir le contexte complet du projet
+  app.get("/api/memory/context", async (_req: Request, res: Response) => {
+    try {
+      const context = await MemoryContext.getProjectContext();
+      return res.status(200).json({ context });
+    } catch (error) {
+      console.error("Erreur contexte:", error);
+      return res.status(500).json({ 
+        error: "Erreur lors de la récupération du contexte",
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // POST /api/memory/recall - Rechercher dans le contexte
+  app.post("/api/memory/recall", async (req: Request, res: Response) => {
+    try {
+      const { query, limit } = req.body;
+      const memories = await MemoryContext.recall(query, limit);
+      return res.status(200).json({ memories, total: memories.length });
+    } catch (error) {
+      console.error("Erreur recall:", error);
+      return res.status(500).json({ 
+        error: "Erreur lors du rappel",
         details: error instanceof Error ? error.message : 'Unknown error'
       });
     }
