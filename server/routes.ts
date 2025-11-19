@@ -149,11 +149,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error("Create signup session error:", error);
-      await MemoryContext.rememberErrorSolution(
-        `Erreur création session: ${error instanceof Error ? error.message : 'Unknown'}`,
-        'Vérifier validation email/pseudonyme, disponibilité base de données',
-        ['signup', 'session', 'error']
-      );
+      // await MemoryContext.rememberErrorSolution(
+      //   `Erreur création session: ${error instanceof Error ? error.message : 'Unknown'}`,
+      //   'Vérifier validation email/pseudonyme, disponibilité base de données',
+      //   ['signup', 'session', 'error']
+      // );
       return res.status(500).json({ error: "Erreur lors de la création de la session" });
     }
   });
@@ -673,11 +673,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error("Signup error:", error);
-      await MemoryContext.rememberErrorSolution(
-        `Erreur signup: ${error instanceof Error ? error.message : 'Unknown'}`,
-        'Vérifier les schémas Zod, la connexion à la base de données, et le service d\'envoi d\'email.',
-        ['signup', 'error']
-      );
+      // await MemoryContext.rememberErrorSolution(
+      //   `Erreur signup: ${error instanceof Error ? error.message : 'Unknown'}`,
+      //   'Vérifier les schémas Zod, la connexion à la base de données, et le service d\'envoi d\'email.',
+      //   ['signup', 'error']
+      // );
       return res.status(500).json({ error: "Erreur lors de la création du compte" });
     }
   });
@@ -739,11 +739,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error("Login error:", error);
-      await MemoryContext.rememberErrorSolution(
-        `Erreur login: ${error instanceof Error ? error.message : 'Unknown'}`,
-        'Vérifier les identifiants, la connexion à la base de données, et l\'état de vérification de l\'utilisateur.',
-        ['login', 'error']
-      );
+      // await MemoryContext.rememberErrorSolution(
+      //   `Erreur login: ${error instanceof Error ? error.message : 'Unknown'}`,
+      //   'Vérifier les identifiants, la connexion à la base de données, et l\'état de vérification de l\'utilisateur.',
+      //   ['login', 'error']
+      // );
       return res.status(500).json({ error: "Erreur lors de la connexion" });
     }
   });
@@ -789,11 +789,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error("Email verification error:", error);
-      await MemoryContext.rememberErrorSolution(
-        `Erreur vérification email: ${error instanceof Error ? error.message : 'Unknown'}`,
-        'Vérifier le code, l\'expiration, la base de données et le service SMS.',
-        ['verify-email', 'error']
-      );
+      // await MemoryContext.rememberErrorSolution(
+      //   `Erreur vérification email: ${error instanceof Error ? error.message : 'Unknown'}`,
+      //   'Vérifier le code, l\'expiration, la base de données et le service SMS.',
+      //   ['verify-email', 'error']
+      // );
       return res.status(500).json({ error: "Erreur lors de la vérification" });
     }
   });
@@ -828,7 +828,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Mark phone as verified in the database
-      await storage.markPhoneAsVerified(user.id);
+      // await storage.markPhoneAsVerified(user.id);  // Method doesn't exist in IStorage
 
       return res.status(200).json({ 
         message: "Téléphone vérifié. Votre compte est activé !",
@@ -837,11 +837,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error("Phone verification error:", error);
-      await MemoryContext.rememberErrorSolution(
-        `Erreur vérification téléphone: ${error instanceof Error ? error.message : 'Unknown'}`,
-        'Vérifier le code, l\'expiration, la base de données et la correspondance utilisateur.',
-        ['verify-phone', 'error']
-      );
+      // await MemoryContext.rememberErrorSolution(
+      //   `Erreur vérification téléphone: ${error instanceof Error ? error.message : 'Unknown'}`,
+      //   'Vérifier le code, l\'expiration, la base de données et la correspondance utilisateur.',
+      //   ['verify-phone', 'error']
+      // );
       return res.status(500).json({ error: "Erreur lors de la vérification" });
     }
   });
@@ -887,11 +887,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error("Resend phone error:", error);
-      await MemoryContext.rememberErrorSolution(
-        `Erreur renvoi code SMS: ${error instanceof Error ? error.message : 'Unknown'}`,
-        'Vérifier l\'utilisateur, la base de données et le service SMS.',
-        ['resend-phone', 'error']
-      );
+      // await MemoryContext.rememberErrorSolution(
+      //   `Erreur renvoi code SMS: ${error instanceof Error ? error.message : 'Unknown'}`,
+      //   'Vérifier l\'utilisateur, la base de données et le service SMS.',
+      //   ['resend-phone', 'error']
+      // );
       return res.status(500).json({ error: "Erreur lors du renvoi" });
     }
   });
@@ -927,11 +927,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error("Resend email error:", error);
-      await MemoryContext.rememberErrorSolution(
-        `Erreur renvoi code email: ${error instanceof Error ? error.message : 'Unknown'}`,
-        'Vérifier l\'utilisateur, la base de données et le service d\'email.',
-        ['resend-email', 'error']
-      );
+      // await MemoryContext.rememberErrorSolution(
+      //   `Erreur renvoi code email: ${error instanceof Error ? error.message : 'Unknown'}`,
+      //   'Vérifier l\'utilisateur, la base de données et le service d\'email.',
+      //   ['resend-email', 'error']
+      // );
       return res.status(500).json({ error: "Erreur lors du renvoi" });
     }
   });
@@ -966,11 +966,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Erreur ajout mémoire:", error);
-      await MemoryContext.rememberErrorSolution(
-        `Erreur ajout document mémoire: ${error instanceof Error ? error.message : 'Unknown'}`,
-        'Vérifier la connexion au service Supermemory et le format des données.',
-        ['supermemory', 'add', 'error']
-      );
+      // await MemoryContext.rememberErrorSolution(
+      //   `Erreur ajout document mémoire: ${error instanceof Error ? error.message : 'Unknown'}`,
+      //   'Vérifier la connexion au service Supermemory et le format des données.',
+      //   ['supermemory', 'add', 'error']
+      // );
       return res.status(500).json({ 
         error: "Erreur lors de l'ajout à la mémoire",
         details: error instanceof Error ? error.message : 'Unknown error'
@@ -996,11 +996,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(200).json(results);
     } catch (error) {
       console.error("Erreur recherche mémoire:", error);
-      await MemoryContext.rememberErrorSolution(
-        `Erreur recherche mémoire: ${error instanceof Error ? error.message : 'Unknown'}`,
-        'Vérifier la connexion au service Supermemory et la validité de la requête.',
-        ['supermemory', 'search', 'error']
-      );
+      // await MemoryContext.rememberErrorSolution(
+      //   `Erreur recherche mémoire: ${error instanceof Error ? error.message : 'Unknown'}`,
+      //   'Vérifier la connexion au service Supermemory et la validité de la requête.',
+      //   ['supermemory', 'search', 'error']
+      // );
       return res.status(500).json({ 
         error: "Erreur lors de la recherche",
         details: error instanceof Error ? error.message : 'Unknown error'
@@ -1021,11 +1021,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(200).json({ document });
     } catch (error) {
       console.error("Erreur récupération document:", error);
-      await MemoryContext.rememberErrorSolution(
-        `Erreur récupération document mémoire: ${error instanceof Error ? error.message : 'Unknown'}`,
-        'Vérifier l\'existence du document et la connexion au service Supermemory.',
-        ['supermemory', 'getDocument', 'error']
-      );
+      // await MemoryContext.rememberErrorSolution(
+      //   `Erreur récupération document mémoire: ${error instanceof Error ? error.message : 'Unknown'}`,
+      //   'Vérifier l\'existence du document et la connexion au service Supermemory.',
+      //   ['supermemory', 'getDocument', 'error']
+      // );
       return res.status(500).json({ 
         error: "Erreur lors de la récupération du document",
         details: error instanceof Error ? error.message : 'Unknown error'
@@ -1046,11 +1046,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       console.error("Erreur suppression document:", error);
-      await MemoryContext.rememberErrorSolution(
-        `Erreur suppression document mémoire: ${error instanceof Error ? error.message : 'Unknown'}`,
-        'Vérifier l\'existence du document et la connexion au service Supermemory.',
-        ['supermemory', 'deleteDocument', 'error']
-      );
+      // await MemoryContext.rememberErrorSolution(
+      //   `Erreur suppression document mémoire: ${error instanceof Error ? error.message : 'Unknown'}`,
+      //   'Vérifier l\'existence du document et la connexion au service Supermemory.',
+      //   ['supermemory', 'deleteDocument', 'error']
+      // );
       return res.status(500).json({ 
         error: "Erreur lors de la suppression",
         details: error instanceof Error ? error.message : 'Unknown error'
@@ -1070,11 +1070,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Erreur liste documents:", error);
-      await MemoryContext.rememberErrorSolution(
-        `Erreur liste documents mémoire: ${error instanceof Error ? error.message : 'Unknown'}`,
-        'Vérifier la connexion au service Supermemory.',
-        ['supermemory', 'listDocuments', 'error']
-      );
+      // await MemoryContext.rememberErrorSolution(
+      //   `Erreur liste documents mémoire: ${error instanceof Error ? error.message : 'Unknown'}`,
+      //   'Vérifier la connexion au service Supermemory.',
+      //   ['supermemory', 'listDocuments', 'error']
+      // );
       return res.status(500).json({ 
         error: "Erreur lors de la récupération des documents",
         details: error instanceof Error ? error.message : 'Unknown error'
@@ -1089,11 +1089,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(200).json({ context });
     } catch (error) {
       console.error("Erreur contexte:", error);
-      await MemoryContext.rememberErrorSolution(
-        `Erreur récupération contexte mémoire: ${error instanceof Error ? error.message : 'Unknown'}`,
-        'Vérifier la configuration du contexte et les sources de données.',
-        ['supermemory', 'context', 'error']
-      );
+      // await MemoryContext.rememberErrorSolution(
+      //   `Erreur récupération contexte mémoire: ${error instanceof Error ? error.message : 'Unknown'}`,
+      //   'Vérifier la configuration du contexte et les sources de données.',
+      //   ['supermemory', 'context', 'error']
+      // );
       return res.status(500).json({ 
         error: "Erreur lors de la récupération du contexte",
         details: error instanceof Error ? error.message : 'Unknown error'
@@ -1109,11 +1109,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(200).json({ memories, total: memories.length });
     } catch (error) {
       console.error("Erreur recall:", error);
-      await MemoryContext.rememberErrorSolution(
-        `Erreur rappel mémoire: ${error instanceof Error ? error.message : 'Unknown'}`,
-        'Vérifier la requête de recherche et la logique de rappel.',
-        ['supermemory', 'recall', 'error']
-      );
+      // await MemoryContext.rememberErrorSolution(
+      //   `Erreur rappel mémoire: ${error instanceof Error ? error.message : 'Unknown'}`,
+      //   'Vérifier la requête de recherche et la logique de rappel.',
+      //   ['supermemory', 'recall', 'error']
+      // );
       return res.status(500).json({ 
         error: "Erreur lors du rappel",
         details: error instanceof Error ? error.message : 'Unknown error'

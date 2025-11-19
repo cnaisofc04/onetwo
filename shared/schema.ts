@@ -82,11 +82,16 @@ export const insertUserSchema = createInsertSchema(users).omit({
   }),
 });
 
+// Type export for InsertUser
+export type InsertUser = z.infer<typeof insertUserSchema>;
+
 // Login schema (only email and password)
 export const loginUserSchema = z.object({
   email: z.string().email("Email invalide").toLowerCase(),
   password: z.string().min(1, "Mot de passe requis"),
 });
+
+export type LoginUser = z.infer<typeof loginUserSchema>;
 
 // Verification schemas
 export const verifyEmailSchema = z.object({
@@ -94,14 +99,20 @@ export const verifyEmailSchema = z.object({
   code: z.string().length(6, "Le code doit contenir 6 chiffres"),
 });
 
+export type VerifyEmail = z.infer<typeof verifyEmailSchema>;
+
 export const verifyPhoneSchema = z.object({
   phone: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Numéro invalide"),
   code: z.string().length(6, "Le code doit contenir 6 chiffres"),
 });
 
+export type VerifyPhone = z.infer<typeof verifyPhoneSchema>;
+
 export const resendVerificationSchema = z.object({
   email: z.string().email("Email invalide").toLowerCase(),
 });
+
+export type ResendVerification = z.infer<typeof resendVerificationSchema>;
 
 // Signup Sessions table - Temporary storage during registration
 export const signupSessions = pgTable("signup_sessions", {
@@ -178,6 +189,8 @@ export const insertSignupSessionSchema = createInsertSchema(signupSessions).omit
   password: z.string().optional(),
 });
 
+export type InsertSignupSession = z.infer<typeof insertSignupSessionSchema>;
+
 // Schema for updating signup session
 export const updateSignupSessionSchema = z.object({
   gender: z.enum([
@@ -201,6 +214,8 @@ export const updateSignupSessionSchema = z.object({
     .regex(/^\+?[1-9]\d{1,14}$/, "Numéro de téléphone invalide (format international requis)")
     .optional(),
 });
+
+export type UpdateSignupSession = z.infer<typeof updateSignupSessionSchema>;
 
 // Consent update schema
 export const updateConsentsSchema = z.object({
