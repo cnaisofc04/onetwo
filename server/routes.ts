@@ -37,8 +37,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('📝 [SESSION] Body:', JSON.stringify(req.body, null, 2));
 
     try {
-      // Validate with MINIMAL schema - only data from steps 1-3
+      // Validate with MINIMAL schema - only data from steps 1-3 + language
       const createSessionSchema = z.object({
+        language: z.string().optional().default("fr"), // Langue optionnelle, par défaut français
         pseudonyme: insertSignupSessionSchema.shape.pseudonyme,
         dateOfBirth: insertSignupSessionSchema.shape.dateOfBirth,
         email: insertSignupSessionSchema.shape.email,
@@ -55,7 +56,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const { pseudonyme, dateOfBirth, email } = validationResult.data;
+      const { language, pseudonyme, dateOfBirth, email } = validationResult.data;
+      console.log(`🌍 [SESSION] Langue: ${language}`);
       console.log('✅ [SESSION] Validation réussie');
       console.log(`📧 [SESSION] Email: ${email}`);
       console.log(`👤 [SESSION] Pseudonyme: ${pseudonyme}`);
@@ -78,9 +80,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.log('✅ [SESSION] Pseudonyme disponible');
 
-      // Create signup session with ONLY initial data (steps 1-3)
+      // Create signup session with ONLY initial data (steps 1-3 + language)
       console.log('💾 [SESSION] Création en base de données...');
       const session = await storage.createSignupSession({
+        language,
         pseudonyme,
         dateOfBirth,
         email,

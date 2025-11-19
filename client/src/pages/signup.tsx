@@ -109,9 +109,13 @@ export default function Signup() {
     const isValid = await form.trigger(["pseudonyme", "dateOfBirth", "email"]);
     if (!isValid) return;
 
-    // Créer session avec données minimales (étape 3)
+    // Récupérer la langue depuis localStorage (défaut: français)
+    const language = localStorage.getItem("signup_language") || "fr";
+    console.log(`🌍 [SIGNUP] Langue sélectionnée: ${language}`);
+
+    // Créer session avec données minimales (étape 3 + langue)
     const { pseudonyme, dateOfBirth, email } = form.getValues();
-    await createSessionMutation.mutateAsync({ pseudonyme, dateOfBirth, email });
+    await createSessionMutation.mutateAsync({ language, pseudonyme, dateOfBirth, email });
   };
 
   const handleStep7Complete = async () => {
