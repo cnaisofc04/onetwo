@@ -16,6 +16,7 @@ import LocationCountry from "@/pages/location-country";
 import LocationNationality from "@/pages/location-nationality";
 import ConsentTerms from "@/pages/consent-terms";
 import ConsentDevice from "@/pages/consent-device";
+import Complete from "@/pages/complete";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -33,6 +34,7 @@ function Router() {
       <Route path="/location-nationality" component={LocationNationality} />
       <Route path="/consent-terms" component={ConsentTerms} />
       <Route path="/consent-device" component={ConsentDevice} />
+      <Route path="/complete" component={Complete} />
       <Route component={NotFound} />
     </Switch>
   );

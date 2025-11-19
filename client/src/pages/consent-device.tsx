@@ -40,7 +40,8 @@ export default function ConsentDevice() {
         title: "Consentement enregistré",
         description: "Finalisation de votre compte en cours...",
       });
-      finalizeSignup();
+      console.log('✅ [DEVICE] Consentement enregistré, redirection vers /complete');
+      setLocation("/complete");
     },
     onError: (error: any) => {
       toast({

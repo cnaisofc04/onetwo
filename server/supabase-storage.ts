@@ -36,9 +36,10 @@ function getSupabaseClient(gender: string) {
   if (gender === 'MARQUE') {
     if (!SUPABASE_BRAND_URL || !SUPABASE_BRAND_ANON_KEY) {
       console.error('⚠️ Supabase Brand not configured. Defaulting to supabaseMan.');
-      console.warn('⚠️ Please configure profil_brand_supabase_URL and profil_brand_supabase_API_anon_public secrets');
+      console.warn('⚠️ Please configure SUPABASE_USER_BRAND_Project_URL and SUPABASE_USER_BRAND_API_anon_public secrets');
       return supabaseMan; // Fallback temporaire
     }
+    console.log('✅ [SUPABASE] Routing MARQUE to Brand database');
     return supabaseBrand;
   }
   
@@ -413,6 +414,22 @@ export class SupabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error verifying consents:', error);
       return false;
+    }
+  }
+
+  async updateSessionLocation(id: string, location: import('@shared/schema').UpdateLocation): Promise<SignupSession | undefined> {
+    try {
+      console.log(`💾 [SUPABASE-STORAGE] Mise à jour location session ${id}:`, location);
+      const [session] = await db
+        .update(signupSessions)
+        .set(location)
+        .where(eq(signupSessions.id, id))
+        .returning();
+      console.log(`✅ [SUPABASE-STORAGE] Location mise à jour pour session ${id}`);
+      return session;
+    } catch (error) {
+      console.error('❌ [SUPABASE-STORAGE] Error updating session location:', error);
+      return undefined;
     }
   }
 

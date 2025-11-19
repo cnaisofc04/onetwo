@@ -10,11 +10,14 @@ interface PostHogProviderProps {
 
 export function PostHogProvider({ children }: PostHogProviderProps) {
   useEffect(() => {
+    // PostHog API Key - le secret backend est POSTHOG_API_KEY
+    // Pour le frontend Vite, on doit utiliser VITE_POSTHOG_API_KEY
     const apiKey = import.meta.env.VITE_POSTHOG_API_KEY;
+    const apiHost = import.meta.env.VITE_POSTHOG_HOST || 'https://app.posthog.com';
     
     if (apiKey) {
       posthog.init(apiKey, {
-        api_host: 'https://app.posthog.com',
+        api_host: apiHost,
         autocapture: true,
         capture_pageview: true,
         capture_pageleave: true,
@@ -22,13 +25,15 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
         loaded: (posthog) => {
           if (import.meta.env.DEV) {
             console.log('✅ [PostHog] Initialisé en mode dev');
+            console.log('📊 [PostHog] Host:', apiHost);
           }
         },
       });
 
       console.log('📊 [PostHog] Service de tracking initialisé');
     } else {
-      console.warn('⚠️ [PostHog] API Key manquante - tracking désactivé');
+      console.warn('⚠️ [PostHog] VITE_POSTHOG_API_KEY manquante - tracking désactivé');
+      console.warn('⚠️ [PostHog] Pour activer PostHog, ajoutez le secret VITE_POSTHOG_API_KEY');
     }
 
     return () => {
