@@ -31,18 +31,21 @@ import { z } from "zod";
 export async function registerRoutes(app: Express): Promise<Server> {
   // New Signup Session Flow Routes
 
-  // POST /api/auth/signup/session - Create signup session with INITIAL data only (step 1-3)
+  // POST /api/auth/signup/session - Create signup session with ALL data from steps 1-6
   app.post("/api/auth/signup/session", async (req: Request, res: Response) => {
     console.log('\n🟢 [SESSION] Début création session');
     console.log('📝 [SESSION] Body:', JSON.stringify(req.body, null, 2));
 
     try {
-      // Validate with MINIMAL schema - only data from steps 1-3 + language
+      // Validate with COMPLETE schema - all data from steps 1-6 + language
       const createSessionSchema = z.object({
-        language: z.string().optional().default("fr"), // Langue optionnelle, par défaut français
+        language: z.string().optional().default("fr"),
         pseudonyme: insertSignupSessionSchema.shape.pseudonyme,
         dateOfBirth: insertSignupSessionSchema.shape.dateOfBirth,
         email: insertSignupSessionSchema.shape.email,
+        phone: insertSignupSessionSchema.shape.phone,
+        gender: insertSignupSessionSchema.shape.gender,
+        password: z.string().min(8, "Mot de passe min 8 caractères"),
       });
 
       const validationResult = createSessionSchema.safeParse(req.body);
@@ -56,7 +59,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const { language, pseudonyme, dateOfBirth, email } = validationResult.data;
+      const { language, pseudonyme, dateOfBirth, email, phone, gender, password } = validationResult.data;
       console.log(`🌍 [SESSION] Langue: ${language}`);
       console.log('✅ [SESSION] Validation réussie');
       console.log(`📧 [SESSION] Email: ${email}`);
@@ -80,15 +83,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.log('✅ [SESSION] Pseudonyme disponible');
 
-      // Create signup session with ONLY initial data (steps 1-3 + language)
+      // Hash password before saving
+      console.log('🔐 [SESSION] Hachage du mot de passe...');
+      const hashedPassword = await bcrypt.hash(password, 10);
+      console.log('✅ [SESSION] Mot de passe haché');
+
+      // Create signup session with ALL data (steps 1-6 + language)
       console.log('💾 [SESSION] Création en base de données...');
       const session = await storage.createSignupSession({
         language,
         pseudonyme,
         dateOfBirth,
         email,
+        phone,
+        gender,
+        password: hashedPassword,
       });
       console.log('✅ [SESSION] Session créée:', session.id);
+      console.log('📱 [SESSION] Téléphone enregistré:', phone);
+      console.log('👤 [SESSION] Genre enregistré:', gender);
 
       // Generate and send email verification code
       console.log('🔑 [SESSION] Génération code email...');
@@ -108,11 +121,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.warn('⚠️  [SESSION] Code visible en console pour test:', emailCode);
       }
 
+      // Generate and save SMS code immediately
+      console.log('🔑 [SESSION] Génération code SMS...');
+      const smsCode = VerificationService.generateVerificationCode();
+      const smsExpiry = VerificationService.getCodeExpiry();
+      console.log(`📬 [SESSION] Code SMS: ${smsCode} (expire: ${smsExpiry.toISOString()})`);
+
+      console.log('💾 [SESSION] Enregistrement code SMS en base...');
+      await storage.setSessionPhoneVerificationCode(session.id, smsCode, smsExpiry);
+      console.log('✅ [SESSION] Code SMS enregistré');
+
+      console.log('📱 [SESSION] Envoi SMS...');
+      const smsSent = await VerificationService.sendPhoneVerification(session.phone!, smsCode);
+      console.log(`${smsSent ? '✅' : '❌'} [SESSION] SMS ${smsSent ? 'envoyé' : 'ÉCHEC'}`);
+
+      if (!smsSent) {
+        console.warn('⚠️  [SESSION] Code SMS visible en console pour test:', smsCode);
+      }
+
       console.log('🎉 [SESSION] Réponse envoyée au client\n');
       return res.status(201).json({ 
-        message: "Session créée. Code envoyé par email.",
+        message: "Session créée. Codes envoyés par email et SMS.",
         sessionId: session.id,
-        email: session.email
+        email: session.email,
+        phone: session.phone
       });
 
     } catch (error) {
