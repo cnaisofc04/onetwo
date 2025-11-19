@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { useLocation, useNavigate } from "wouter"; // Added useNavigate
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -19,8 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function VerifyPhone() {
   const { toast } = useToast();
-  const navigate = useNavigate(); // Initialized useNavigate
-  const location = useLocation(); // Initialized useLocation
+  const [location, setLocation] = useLocation();
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [isLoading, setIsLoading] = useState(false); // Added from changes
@@ -54,7 +53,7 @@ export default function VerifyPhone() {
   });
 
   // Added useEffect from changes
-  const userId = location.state?.userId || localStorage.getItem('signup_userId');
+  const userId = localStorage.getItem('signup_userId');
 
   useEffect(() => {
     console.log('📱 Page verify-phone chargée');
@@ -67,9 +66,9 @@ export default function VerifyPhone() {
         description: "Veuillez d'abord créer un compte",
         variant: "destructive"
       });
-      navigate('/signup');
+      setLocation('/signup');
     }
-  }, [userId, navigate]);
+  }, [userId, setLocation, toast]);
 
   const form = useForm<{ code: string }>({
     resolver: zodResolver(z.object({ code: z.string().length(6) })),
@@ -95,7 +94,7 @@ export default function VerifyPhone() {
         description: "Passons aux consentements",
       });
       // Use navigate for redirection
-      navigate("/consent-geolocation");
+      setLocation("/consent-geolocation");
     },
     onError: (error: any) => {
       toast({

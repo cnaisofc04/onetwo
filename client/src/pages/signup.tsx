@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertUserSchema, type InsertUser } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { useLocation, useNavigate } from "wouter"; // Import useNavigate
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -30,8 +30,7 @@ type SignupFormData = z.infer<typeof signupFormSchema>;
 
 export default function Signup() {
   const { toast } = useToast();
-  const [, setLocation] = useLocation(); // Keep setLocation for potential other uses, but use navigate for this fix
-  const navigate = useNavigate(); // Use useNavigate for the redirection
+  const [, setLocation] = useLocation();
 
   const [step, setStep] = useState(1);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -93,10 +92,8 @@ export default function Signup() {
       console.log('✅ Compte créé, redirection vers /verify-email');
       console.log('Email utilisateur:', form.getValues('email'));
 
-      // Redirection IMMÉDIATE (le timeout peut être annulé)
-      navigate('/verify-email', {
-        state: { email: form.getValues('email') }
-      });
+      // Redirection IMMÉDIATE
+      setLocation('/verify-email');
     },
     onError: (error: any) => {
       toast({
