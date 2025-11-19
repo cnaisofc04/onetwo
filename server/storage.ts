@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type SignupSession, type InsertSignupSession, type UpdateSignupSession, type UpdateConsents } from "@shared/schema";
+import { type User, type InsertUser, type SignupSession, type InsertSignupSession, type UpdateSignupSession, type UpdateConsents, type UpdateLocation } from "@shared/schema";
 import { db } from "./db";
 import { users, signupSessions } from "@shared/schema";
 import { eq } from "drizzle-orm";
@@ -37,6 +37,9 @@ export interface IStorage {
   // Consent methods
   updateSessionConsents(id: string, consents: UpdateConsents): Promise<SignupSession | undefined>;
   verifyAllConsentsGiven(sessionId: string): Promise<boolean>;
+  
+  // Location methods
+  updateSessionLocation(id: string, location: UpdateLocation): Promise<SignupSession | undefined>;
 }
 
 // PostgreSQL Database Storage Implementation
@@ -335,6 +338,22 @@ export class DBStorage implements IStorage {
     } catch (error) {
       console.error('Error verifying consents:', error);
       return false;
+    }
+  }
+
+  async updateSessionLocation(id: string, location: UpdateLocation): Promise<SignupSession | undefined> {
+    try {
+      console.log(`💾 [STORAGE] Mise à jour location session ${id}:`, location);
+      const [session] = await db
+        .update(signupSessions)
+        .set(location)
+        .where(eq(signupSessions.id, id))
+        .returning();
+      console.log(`✅ [STORAGE] Location mise à jour pour session ${id}`);
+      return session;
+    } catch (error) {
+      console.error('❌ [STORAGE] Error updating session location:', error);
+      return undefined;
     }
   }
 }

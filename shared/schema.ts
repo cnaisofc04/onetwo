@@ -6,12 +6,16 @@ import { z } from "zod";
 // Users table - OneTwo Dating App
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  language: text("language").notNull().default("fr"), // fr, en, es, etc.
   pseudonyme: text("pseudonyme").notNull().unique(),
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
   dateOfBirth: date("date_of_birth").notNull(),
   phone: text("phone").notNull(),
   gender: text("gender").notNull(), // Mr, Mrs, Homosexuel, Homosexuelle, Transgenre, Bisexuel, MARQUE
+  city: text("city").notNull(), // Ville
+  country: text("country").notNull(), // Pays
+  nationality: text("nationality").notNull(), // Nationalité
   emailVerified: boolean("email_verified").notNull().default(false),
   phoneVerified: boolean("phone_verified").notNull().default(false),
   emailVerificationCode: text("email_verification_code"),
@@ -102,6 +106,7 @@ export const resendVerificationSchema = z.object({
 // Signup Sessions table - Temporary storage during registration
 export const signupSessions = pgTable("signup_sessions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  language: text("language").notNull().default("fr"), // Langue choisie
   pseudonyme: text("pseudonyme").notNull(),
   dateOfBirth: date("date_of_birth").notNull(),
   email: text("email").notNull(),
@@ -114,6 +119,9 @@ export const signupSessions = pgTable("signup_sessions", {
   phoneVerified: boolean("phone_verified").notNull().default(false),
   gender: text("gender"),
   password: text("password"),
+  city: text("city"), // Ville
+  country: text("country"), // Pays  
+  nationality: text("nationality"), // Nationalité
   geolocationConsent: boolean("geolocation_consent").notNull().default(false),
   termsAccepted: boolean("terms_accepted").notNull().default(false),
   deviceBindingConsent: boolean("device_binding_consent").notNull().default(false),
@@ -201,6 +209,13 @@ export const updateConsentsSchema = z.object({
   deviceBindingConsent: z.boolean().optional(),
 });
 
+// Location update schema (city, country, nationality)
+export const updateLocationSchema = z.object({
+  city: z.string().min(2, "La ville doit contenir au moins 2 caractères").optional(),
+  country: z.string().min(2, "Le pays doit contenir au moins 2 caractères").optional(),
+  nationality: z.string().min(2, "La nationalité doit contenir au moins 2 caractères").optional(),
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type LoginUser = z.infer<typeof loginUserSchema>;
 export type VerifyEmail = z.infer<typeof verifyEmailSchema>;
@@ -211,3 +226,4 @@ export type SignupSession = typeof signupSessions.$inferSelect;
 export type InsertSignupSession = z.infer<typeof insertSignupSessionSchema>;
 export type UpdateSignupSession = z.infer<typeof updateSignupSessionSchema>;
 export type UpdateConsents = z.infer<typeof updateConsentsSchema>;
+export type UpdateLocation = z.infer<typeof updateLocationSchema>;

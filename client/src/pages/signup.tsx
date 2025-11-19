@@ -105,11 +105,30 @@ export default function Signup() {
   });
 
   const handleStep3Complete = async () => {
-    const isValid = await form.trigger(["pseudonyme", "dateOfBirth", "gender", "email", "password", "confirmPassword", "phone"]);
+    // Valider SEULEMENT les champs nécessaires pour créer la session
+    const isValid = await form.trigger(["pseudonyme", "dateOfBirth", "email"]);
     if (!isValid) return;
 
-    const { confirmPassword, ...userData } = form.getValues();
-    await createSessionMutation.mutateAsync(userData);
+    // Créer session avec données minimales (étape 3)
+    const { pseudonyme, dateOfBirth, email } = form.getValues();
+    await createSessionMutation.mutateAsync({ pseudonyme, dateOfBirth, email });
+  };
+
+  const handleStep7Complete = async () => {
+    // Sauvegarder gender, password, phone dans localStorage pour PATCH après verify-email
+    const { gender, password, phone } = form.getValues();
+    localStorage.setItem("signup_pending_gender", gender || "");
+    localStorage.setItem("signup_pending_password", password);
+    localStorage.setItem("signup_pending_phone", phone);
+    
+    console.log('💾 [SIGNUP] Données sauvegardées pour PATCH après vérification email');
+    console.log('💾 [SIGNUP] Gender:', gender, '| Phone:', phone);
+    
+    // Pas de requête ici - juste sauvegarder localement
+    toast({
+      title: "Informations enregistrées",
+      description: "Veuillez vérifier votre email pour continuer",
+    });
   };
 
   const nextStep = async () => {
@@ -123,20 +142,22 @@ export default function Signup() {
         fieldsToValidate = ["dateOfBirth"];
         break;
       case 3:
+        fieldsToValidate = ["email"];
+        // CRÉER SESSION après étape 3 (pseudo + date + email)
+        await handleStep3Complete();
+        return; // Redirection gérée par createSessionMutation
+      case 4:
         fieldsToValidate = ["gender"];
         break;
-      case 4: // Email déjà validé dans step 3
-        return; // Redirection gérée par createSessionMutation
       case 5:
-        fieldsToValidate = ["email"];
-        break;
-      case 6:
         fieldsToValidate = ["password", "confirmPassword"];
         break;
-      case 7:
+      case 6:
         fieldsToValidate = ["phone"];
-        // Step 3 complete → Créer session
-        await handleStep3Complete();
+        break;
+      case 7:
+        // Sauvegarder les données restantes et informer l'utilisateur
+        await handleStep7Complete();
         return;
     }
 

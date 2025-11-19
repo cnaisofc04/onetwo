@@ -10,6 +10,7 @@ import {
   insertSignupSessionSchema,
   updateSignupSessionSchema,
   updateConsentsSchema,
+  updateLocationSchema,
   type InsertUser, 
   type LoginUser,
   type VerifyEmail,
@@ -17,7 +18,8 @@ import {
   type ResendVerification,
   type InsertSignupSession,
   type UpdateSignupSession,
-  type UpdateConsents
+  type UpdateConsents,
+  type UpdateLocation
 } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 import { VerificationService } from "./verification-service";
@@ -29,24 +31,17 @@ import { z } from "zod";
 export async function registerRoutes(app: Express): Promise<Server> {
   // New Signup Session Flow Routes
 
-  // POST /api/auth/signup/session - Create signup session with ALL user data
+  // POST /api/auth/signup/session - Create signup session with INITIAL data only (step 1-3)
   app.post("/api/auth/signup/session", async (req: Request, res: Response) => {
     console.log('\n🟢 [SESSION] Début création session');
     console.log('📝 [SESSION] Body:', JSON.stringify(req.body, null, 2));
 
     try {
-      // Validate with COMPLETE schema including gender, password, phone
+      // Validate with MINIMAL schema - only data from steps 1-3
       const createSessionSchema = z.object({
         pseudonyme: insertSignupSessionSchema.shape.pseudonyme,
         dateOfBirth: insertSignupSessionSchema.shape.dateOfBirth,
         email: insertSignupSessionSchema.shape.email,
-        gender: insertSignupSessionSchema.shape.gender,
-        password: z.string()
-          .min(8, "Le mot de passe doit contenir au moins 8 caractères")
-          .regex(/[A-Z]/, "Le mot de passe doit contenir au moins une majuscule")
-          .regex(/[a-z]/, "Le mot de passe doit contenir au moins une minuscule")
-          .regex(/[0-9]/, "Le mot de passe doit contenir au moins un chiffre"),
-        phone: insertSignupSessionSchema.shape.phone,
       });
 
       const validationResult = createSessionSchema.safeParse(req.body);
@@ -60,7 +55,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const { pseudonyme, dateOfBirth, email, gender, password, phone } = validationResult.data;
+      const { pseudonyme, dateOfBirth, email } = validationResult.data;
       console.log('✅ [SESSION] Validation réussie');
       console.log(`📧 [SESSION] Email: ${email}`);
       console.log(`👤 [SESSION] Pseudonyme: ${pseudonyme}`);
@@ -83,58 +78,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.log('✅ [SESSION] Pseudonyme disponible');
 
-      // Hash password before storing
-      console.log('🔐 [SESSION] Hachage du mot de passe...');
-      const hashedPassword = await bcrypt.hash(password, 10);
-      console.log('✅ [SESSION] Mot de passe haché');
-
-      // Create signup session with ALL data
+      // Create signup session with ONLY initial data (steps 1-3)
       console.log('💾 [SESSION] Création en base de données...');
       const session = await storage.createSignupSession({
         pseudonyme,
         dateOfBirth,
         email,
-        gender,
-        password: hashedPassword,
-        phone,
       });
       console.log('✅ [SESSION] Session créée:', session.id);
-      console.log('📊 [SESSION] Gender:', gender, '| Phone:', phone);
 
       // Generate and send email verification code
       console.log('🔑 [SESSION] Génération code email...');
       const emailCode = VerificationService.generateVerificationCode();
       const emailExpiry = VerificationService.getCodeExpiry();
-      console.log(`📬 [SESSION] Code email: ${emailCode} (expire: ${emailExpiry.toISOString()})`);
+      console.log(`📬 [SESSION] Code: ${emailCode} (expire: ${emailExpiry.toISOString()})`);
 
-      console.log('💾 [SESSION] Enregistrement code email en base...');
+      console.log('💾 [SESSION] Enregistrement code en base...');
       await storage.setSessionEmailVerificationCode(session.id, emailCode, emailExpiry);
-      console.log('✅ [SESSION] Code email enregistré');
+      console.log('✅ [SESSION] Code enregistré');
 
       console.log('📧 [SESSION] Envoi email...');
       const emailSent = await VerificationService.sendEmailVerification(session.email, emailCode);
       console.log(`${emailSent ? '✅' : '❌'} [SESSION] Email ${emailSent ? 'envoyé' : 'ÉCHEC'}`);
 
       if (!emailSent) {
-        console.warn('⚠️  [SESSION] Code email visible en console pour test:', emailCode);
-      }
-
-      // Generate and send SMS verification code (new!)
-      console.log('🔑 [SESSION] Génération code SMS...');
-      const smsCode = VerificationService.generateVerificationCode();
-      const smsExpiry = VerificationService.getCodeExpiry();
-      console.log(`📱 [SESSION] Code SMS: ${smsCode} (expire: ${smsExpiry.toISOString()})`);
-
-      console.log('💾 [SESSION] Enregistrement code SMS en base...');
-      await storage.setSessionPhoneVerificationCode(session.id, smsCode, smsExpiry);
-      console.log('✅ [SESSION] Code SMS enregistré');
-
-      console.log('📱 [SESSION] Envoi SMS...');
-      const smsSent = await VerificationService.sendPhoneVerification(session.phone, smsCode);
-      console.log(`${smsSent ? '✅' : '❌'} [SESSION] SMS ${smsSent ? 'envoyé' : 'ÉCHEC'}`);
-
-      if (!smsSent) {
-        console.warn('⚠️  [SESSION] Code SMS visible en console pour test:', smsCode);
+        console.warn('⚠️  [SESSION] Code visible en console pour test:', emailCode);
       }
 
       console.log('🎉 [SESSION] Réponse envoyée au client\n');
@@ -189,8 +157,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // PATCH /api/auth/signup/session/:id - Update session (gender, password, phone)
+  // PATCH /api/auth/signup/session/:id - Update session (gender, password, phone) AFTER email verification
   app.patch("/api/auth/signup/session/:id", async (req: Request, res: Response) => {
+    console.log('\n🔵 [PATCH-SESSION] Début mise à jour session');
+    console.log('🔵 [PATCH-SESSION] SessionId:', req.params.id);
+    console.log('🔵 [PATCH-SESSION] Body:', JSON.stringify(req.body, null, 2));
+
     try {
       const { id } = req.params;
 
@@ -198,6 +170,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validationResult = updateSignupSessionSchema.safeParse(req.body);
 
       if (!validationResult.success) {
+        console.log('❌ [PATCH-SESSION] Validation échouée');
         const validationError = fromZodError(validationResult.error);
         return res.status(400).json({ 
           error: validationError.message,
@@ -206,23 +179,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const updates = validationResult.data;
+      console.log('✅ [PATCH-SESSION] Validation réussie');
 
       // Get existing session
       const session = await storage.getSignupSession(id);
       if (!session) {
+        console.log('❌ [PATCH-SESSION] Session non trouvée');
         return res.status(404).json({ error: "Session non trouvée" });
       }
 
       // Check if email is verified before allowing updates
       if (!session.emailVerified) {
+        console.log('❌ [PATCH-SESSION] Email non vérifié');
         return res.status(403).json({ error: "Email non vérifié" });
       }
 
+      // Hash password if provided
+      if (updates.password) {
+        console.log('🔐 [PATCH-SESSION] Hachage du mot de passe...');
+        updates.password = await bcrypt.hash(updates.password, 10);
+        console.log('✅ [PATCH-SESSION] Mot de passe haché');
+      }
+
       // Update session
+      console.log('💾 [PATCH-SESSION] Mise à jour en base...');
       const updatedSession = await storage.updateSignupSession(id, updates);
 
       if (!updatedSession) {
+        console.log('❌ [PATCH-SESSION] Erreur mise à jour');
         return res.status(500).json({ error: "Erreur lors de la mise à jour" });
+      }
+
+      console.log('✅ [PATCH-SESSION] Session mise à jour');
+      
+      // If phone was added, send SMS code
+      if (updates.phone && updatedSession.phone) {
+        console.log('📱 [PATCH-SESSION] Nouveau téléphone détecté, envoi SMS...');
+        const smsCode = VerificationService.generateVerificationCode();
+        const smsExpiry = VerificationService.getCodeExpiry();
+        
+        await storage.setSessionPhoneVerificationCode(id, smsCode, smsExpiry);
+        const smsSent = await VerificationService.sendPhoneVerification(updatedSession.phone, smsCode);
+        
+        console.log(`${smsSent ? '✅' : '❌'} [PATCH-SESSION] SMS ${smsSent ? 'envoyé' : 'ÉCHEC'}`);
+        
+        if (!smsSent) {
+          console.warn('⚠️  [PATCH-SESSION] Code SMS visible en console:', smsCode);
+        }
       }
 
       return res.status(200).json({ 
@@ -231,12 +234,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: updatedSession.id,
           email: updatedSession.email,
           emailVerified: updatedSession.emailVerified,
-          phoneVerified: updatedSession.phoneVerified
+          phoneVerified: updatedSession.phoneVerified,
+          hasGender: !!updatedSession.gender,
+          hasPassword: !!updatedSession.password,
+          hasPhone: !!updatedSession.phone
         }
       });
 
     } catch (error) {
-      console.error("Update session error:", error);
+      console.error("❌ [PATCH-SESSION] Exception:", error);
       return res.status(500).json({ error: "Erreur lors de la mise à jour" });
     }
   });
@@ -383,6 +389,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Update consents error:", error);
       return res.status(500).json({ error: "Erreur lors de la mise à jour des consentements" });
+    }
+  });
+
+  // PATCH /api/auth/signup/session/:id/location - Update location data (city, country, nationality)
+  app.patch("/api/auth/signup/session/:id/location", async (req: Request, res: Response) => {
+    console.log('\n🌍 [LOCATION] Début mise à jour localisation');
+    console.log('📝 [LOCATION] Body:', JSON.stringify(req.body, null, 2));
+    
+    try {
+      const { id } = req.params;
+      console.log(`🆔 [LOCATION] SessionId: ${id}`);
+
+      // Validate location updates
+      const validationResult = updateLocationSchema.safeParse(req.body);
+
+      if (!validationResult.success) {
+        console.log('❌ [LOCATION] Validation échouée');
+        const validationError = fromZodError(validationResult.error);
+        return res.status(400).json({ 
+          error: validationError.message,
+          details: validationResult.error.flatten()
+        });
+      }
+
+      const location: UpdateLocation = validationResult.data;
+      console.log('✅ [LOCATION] Validation réussie');
+
+      // Get existing session
+      const session = await storage.getSignupSession(id);
+      if (!session) {
+        console.log('❌ [LOCATION] Session non trouvée');
+        return res.status(404).json({ error: "Session non trouvée" });
+      }
+
+      // Check if phone is verified before allowing location updates
+      if (!session.phoneVerified) {
+        console.log('❌ [LOCATION] Téléphone non vérifié');
+        return res.status(403).json({ error: "Téléphone non vérifié" });
+      }
+
+      // Update location
+      console.log('💾 [LOCATION] Mise à jour en base...');
+      const updatedSession = await storage.updateSessionLocation(id, location);
+
+      if (!updatedSession) {
+        console.log('❌ [LOCATION] Erreur mise à jour');
+        return res.status(500).json({ error: "Erreur lors de la mise à jour de la localisation" });
+      }
+
+      console.log('✅ [LOCATION] Localisation mise à jour');
+      console.log(`🏙️ [LOCATION] Ville: ${updatedSession.city || 'non définie'}`);
+      console.log(`🌍 [LOCATION] Pays: ${updatedSession.country || 'non défini'}`);
+      console.log(`🛂 [LOCATION] Nationalité: ${updatedSession.nationality || 'non définie'}`);
+
+      return res.status(200).json({ 
+        message: "Localisation mise à jour",
+        location: {
+          city: updatedSession.city,
+          country: updatedSession.country,
+          nationality: updatedSession.nationality
+        }
+      });
+
+    } catch (error) {
+      console.error("❌ [LOCATION] Erreur:", error);
+      return res.status(500).json({ error: "Erreur lors de la mise à jour de la localisation" });
     }
   });
 
