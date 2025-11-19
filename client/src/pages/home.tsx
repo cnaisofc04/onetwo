@@ -28,7 +28,7 @@ export default function Home() {
 
         {/* Buttons */}
         <div className="flex flex-col w-full max-w-sm gap-4 pt-4">
-          <Link href="/signup">
+          <Link href="/language-selection">
             <Button 
               className="w-full h-14 text-base font-semibold"
               size="lg"
