@@ -30,7 +30,7 @@ export default function LocationNationality() {
   useEffect(() => {
     const storedSessionId = localStorage.getItem("signup_session_id");
     console.log('🛂 [NATIONALITY] Page chargée, sessionId:', storedSessionId);
-    
+
     if (!storedSessionId) {
       console.error('❌ [NATIONALITY] Aucun sessionId trouvé');
       toast({
@@ -41,7 +41,7 @@ export default function LocationNationality() {
       setLocation("/signup");
       return;
     }
-    
+
     setSessionId(storedSessionId);
     trackEvent("page_view", { page: "location_nationality" });
   }, [toast, setLocation]);
@@ -56,7 +56,7 @@ export default function LocationNationality() {
   const updateNationalityMutation = useMutation({
     mutationFn: async (nationality: string) => {
       if (!sessionId) throw new Error("Session non trouvée");
-      
+
       console.log('📤 [NATIONALITY] Envoi PATCH pour nationalité:', nationality);
       return apiRequest(`/api/auth/signup/session/${sessionId}/location`, {
         method: "PATCH",
@@ -66,16 +66,12 @@ export default function LocationNationality() {
     },
     onSuccess: () => {
       console.log('✅ [NATIONALITY] Nationalité enregistrée');
-      trackEvent("location_nationality_completed", { sessionId });
-      
       toast({
         title: "Nationalité enregistrée",
         description: "Passons aux conditions d'utilisation",
       });
-      
-      setTimeout(() => {
-        setLocation("/consent-terms");
-      }, 1000);
+      console.log('➡️ [NATIONALITY] Redirection vers /consent-terms');
+      setLocation("/consent-terms");
     },
     onError: (error: any) => {
       console.error('❌ [NATIONALITY] Erreur:', error);

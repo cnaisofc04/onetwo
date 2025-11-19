@@ -63,12 +63,12 @@ export default function ConsentDevice() {
       localStorage.removeItem("signup_session_id");
       localStorage.removeItem("verification_email");
       localStorage.removeItem("verification_phone");
-      
+
       toast({
         title: "Compte créé !",
         description: "Bienvenue sur OneTwo. Vous pouvez maintenant vous connecter.",
       });
-      
+
       setTimeout(() => {
         setLocation("/login");
       }, 1500);
@@ -87,7 +87,47 @@ export default function ConsentDevice() {
   };
 
   const handleAccept = async () => {
-    await updateConsentMutation.mutateAsync();
+    if (!sessionId) {
+      console.error('❌ [DEVICE] Aucun sessionId trouvé!');
+      toast({
+        title: "Erreur",
+        description: "Session introuvable. Retour à l'inscription.",
+        variant: "destructive",
+      });
+      setTimeout(() => setLocation("/signup"), 2000);
+      return;
+    }
+
+    try {
+      console.log('🔵 [DEVICE] === DÉBUT ENREGISTREMENT CONSENTEMENT APPAREIL ===');
+      console.log('📝 [DEVICE] SessionId:', sessionId);
+
+      // Update device binding consent
+      console.log('📤 [DEVICE] Envoi PATCH pour deviceBindingConsent: true');
+      await apiRequest(`/api/auth/signup/session/${sessionId}/consents`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deviceBindingConsent: true }),
+      });
+
+      console.log('✅ [DEVICE] Consentement appareil enregistré avec succès');
+
+      toast({
+        title: "Consentement enregistré",
+        description: "Finalisation de votre compte...",
+      });
+
+      console.log('➡️ [DEVICE] Redirection vers /complete');
+      // Redirect to complete page
+      setLocation("/complete");
+    } catch (error: any) {
+      console.error('❌ [DEVICE] Erreur:', error);
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible d'enregistrer le consentement",
+        variant: "destructive",
+      });
+    }
   };
 
   const isLoading = updateConsentMutation.isPending || finalizeMutation.isPending;
@@ -104,7 +144,7 @@ export default function ConsentDevice() {
           <h1 className="text-3xl font-semibold text-foreground mb-2" data-testid="text-page-title">
             Liaison de l'appareil
           </h1>
-          <p className="text-base text-muted-foreground" data-testid="text-description">
+          <p className="text-base text-muted-foreground" data-testid="text-page-subtitle">
             Étape 3 sur 3 - Consentements
           </p>
         </div>
@@ -118,7 +158,7 @@ export default function ConsentDevice() {
               <p className="text-base text-muted-foreground" data-testid="text-explanation-2">
                 Cela signifie que vous ne pourrez vous connecter qu'à partir de cet appareil. Cette mesure protège votre compte contre les accès non autorisés.
               </p>
-              
+
               <Alert className="mt-4" data-testid="alert-warning">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription className="ml-2">

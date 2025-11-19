@@ -41,7 +41,8 @@ export default function ConsentGeolocation() {
           description: "Merci d'avoir accepté la géolocalisation",
         });
       }
-      console.log('✅ [GEOLOCATION] Consentement enregistré, redirection vers /location-city');
+      console.log('✅ [GEOLOCATION] Consentement enregistré');
+      console.log('➡️ [GEOLOCATION] Redirection vers /location-city');
       setLocation("/location-city");
     },
     onError: (error: any) => {

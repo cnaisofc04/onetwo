@@ -71,12 +71,13 @@ export default function VerifyPhone() {
       });
     },
     onSuccess: async () => {
+      console.log('✅ [VERIFY-PHONE] Téléphone vérifié avec succès!');
       toast({
         title: "Téléphone vérifié !",
         description: "Passons aux consentements",
       });
-      // Redirect to consent-terms first (correct order)
-      setLocation("/consent-terms");
+      console.log('➡️ [VERIFY-PHONE] Redirection vers /consent-geolocation');
+      setLocation("/consent-geolocation");
     },
     onError: (error: any) => {
       toast({
