@@ -1,70 +1,100 @@
+
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { trackEvent } from "@/lib/posthog";
-import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Globe } from "lucide-react";
+
+const LANGUAGES = [
+  { code: "fr", label: "Français", flag: "🇫🇷" },
+  { code: "en", label: "English", flag: "🇬🇧" },
+  { code: "es", label: "Español", flag: "🇪🇸" },
+  { code: "de", label: "Deutsch", flag: "🇩🇪" },
+  { code: "it", label: "Italiano", flag: "🇮🇹" },
+  { code: "pt", label: "Português", flag: "🇵🇹" },
+  { code: "nl", label: "Nederlands", flag: "🇳🇱" },
+  { code: "pl", label: "Polski", flag: "🇵🇱" },
+  { code: "ru", label: "Русский", flag: "🇷🇺" },
+  { code: "ar", label: "العربية", flag: "🇸🇦" },
+  { code: "zh", label: "中文", flag: "🇨🇳" },
+  { code: "ja", label: "日本語", flag: "🇯🇵" },
+  { code: "ko", label: "한국어", flag: "🇰🇷" },
+  { code: "hi", label: "हिन्दी", flag: "🇮🇳" },
+  { code: "tr", label: "Türkçe", flag: "🇹🇷" },
+  { code: "sv", label: "Svenska", flag: "🇸🇪" },
+  { code: "no", label: "Norsk", flag: "🇳🇴" },
+  { code: "da", label: "Dansk", flag: "🇩🇰" },
+  { code: "fi", label: "Suomi", flag: "🇫🇮" },
+  { code: "cs", label: "Čeština", flag: "🇨🇿" },
+  { code: "hu", label: "Magyar", flag: "🇭🇺" },
+  { code: "ro", label: "Română", flag: "🇷🇴" },
+  { code: "el", label: "Ελληνικά", flag: "🇬🇷" },
+  { code: "he", label: "עברית", flag: "🇮🇱" },
+  { code: "th", label: "ไทย", flag: "🇹🇭" },
+  { code: "vi", label: "Tiếng Việt", flag: "🇻🇳" },
+  { code: "id", label: "Bahasa Indonesia", flag: "🇮🇩" },
+  { code: "ms", label: "Bahasa Melayu", flag: "🇲🇾" },
+  { code: "uk", label: "Українська", flag: "🇺🇦" },
+];
 
 export default function LanguageSelection() {
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
-  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("");
 
-  const languages = [
-    { code: "fr", label: "Français", flag: "🇫🇷" },
-    { code: "en", label: "English", flag: "🇬🇧" },
-    { code: "es", label: "Español", flag: "🇪🇸" },
-    { code: "de", label: "Deutsch", flag: "🇩🇪" },
-    { code: "it", label: "Italiano", flag: "🇮🇹" },
-    { code: "pt", label: "Português", flag: "🇵🇹" },
-  ];
-
-  const handleLanguageSelect = (langCode: string) => {
-    console.log(`🌍 [LANGUAGE] Langue sélectionnée: ${langCode}`);
-    setSelectedLanguage(langCode);
-    localStorage.setItem("signup_language", langCode);
+  const handleContinue = () => {
+    if (!selectedLanguage) {
+      return;
+    }
     
-    trackEvent("language_selected", { language: langCode });
-    
-    toast({
-      title: "Langue sélectionnée",
-      description: `Vous avez choisi ${languages.find(l => l.code === langCode)?.label}`,
-    });
-
-    // Redirection immédiate vers signup
-    setTimeout(() => {
-      console.log(`✅ [LANGUAGE] Redirection vers /signup`);
-      setLocation("/signup");
-    }, 500);
+    console.log('🌍 [LANGUAGE] Langue sélectionnée:', selectedLanguage);
+    localStorage.setItem("selected_language", selectedLanguage);
+    setLocation("/signup");
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-6">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="text-5xl mb-3">☯️</div>
-          <h1 className="text-3xl font-semibold text-foreground mb-2" data-testid="text-page-title">
-            Choisissez votre langue
-          </h1>
-          <p className="text-base text-muted-foreground">
-            Select your language / Seleccione su idioma
-          </p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md">
+        <CardContent className="pt-6 space-y-6">
+          <div className="text-center space-y-2">
+            <Globe className="h-12 w-12 mx-auto text-primary" />
+            <h1 className="text-2xl font-bold">Choisissez votre langue</h1>
+            <p className="text-sm text-muted-foreground">
+              Sélectionnez la langue de l'interface
+            </p>
+          </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          {languages.map((lang) => (
+          <div className="space-y-4">
+            <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+              <SelectTrigger className="w-full h-14 text-lg">
+                <SelectValue placeholder="Sélectionnez une langue" />
+              </SelectTrigger>
+              <SelectContent className="max-h-[300px]">
+                {LANGUAGES.map((lang) => (
+                  <SelectItem 
+                    key={lang.code} 
+                    value={lang.code}
+                    className="text-lg py-3"
+                  >
+                    <span className="flex items-center gap-3">
+                      <span className="text-2xl">{lang.flag}</span>
+                      <span>{lang.label}</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
             <Button
-              key={lang.code}
-              variant={selectedLanguage === lang.code ? "default" : "outline"}
-              className="h-20 text-lg font-semibold flex flex-col items-center justify-center gap-2"
-              onClick={() => handleLanguageSelect(lang.code)}
-              data-testid={`button-language-${lang.code}`}
+              onClick={handleContinue}
+              disabled={!selectedLanguage}
+              className="w-full h-14 text-lg"
             >
-              <span className="text-3xl">{lang.flag}</span>
-              <span>{lang.label}</span>
+              Continuer
             </Button>
-          ))}
-        </div>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

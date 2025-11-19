@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import type { IStorage } from './storage';
 import type { InsertUser, User, SignupSession, InsertSignupSession, UpdateConsents } from '@shared/schema';
@@ -42,7 +41,7 @@ function getSupabaseClient(gender: string) {
     console.log('✅ [SUPABASE] Routing MARQUE to Brand database');
     return supabaseBrand;
   }
-  
+
   // Man database routing (new + legacy values)
   const manGenders = [
     'Mr',
@@ -56,7 +55,7 @@ function getSupabaseClient(gender: string) {
     'Bisexuel',
     'Transgenre'
   ];
-  
+
   // Woman database routing (new + legacy values)
   const womanGenders = [
     'Mrs',
@@ -67,15 +66,15 @@ function getSupabaseClient(gender: string) {
     'Homosexuelle',
     'Lesbienne'
   ];
-  
+
   if (manGenders.includes(gender)) {
     return supabaseMan;
   }
-  
+
   if (womanGenders.includes(gender)) {
     return supabaseWoman;
   }
-  
+
   // Unknown value - log warning and default to supabaseMan
   console.error(`⚠️ Genre inconnu: "${gender}". Routage vers supabaseMan par défaut.`);
   console.warn('Valeurs valides:', [...manGenders, ...womanGenders, 'MARQUE'].join(', '));
@@ -87,10 +86,10 @@ export class SupabaseStorage implements IStorage {
     // Try all three databases (for login where we don't know gender)
     let result = await supabaseMan.from('users').select('*').eq('id', id).single();
     if (result.data) return result.data as User;
-    
+
     result = await supabaseWoman.from('users').select('*').eq('id', id).single();
     if (result.data) return result.data as User;
-    
+
     result = await supabaseBrand.from('users').select('*').eq('id', id).single();
     return result.data as User | undefined;
   }
@@ -99,10 +98,10 @@ export class SupabaseStorage implements IStorage {
     // Try all three databases
     let result = await supabaseMan.from('users').select('*').eq('email', email.toLowerCase()).single();
     if (result.data) return result.data as User;
-    
+
     result = await supabaseWoman.from('users').select('*').eq('email', email.toLowerCase()).single();
     if (result.data) return result.data as User;
-    
+
     result = await supabaseBrand.from('users').select('*').eq('email', email.toLowerCase()).single();
     return result.data as User | undefined;
   }
@@ -111,10 +110,10 @@ export class SupabaseStorage implements IStorage {
     // Try all three databases
     let result = await supabaseMan.from('users').select('*').eq('pseudonyme', pseudonyme).single();
     if (result.data) return result.data as User;
-    
+
     result = await supabaseWoman.from('users').select('*').eq('pseudonyme', pseudonyme).single();
     if (result.data) return result.data as User;
-    
+
     result = await supabaseBrand.from('users').select('*').eq('pseudonyme', pseudonyme).single();
     return result.data as User | undefined;
   }
@@ -122,10 +121,10 @@ export class SupabaseStorage implements IStorage {
   async createUser(userData: InsertUser): Promise<User> {
     // Hash password
     const hashedPassword = await bcrypt.hash(userData.password, 10);
-    
+
     // Select correct Supabase instance based on gender
     const supabase = getSupabaseClient(userData.gender);
-    
+
     const userToInsert = {
       pseudonyme: userData.pseudonyme,
       email: userData.email.toLowerCase(),
@@ -387,63 +386,14 @@ export class SupabaseStorage implements IStorage {
     }
   }
 
-  async updateSessionConsents(id: string, consents: UpdateConsents): Promise<SignupSession | undefined> {
-    try {
-      const [session] = await db
-        .update(signupSessions)
-        .set(consents)
-        .where(eq(signupSessions.id, id))
-        .returning();
-      return session;
-    } catch (error) {
-      console.error('Error updating session consents:', error);
-      return undefined;
-    }
+  async updateSessionConsents(sessionId: string, consents: UpdateConsents): Promise<void> {
+    // Not implemented for Supabase storage - sessions are in PostgreSQL
+    throw new Error("Session operations not supported in Supabase storage");
   }
 
-  async verifyAllConsentsGiven(sessionId: string): Promise<boolean> {
-    try {
-      const session = await this.getSignupSession(sessionId);
-      if (!session) return false;
-      
-      return !!(
-        session.geolocationConsent &&
-        session.termsAccepted &&
-        session.deviceBindingConsent
-      );
-    } catch (error) {
-      console.error('Error verifying consents:', error);
-      return false;
-    }
-  }
-
-  async updateSessionLocation(id: string, location: import('@shared/schema').UpdateLocation): Promise<SignupSession | undefined> {
-    try {
-      console.log(`💾 [SUPABASE-STORAGE] Mise à jour location session ${id}:`, location);
-      const [session] = await db
-        .update(signupSessions)
-        .set(location)
-        .where(eq(signupSessions.id, id))
-        .returning();
-      console.log(`✅ [SUPABASE-STORAGE] Location mise à jour pour session ${id}`);
-      return session;
-    } catch (error) {
-      console.error('❌ [SUPABASE-STORAGE] Error updating session location:', error);
-      return undefined;
-    }
-  }
-
-  private async findUserSupabase(email: string) {
-    let result = await supabaseMan.from('users').select('*').eq('email', email.toLowerCase()).single();
-    if (result.data) return supabaseMan;
-    
-    result = await supabaseWoman.from('users').select('*').eq('email', email.toLowerCase()).single();
-    if (result.data) return supabaseWoman;
-    
-    result = await supabaseBrand.from('users').select('*').eq('email', email.toLowerCase()).single();
-    if (result.data) return supabaseBrand;
-    
-    return null;
+  async updateSessionLocation(sessionId: string, location: { city?: string; country?: string; nationality?: string }): Promise<void> {
+    // Not implemented for Supabase storage - sessions are in PostgreSQL
+    throw new Error("Session operations not supported in Supabase storage");
   }
 }
 

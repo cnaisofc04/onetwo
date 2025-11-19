@@ -120,7 +120,7 @@ export const signupSessions = pgTable("signup_sessions", {
   gender: text("gender"),
   password: text("password"),
   city: text("city"), // Ville
-  country: text("country"), // Pays  
+  country: text("country"), // Pays
   nationality: text("nationality"), // Nationalité
   geolocationConsent: boolean("geolocation_consent").notNull().default(false),
   termsAccepted: boolean("terms_accepted").notNull().default(false),
@@ -209,21 +209,12 @@ export const updateConsentsSchema = z.object({
   deviceBindingConsent: z.boolean().optional(),
 });
 
-// Location update schema (city, country, nationality)
+export type UpdateConsents = z.infer<typeof updateConsentsSchema>;
+
 export const updateLocationSchema = z.object({
-  city: z.string().min(2, "La ville doit contenir au moins 2 caractères").optional(),
-  country: z.string().min(2, "Le pays doit contenir au moins 2 caractères").optional(),
-  nationality: z.string().min(2, "La nationalité doit contenir au moins 2 caractères").optional(),
+  city: z.string().min(1, "La ville est requise").optional(),
+  country: z.string().min(1, "Le pays est requis").optional(),
+  nationality: z.string().min(1, "La nationalité est requise").optional(),
 });
 
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type LoginUser = z.infer<typeof loginUserSchema>;
-export type VerifyEmail = z.infer<typeof verifyEmailSchema>;
-export type VerifyPhone = z.infer<typeof verifyPhoneSchema>;
-export type ResendVerification = z.infer<typeof resendVerificationSchema>;
-export type User = typeof users.$inferSelect;
-export type SignupSession = typeof signupSessions.$inferSelect;
-export type InsertSignupSession = z.infer<typeof insertSignupSessionSchema>;
-export type UpdateSignupSession = z.infer<typeof updateSignupSessionSchema>;
-export type UpdateConsents = z.infer<typeof updateConsentsSchema>;
 export type UpdateLocation = z.infer<typeof updateLocationSchema>;
