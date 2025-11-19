@@ -534,7 +534,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Valeur de genre invalide" });
       }
 
-      // Create final user with consents
+      // Create final user with consents AND location data
       const user = await storage.createUser({
         pseudonyme: session.pseudonyme,
         email: session.email,
@@ -547,6 +547,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         geolocationConsent: session.geolocationConsent,
         termsAccepted: session.termsAccepted,
         deviceBindingConsent: session.deviceBindingConsent,
+        city: session.city,
+        country: session.country,
+        nationality: session.nationality,
       });
 
       // Delete signup session
