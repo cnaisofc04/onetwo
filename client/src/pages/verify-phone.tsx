@@ -22,11 +22,11 @@ export default function VerifyPhone() {
   const [location, setLocation] = useLocation();
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // Added from changes
-  const [otp, setOtp] = useState(""); // Added from changes
+  const [isLoading, setIsLoading] = useState(false);
+  const [otp, setOtp] = useState("");
 
   // Récupérer le sessionId au chargement
-  useState(() => {
+  useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const urlSessionId = urlParams.get('sessionId');
     const localSessionId = localStorage.getItem('signup_session_id');
@@ -50,25 +50,7 @@ export default function VerifyPhone() {
       setSessionId(finalSessionId);
       setIsReady(true);
     }
-  });
-
-  // Added useEffect from changes
-  const userId = localStorage.getItem('signup_userId');
-
-  useEffect(() => {
-    console.log('📱 Page verify-phone chargée');
-    console.log('User ID:', userId);
-
-    if (!userId) {
-      console.error('❌ Aucun ID utilisateur trouvé, redirection vers signup');
-      toast({
-        title: "Erreur",
-        description: "Veuillez d'abord créer un compte",
-        variant: "destructive"
-      });
-      setLocation('/signup');
-    }
-  }, [userId, setLocation, toast]);
+  }, [toast, setLocation]);
 
   const form = useForm<{ code: string }>({
     resolver: zodResolver(z.object({ code: z.string().length(6) })),
@@ -93,8 +75,8 @@ export default function VerifyPhone() {
         title: "Téléphone vérifié !",
         description: "Passons aux consentements",
       });
-      // Use navigate for redirection
-      setLocation("/consent-geolocation");
+      // Redirect to consent-terms first (correct order)
+      setLocation("/consent-terms");
     },
     onError: (error: any) => {
       toast({

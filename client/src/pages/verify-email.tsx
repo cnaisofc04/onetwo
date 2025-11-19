@@ -24,7 +24,7 @@ export default function VerifyEmail() {
   const [isReady, setIsReady] = useState(false);
 
   // Récupérer le sessionId au chargement
-  useState(() => {
+  useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const urlSessionId = urlParams.get('sessionId');
     const localSessionId = localStorage.getItem('signup_session_id');
@@ -48,7 +48,7 @@ export default function VerifyEmail() {
       setSessionId(finalSessionId);
       setIsReady(true);
     }
-  });
+  }, [toast, setLocation]);
 
   const form = useForm<{ code: string }>({
     resolver: zodResolver(z.object({ code: z.string().length(6) })),
