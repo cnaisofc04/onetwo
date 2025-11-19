@@ -495,76 +495,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // POST /api/auth/signup/session/:id/complete - Complete signup and create final user
   app.post("/api/auth/signup/session/:id/complete", async (req: Request, res: Response) => {
+    console.log('\n🎯 [COMPLETE] Début finalisation inscription');
     try {
       const { id } = req.params;
+      console.log(`🆔 [COMPLETE] SessionId: ${id}`);
 
       const session = await storage.getSignupSession(id);
       if (!session) {
+        console.log('❌ [COMPLETE] Session non trouvée');
         return res.status(404).json({ error: "Session non trouvée" });
       }
 
+      console.log('✅ [COMPLETE] Session trouvée');
+
       // Verify session is complete
       if (!session.emailVerified) {
+        console.log('❌ [COMPLETE] Email non vérifié');
         return res.status(400).json({ error: "Email non vérifié" });
       }
 
       if (!session.phoneVerified) {
+        console.log('❌ [COMPLETE] Téléphone non vérifié');
         return res.status(400).json({ error: "Téléphone non vérifié" });
       }
 
       if (!session.gender || !session.password || !session.phone) {
+        console.log('❌ [COMPLETE] Informations manquantes');
         return res.status(400).json({ error: "Informations manquantes" });
       }
 
       // Verify all consents are given
       const allConsentsGiven = await storage.verifyAllConsentsGiven(id);
       if (!allConsentsGiven) {
+        console.log('❌ [COMPLETE] Consentements manquants');
         return res.status(403).json({ 
           error: "Consentements manquants",
           message: "Vous devez accepter tous les consentements pour finaliser votre inscription"
         });
       }
 
-      // Hash password before creating user
-      const hashedPassword = await bcrypt.hash(session.password, 10);
+      console.log('✅ [COMPLETE] Toutes les vérifications OK');
 
       // Validate gender value matches expected enum
       const validGenders = ["Mr", "Mr_Homosexuel", "Mr_Bisexuel", "Mr_Transgenre", "Mrs", "Mrs_Homosexuelle", "Mrs_Bisexuelle", "Mrs_Transgenre", "MARQUE"] as const;
       if (!validGenders.includes(session.gender as any)) {
+        console.log('❌ [COMPLETE] Genre invalide:', session.gender);
         return res.status(400).json({ error: "Valeur de genre invalide" });
       }
 
       // Create final user with consents AND location data
+      // NOTE: password is already hashed in session
+      console.log('💾 [COMPLETE] Création utilisateur final...');
       const user = await storage.createUser({
+        language: session.language,
         pseudonyme: session.pseudonyme,
         email: session.email,
         dateOfBirth: session.dateOfBirth,
         phone: session.phone,
         gender: session.gender as typeof validGenders[number],
-        password: hashedPassword,
+        password: session.password, // Already hashed
         emailVerified: true,
         phoneVerified: true,
         geolocationConsent: session.geolocationConsent,
         termsAccepted: session.termsAccepted,
         deviceBindingConsent: session.deviceBindingConsent,
-        city: session.city,
-        country: session.country,
-        nationality: session.nationality,
+        city: session.city || '',
+        country: session.country || '',
+        nationality: session.nationality || '',
       });
 
+      console.log('✅ [COMPLETE] Utilisateur créé:', user.id);
+      console.log('🏙️ [COMPLETE] Ville:', user.city);
+      console.log('🌍 [COMPLETE] Pays:', user.country);
+      console.log('🛂 [COMPLETE] Nationalité:', user.nationality);
+
       // Delete signup session
+      console.log('🗑️ [COMPLETE] Suppression session temporaire...');
       await storage.deleteSignupSession(id);
+      console.log('✅ [COMPLETE] Session supprimée');
 
       // Don't send password in response
       const { password, ...userWithoutPassword } = user;
 
+      console.log('🎉 [COMPLETE] Inscription finalisée avec succès!\n');
       return res.status(201).json({ 
         message: "Compte créé avec succès",
         user: userWithoutPassword
       });
 
     } catch (error) {
-      console.error("Complete signup error:", error);
+      console.error("❌ [COMPLETE] Erreur:", error);
       return res.status(500).json({ error: "Erreur lors de la finalisation" });
     }
   });
