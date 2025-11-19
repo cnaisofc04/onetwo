@@ -109,71 +109,30 @@ export default function Signup() {
     },
   });
 
-  // Updated handleStep3Complete with enhanced logging and logic
+  // Step 3: Save gender and move to next step
   const handleStep3Complete = async () => {
     console.log('🎯 [SIGNUP] === DÉBUT ÉTAPE 3 ===');
-    console.log('📊 [SIGNUP] Form values:', form.getValues());
-    console.log('🎯 [SIGNUP] Genre sélectionné:', form.getValues('gender'));
+    
+    const gender = form.getValues('gender');
+    console.log('🎯 [SIGNUP] Genre sélectionné:', gender);
 
-    const sessionId = localStorage.getItem("signup_session_id");
-    console.log('🔑 [SIGNUP] Session ID:', sessionId);
-
-    if (!sessionId) {
-      console.error('❌ [SIGNUP] Session ID manquant!');
+    if (!gender) {
+      console.error('❌ [SIGNUP] Genre non sélectionné!');
       toast({
         title: "Erreur",
-        description: "Session non trouvée. Veuillez recommencer.",
+        description: "Veuillez sélectionner votre identité",
         variant: "destructive",
       });
       return;
     }
 
-    const language = localStorage.getItem("selected_language") || "fr";
-    console.log('🌍 [SIGNUP] Langue récupérée:', language);
-
-    try {
-      const gender = form.getValues('gender');
-
-      if (!gender) {
-        console.error('❌ [SIGNUP] Genre non sélectionné!');
-        toast({
-          title: "Erreur",
-          description: "Veuillez sélectionner votre identité",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      console.log('📝 [SIGNUP] Envoi PATCH avec:', { language, gender });
-
-      const response = await fetch(`/api/auth/signup/session/${sessionId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language, gender })
-      });
-
-      console.log('📡 [SIGNUP] Réponse HTTP:', response.status);
-
-      if (!response.ok) {
-        const error = await response.json();
-        console.error('❌ [SIGNUP] Erreur serveur:', error);
-        throw new Error(error.error || "Erreur lors de la mise à jour");
-      }
-
-      const data = await response.json();
-      console.log('✅ [SIGNUP] Réponse serveur:', data);
-      console.log('✅ [SIGNUP] Genre enregistré avec succès');
-      console.log('➡️ [SIGNUP] Passage à l\'étape 4');
-
-      setCurrentStep(4);
-    } catch (error: any) {
-      console.error('❌ [SIGNUP] Erreur étape 3:', error);
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    // Sauvegarder le genre localement
+    localStorage.setItem("signup_gender", gender);
+    console.log('💾 [SIGNUP] Genre sauvegardé localement');
+    
+    // Passer directement à l'étape 4 (Email)
+    console.log('➡️ [SIGNUP] Passage à l\'étape 4 (Email)');
+    setStep(4);
   };
 
   const handleStep7Complete = async () => {
@@ -204,23 +163,21 @@ export default function Signup() {
         fieldsToValidate = ["dateOfBirth"];
         break;
       case 3:
-        // Le genre est validé et enregistré DANS handleStep3Complete
+        // Valider et sauvegarder le genre
         await handleStep3Complete();
-        return; // Redirection gérée par handleStep3Complete
+        return;
       case 4:
-        // Étape 4 est une redirection, donc pas de validation de champ
-        // La logique de redirection est gérée par le rendu conditionnel
-        break;
-      case 5:
         fieldsToValidate = ["email"];
         break;
-      case 6:
+      case 5:
         fieldsToValidate = ["password", "confirmPassword"];
         break;
+      case 6:
+        fieldsToValidate = ["phone"];
+        break;
       case 7:
-        // Sauvegarder les données restantes et informer l'utilisateur
+        // Créer la session avec toutes les données
         await handleStep7Complete();
-        // Après avoir sauvegardé, on procède à la création de session (qui redirige)
         const { pseudonyme, dateOfBirth, email, phone, gender, password } = form.getValues();
         await createSessionMutation.mutateAsync({
           language: localStorage.getItem("selected_language") || "fr",
@@ -231,14 +188,12 @@ export default function Signup() {
           gender,
           password,
         });
-        return; // Redirection gérée par createSessionMutation
+        return;
     }
 
-    // Valider les champs pour les étapes qui en ont besoin
+    // Valider les champs
     const isValid = await form.trigger(fieldsToValidate);
     if (isValid && step < 7) {
-      setStep(step + 1);
-    } else if (step === 5 && isValid) { // Cas spécifique: après email, on va à password
       setStep(step + 1);
     }
   };
@@ -259,7 +214,7 @@ export default function Signup() {
             Créer votre compte
           </h1>
           <p className="text-sm text-muted-foreground">
-            Étape {step} sur 7 (puis vérifications)
+            Étape {step} sur 6 (puis vérifications)
           </p>
         </div>
 
@@ -426,17 +381,8 @@ export default function Signup() {
               />
             )}
 
-            {/* Step 4: Email - This step is now a placeholder for redirection */}
+            {/* Step 4: Email */}
             {step === 4 && (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground mb-4">
-                  Redirection vers la vérification email...
-                </p>
-              </div>
-            )}
-
-            {/* Step 5: Email */}
-            {step === 5 && (
               <FormField
                 control={form.control}
                 name="email"
@@ -458,8 +404,8 @@ export default function Signup() {
               />
             )}
 
-            {/* Step 6: Password & Confirm */}
-            {step === 6 && (
+            {/* Step 5: Password & Confirm */}
+            {step === 5 && (
               <div className="space-y-4">
                 <FormField
                   control={form.control}
@@ -502,8 +448,8 @@ export default function Signup() {
               </div>
             )}
 
-            {/* Step 7: Phone */}
-            {step === 7 && (
+            {/* Step 6: Phone */}
+            {step === 6 && (
               <FormField
                 control={form.control}
                 name="phone"
@@ -536,7 +482,7 @@ export default function Signup() {
 
             {/* Navigation Buttons */}
             <div className="flex gap-4 pt-4">
-              {step > 1 && step !== 4 && (
+              {step > 1 && (
                 <Button
                   type="button"
                   variant="outline"
@@ -548,8 +494,7 @@ export default function Signup() {
                 </Button>
               )}
 
-              {/* "Next" button logic adjusted for step 3 and 5 */}
-              {step < 7 && step !== 3 && step !== 4 && (
+              {step < 6 && (
                 <Button
                   type="button"
                   onClick={nextStep}
@@ -560,8 +505,7 @@ export default function Signup() {
                 </Button>
               )}
 
-              {/* Special case for step 7 to trigger session creation */}
-              {step === 7 && (
+              {step === 6 && (
                 <Button
                   type="button"
                   onClick={nextStep}
