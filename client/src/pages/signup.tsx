@@ -135,23 +135,6 @@ export default function Signup() {
     setStep(4);
   };
 
-  const handleStep7Complete = async () => {
-    // Sauvegarder gender, password, phone dans localStorage pour PATCH après verify-email
-    const { gender, password, phone } = form.getValues();
-    localStorage.setItem("signup_pending_gender", gender || "");
-    localStorage.setItem("signup_pending_password", password);
-    localStorage.setItem("signup_pending_phone", phone);
-
-    console.log('💾 [SIGNUP] Données sauvegardées pour PATCH après vérification email');
-    console.log('💾 [SIGNUP] Gender:', gender, '| Phone:', phone);
-
-    // Pas de requête ici - juste sauvegarder localement
-    toast({
-      title: "Informations enregistrées",
-      description: "Veuillez vérifier votre email pour continuer",
-    });
-  };
-
   const nextStep = async () => {
     let fieldsToValidate: (keyof SignupFormData)[] = [];
 
@@ -175,25 +158,12 @@ export default function Signup() {
       case 6:
         fieldsToValidate = ["phone"];
         break;
-      case 7:
-        // Créer la session avec toutes les données
-        await handleStep7Complete();
-        const { pseudonyme, dateOfBirth, email, phone, gender, password } = form.getValues();
-        await createSessionMutation.mutateAsync({
-          language: localStorage.getItem("selected_language") || "fr",
-          pseudonyme,
-          dateOfBirth,
-          email,
-          phone,
-          gender,
-          password,
-        });
-        return;
     }
 
     // Valider les champs
     const isValid = await form.trigger(fieldsToValidate);
-    if (isValid && step < 7) {
+    if (isValid && step < 6) {
+      console.log(`✅ [SIGNUP] Passage étape ${step} → ${step + 1}`);
       setStep(step + 1);
     }
   };
@@ -214,7 +184,7 @@ export default function Signup() {
             Créer votre compte
           </h1>
           <p className="text-sm text-muted-foreground">
-            Étape {step} sur 6 (puis vérifications)
+            Étape {step} sur 6
           </p>
         </div>
 
@@ -508,12 +478,34 @@ export default function Signup() {
               {step === 6 && (
                 <Button
                   type="button"
-                  onClick={nextStep}
+                  onClick={async () => {
+                    console.log('🎯 [SIGNUP] === ÉTAPE 6 - CRÉATION SESSION ===');
+                    const { pseudonyme, dateOfBirth, email, phone, gender, password } = form.getValues();
+                    
+                    console.log('📋 [SIGNUP] Données à envoyer:');
+                    console.log('  - Langue:', localStorage.getItem("selected_language") || "fr");
+                    console.log('  - Pseudonyme:', pseudonyme);
+                    console.log('  - Date naissance:', dateOfBirth);
+                    console.log('  - Email:', email);
+                    console.log('  - Téléphone:', phone);
+                    console.log('  - Genre:', gender);
+                    console.log('  - Mot de passe:', password ? '***' : 'MANQUANT');
+                    
+                    await createSessionMutation.mutateAsync({
+                      language: localStorage.getItem("selected_language") || "fr",
+                      pseudonyme,
+                      dateOfBirth,
+                      email,
+                      phone,
+                      gender,
+                      password,
+                    });
+                  }}
                   disabled={createSessionMutation.isPending}
                   className="flex-1 h-14 text-base font-semibold"
                   data-testid="button-create-session"
                 >
-                  {createSessionMutation.isPending ? "Création..." : "Continuer"}
+                  {createSessionMutation.isPending ? "Création du compte..." : "Créer mon compte"}
                 </Button>
               )}
             </div>
