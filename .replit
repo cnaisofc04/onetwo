@@ -23,7 +23,7 @@ externalPort = 3000
 PORT = "5000"
 
 [workflows]
-runButton = "Project"
+runButton = "Start application with Doppler"
 
 [[workflows.workflow]]
 name = "Project"
@@ -45,6 +45,15 @@ outputType = "webview"
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
+
+[[workflows.workflow]]
+name = "Start application with Doppler"
+author = 49920518
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "doppler run -- npm run dev"
 
 [agent]
 integrations = ["javascript_database:1.0.0", "github:1.0.0", "resend:1.0.0", "notion:1.0.0", "twilio:1.0.0", "javascript_log_in_with_replit:1.0.0"]
