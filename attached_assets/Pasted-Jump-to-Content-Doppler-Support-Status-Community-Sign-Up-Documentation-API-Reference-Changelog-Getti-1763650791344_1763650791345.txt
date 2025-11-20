@@ -1,0 +1,236 @@
+Jump to Content
+Doppler
+Support
+Status
+Community
+Sign Up
+Documentation
+API Reference
+Changelog
+Getting Started
+
+    Welcome 👋
+    Getting Started
+    Team Management
+    CI/CD & Production
+    Managing Secrets
+    Secrets Rotation
+
+Development
+
+    API Reference
+    Command Line
+
+    Install CLI
+    CLI Guide
+    Automatic Restart
+    Text-based UI (TUI)
+    Secrets Setup Guide
+    Secrets Access Guide
+    Secrets Setting Guide
+    Secret Injection with Templates
+    Multiple Commands
+    Multiple Workplaces
+    Secret Fallback Files
+    Configure CLI Behavior
+    Troubleshooting
+    Changelog
+
+Editors
+SDKs
+Languages
+Frameworks
+
+    Terraform CDK
+    Universal Import Guide
+
+Integrations
+
+    Integration Access Scoping
+    Automated Syncs
+
+DIY Syncs
+Infrastructure as Code (IaC)
+Kubernetes
+Rotated Secrets
+Dynamic Secrets
+
+Workplace
+
+    Workplace Structure
+    Default Project Environments
+    Domain Verification
+    Activity Logs
+
+Access Logs
+Enterprise Key Management
+Platform Limits
+High Availability
+Analytics Dashboard
+
+User Management
+
+    User Provisioning
+
+Team Management
+User Groups
+Custom Roles
+Advanced Permissions
+Service Accounts
+
+    Multi-Factor Authentication (MFA)
+
+Projects
+
+    Create Project
+    Project Permissions
+    Webhooks
+    Project Templates
+    Change Requests
+
+Configs
+
+    Configs
+    Branch Configs
+    Config Inheritance
+    Service Tokens
+    Trusted IPs
+
+Secrets
+
+    Secrets
+    Importing Secrets
+    Secret Visibility
+    Secret Generation
+    Versioning
+    Search by Secret Value
+
+Security
+
+    Security Fact Sheet
+    Doppler Share Security
+
+Support
+
+    Support Portal
+    Status Page
+    Common Problems
+
+    FAQS
+    Doppler SLO
+    Artificial Intelligence (AI) Usage
+
+Install CLI
+
+Install the Doppler CLI in local development and production environments.
+Installation
+
+The Doppler CLI provides access to your secrets in every environment, from local development, CI/CD, staging, and production. It is a lightweight binary available for every major operating system, package manager, and Docker.
+
+    📘
+
+    If your specific distribution or OS isn't mentioned below, try using the Shell Script installation method.
+
+# Prerequisite. gnupg is required for binary signature verification
+brew install gnupg
+
+# Next, install using brew (use `doppler update` for subsequent updates)
+brew install dopplerhq/cli/doppler
+
+Now, verify the Doppler CLI was installed by checking its version.
+
+doppler --version
+
+You can also upgrade the CLI to the latest version at any time.
+
+doppler update
+
+Local Development
+Authentication
+
+In order for the Doppler CLI to access secrets for your projects, it needs an access token. For local development, we use the doppler login command which will open a browser window and ask you to authenticate.
+
+doppler login
+
+This only needs to happen once per workplace. If you have multiple workplaces, you can scope each login to a separate directory.
+Project Setup
+
+Now that the CLI is installed, let's configure it for use with a project in your development environment.
+
+In Doppler, access to a project's secrets is scoped to a specific directory in your file system. This allows you to fetch secrets for multiple projects on a single machine.
+
+    📘
+    Have you created a project?
+
+    If you or your team has yet to create a project, learn how in our Create a Project guide, as you'll need a project for the upcoming steps.
+
+For each project, the setup command must be run, usually at the repository root level.
+
+# Change to your project's directory
+cd ./your/project/directory
+
+# Select project and config
+doppler setup
+
+You can optionally pre-configure the Doppler project and config to use for local development by creating a doppler.yaml file, either in the root of the repository, or in each app folder if using a monorepo. You can specify just the project, or the project and config, but we recommend setting both to make setup as easy as possible. Here's an example:
+
+setup:
+  - project: example
+    config: dev_personal
+
+Now you'll get an enhanced experience when running doppler setup:
+
+You can get more detailed information about how project management works in the CLI from our Secrets Setup Guide.
+Usage
+
+Fetch the latest versions of your secrets for your project and selected config using the run command, injecting them as environment variables into the running process from your command or script.
+
+doppler run -- your-command-here
+
+Because Doppler injects secrets as environment variables, it works for any language, framework, platform, and cloud provider.
+
+const secret = process.env["SECRET_NAME"]
+
+To run one-off commands using a secret in Doppler, please make sure to escape the secret or use single quotes. You will need to do this to guard against shell parsing the variable before the run command executes.
+
+doppler run --command="echo \$SECRET_NAME"
+
+Automatic Restarts
+
+If you are on the Team plan, the Doppler CLI can automatically restart your process when your secrets change using the --watch flag.
+
+doppler run --watch -- your-command-here
+
+Remove .env File Usage
+
+Now that Doppler is injecting secrets as environment variables, it's best to remove all application code relying on .env files as well as .env files that may still exist locally.
+
+This instantly improves security by removing the storage of unencrypted secrets from your file system and avoids potential confusion as to what the source of truth is for the loading of environment variables.
+
+    📘
+    Setup Production
+
+    Now that you have local development running, let’s set up authentication for staging and production with Service Tokens or connecting an integration.
+
+    You can also configure the CLI with identity authentication via Service Account Identities (OIDC). Identities allow a service account to authenticate to Doppler via OIDC without using a static API token. Any tool that can generate OIDC tokens (e.g., CI tools like GitHub or GitLab) is compatible with Doppler.
+
+    doppler oidc login --scope=. --identity=00000000-0000-0000-0000-000000000000 --token=$CIRCLE_OIDC_TOKEN_V2
+
+Updated 14 days ago
+What’s Next
+
+    Service Tokens
+
+Automatic Fallbacks
+Multiple Commands
+Did this page help you?
+
+    Table of Contents
+        Installation
+        Local Development
+            Authentication
+            Project Setup
+        Usage
+        Automatic Restarts
+        Remove .env File Usage
+
