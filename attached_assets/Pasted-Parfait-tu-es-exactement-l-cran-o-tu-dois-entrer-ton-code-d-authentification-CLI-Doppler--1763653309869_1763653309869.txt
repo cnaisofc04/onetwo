@@ -1,0 +1,65 @@
+Parfait, tu es **exactement** à l’écran où tu dois entrer ton **code d’authentification CLI Doppler**. 👉 Le message *"Invalid CLI auth code"* signifie simplement que **le code collé n’est pas le bon**, ou qu’il **n’a pas été regénéré**.  Voici **la bonne procédure complète**, étape par étape, pour que ça fonctionne **à 100%** :  ---  # ✅ ÉTAPE 1 — Regénère un nouveau code d'authentification CLI  Dans ton terminal, tape :  ```bash doppler login --no-check-version ```  ⚠️ Très important : **N'utilise pas juste `doppler login`**, sinon il essaie de se mettre à jour mais échoue, et la commande ne génère pas le code.  Cette commande va :  ✔️ éviter la mise à jour (qui échoue) ✔️ générer un **nouveau code CLI unique**  Tu verras apparaître quelque chose du style :  ``` Open this URL in your browser: https://dashboard.doppler.com/workplace/auth/cli?code=XXXXXX ```  Et le code sera **automatiquement copié dans ton presse-papiers**.  ---  # ✅ ÉTAPE 2 — Colle *exactement* ce code dans la page web Doppler  Sur la page que tu as dans ton screenshot (la page violet / vert), dans le champ :  🔲 **Auth code**  ➡️ Colle le code copié automatiquement ➡️ Clique sur **Next**  Si le code expire, refais **doppler login --no-check-version**.  ---  # ❗ ÉTAPE 3 — Vérifie que tu es bien authentifié  Retourne dans ton terminal et vérifie :  ```bash doppler configure ```  Tu devrais voir ton email Doppler.  ---  # 🚀 ÉTAPE 4 — Initialiser ton projet Doppler (après login réussi)  Tu peux maintenant exécuter :  ```bash doppler setup --project onetwo --config dev ```  Cela va créer ton environnement et lier ton projet Doppler au dossier.  ---  # Si tu veux, je peux ensuite t’aider pour :  ✅ créer tes secrets dans Doppler ✅ connecter ton app Node/Express à Doppler ✅ utiliser `doppler run` pour lancer ton app avec les secrets etc.  Veux-tu que je t'explique la suite ? ~/workspace$ npm run doppler:init
+
+> rest-express@1.0.0 doppler:init
+> tsx scripts/init-doppler.ts
+
+🔍 VÉRIFICATION CONFIGURATION DOPPLER
+
+================================================================================
+✅ Doppler CLI installé
+❌ Non authentifié sur Doppler
+
+🔐 Pour vous authentifier:
+doppler login
+
+❌ Configuration incomplète - Authentifiez-vous
+~/workspace$ doppler login
+An update is available.
+CLI v3.75.1
+· * b008b823ec58f6982e26392b6fd0c30345e100a0 Fix race condition in concurrent creation of config and fallback dirs
+
+? Install Doppler CLI v3.75.1 Yes
+Updating...
+Error: update failed due to improper permissions
+Please re-run with `sudo` or as an admin
+Doppler Error: exit status 2
+~/workspace$ doppler setup --project onetwo --config dev
+An update is available.
+CLI v3.75.1
+· * b008b823ec58f6982e26392b6fd0c30345e100a0 Fix race condition in concurrent creation of config and fallback dirs
+
+? Install Doppler CLI v3.75.1 Yes
+Updating...
+Error: update failed due to improper permissions
+Please re-run with `sudo` or as an admin
+Doppler Error: exit status 2
+~/workspace$ doppler login
+An update is available.
+CLI v3.75.1
+· * b008b823ec58f6982e26392b6fd0c30345e100a0 Fix race condition in concurrent creation of config and fallback dirs
+
+? Install Doppler CLI v3.75.1 Yes
+Updating...
+Error: update failed due to improper permissions
+Please re-run with `sudo` or as an admin
+Doppler Error: exit status 2
+~/workspace$ oppler login --no-check-version
+bash: oppler: command not found
+~/workspace$ doppler login --no-check-version
+? Open the authorization page in your browser? Yes
+Complete authorization at https://dashboard.doppler.com/workplace/auth/cli
+Your auth code is:
+piano_prometheus_denver_turtle_fife
+
+Waiting...
+^C
+~/workspace$ doppler login --no-check-version
+? Open the authorization page in your browser? Yes
+Complete authorization at https://dashboard.doppler.com/workplace/auth/cli
+Your auth code is:
+spinach_indianapolis_otter_english_bear
+
+Waiting...
+  
+Welcome, gabriel
+~/workspace$ 
