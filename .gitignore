@@ -1,11 +1,14 @@
 node_modules
 dist
 .DS_Store
+# Local env files
 .env
 .env.local
-*.log
-.replit
-replit.nix
-server/public
-vite.config.ts.*
-*.tar.gz
+.env.production.local
+.env.development.local
+.env.backup
+
+# Doppler
+secrets.json
+secrets-migration.json
+.doppler

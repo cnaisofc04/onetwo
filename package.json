@@ -5,18 +5,24 @@
   "license": "MIT",
   "scripts": {
     "dev": "NODE_ENV=development tsx server/index.ts",
+    "dev:doppler": "doppler run -- npm run dev",
     "build": "npm run build:client && npm run build:server",
     "build:client": "vite build",
     "build:server": "esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/index.js",
     "start": "NODE_ENV=production node dist/index.js",
+    "start:doppler": "doppler run -- npm start",
     "db:push": "drizzle-kit push",
     "postinstall": "npm run memory:init",
     "memory:init": "tsx scripts/initialize-memory.ts",
     "memory:test": "tsx scripts/test-super-memory-api.ts",
     "secrets:test": "tsx scripts/test-all-secrets.ts",
+    "doppler:init": "tsx scripts/init-doppler.ts",
+    "doppler:test": "tsx scripts/test-doppler-manual.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "test:doppler": "vitest run server/doppler.test.ts",
+    "test:doppler:integration": "vitest run server/doppler-integration.test.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
