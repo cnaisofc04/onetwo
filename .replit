@@ -4,7 +4,7 @@ hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-25_05"
-packages = ["wmutils-core", "tree", "openssh_gssapi", "doppler"]
+packages = ["wmutils-core", "tree", "openssh_gssapi", "doppler", "jq"]
 
 [deployment]
 deploymentTarget = "autoscale"
@@ -14,6 +14,10 @@ run = ["npm", "run", "start"]
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 24678
+externalPort = 3001
 
 [[ports]]
 localPort = 39537
