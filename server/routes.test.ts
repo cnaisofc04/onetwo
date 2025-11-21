@@ -35,7 +35,10 @@ describe('API Routes - Authentication', () => {
         password: 'Password123',
         dateOfBirth: '2000-01-01',
         phone: '+33612345678',
-        gender: 'Mr'
+        gender: 'Mr',
+        city: 'Paris',
+        country: 'France',
+        nationality: 'Française'
       };
 
       const response = await request(app)
@@ -58,7 +61,10 @@ describe('API Routes - Authentication', () => {
         password: 'Password123',
         dateOfBirth: '2000-01-01',
         phone: `+3361299${timestamp.toString().slice(-4)}`,
-        gender: 'Mr'
+        gender: 'Mr',
+        city: 'Lyon',
+        country: 'France',
+        nationality: 'Française'
       };
 
       await request(app).post('/api/auth/signup').send(userData).expect(201);
@@ -93,7 +99,10 @@ describe('API Routes - Authentication', () => {
           password: 'Password123',
           dateOfBirth: underageDate.toISOString().split('T')[0],
           phone: '+33612345678',
-          gender: 'Mr'
+          gender: 'Mr',
+          city: 'Marseille',
+          country: 'France',
+          nationality: 'Française'
         })
         .expect(400);
 
@@ -108,7 +117,10 @@ describe('API Routes - Authentication', () => {
       password: 'Password123',
       dateOfBirth: '2000-01-01',
       phone: '+33612345678',
-      gender: 'Mrs'
+      gender: 'Mrs',
+      city: 'Toulouse',
+      country: 'France',
+      nationality: 'Française'
     };
 
     beforeAll(async () => {
