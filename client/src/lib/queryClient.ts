@@ -1,43 +1,30 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
-// 🚀 RÉSOLUTION: Déterminer le domaine correct du backend
-const getBackendURL = () => {
-  // En développement Replit
-  if (typeof window !== 'undefined' && window.location.hostname) {
-    const protocol = window.location.protocol;
-    const hostname = window.location.hostname;
-    
-    // Si on est sur replit.dev domain
-    if (hostname.includes('replit.dev') || hostname.includes('localhost')) {
-      // Sur Replit: http://hostname:3001 (même domaine, port 3001)
-      return `${protocol}//${hostname}:3001`;
-    }
-  }
-  
-  // Par défaut utilise le port 3001 local
-  return 'http://localhost:3001';
-};
-
-const BACKEND_URL = getBackendURL();
-
-console.log(`🌐 [CLIENT] Backend URL: ${BACKEND_URL}`);
-
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
-    console.error(`❌ [API] Réponse erreur: ${res.status} - ${text}`);
+    console.error(`❌ [API] Erreur HTTP ${res.status}:`, text);
     throw new Error(`${res.status}: ${text}`);
   }
 }
 
 export async function apiRequest(endpoint: string, options?: RequestInit) {
-  const fullURL = `${BACKEND_URL}${endpoint}`;
+  // ✅ UTILISER /api directement (proxy Vite handle)
+  // Vite proxy redirige: /api/* → http://127.0.0.1:3001/api/*
   
-  console.log(`📤 [API] Appel: ${options?.method || 'GET'} ${fullURL}`);
-  console.log(`📝 [API] Body:`, options?.body ? JSON.parse(options.body as string) : 'N/A');
+  console.log(`📤 [API] ${options?.method || 'POST'} ${endpoint}`);
+  
+  if (options?.body) {
+    try {
+      const body = JSON.parse(options.body as string);
+      console.log(`📝 [API] Body:`, body);
+    } catch (e) {
+      console.log(`📝 [API] Body:`, options.body);
+    }
+  }
   
   try {
-    const response = await fetch(fullURL, {
+    const response = await fetch(endpoint, {
       method: options?.method || 'POST',
       credentials: 'include',
       ...options,
@@ -48,7 +35,7 @@ export async function apiRequest(endpoint: string, options?: RequestInit) {
     await throwIfResNotOk(response);
     return response;
   } catch (error) {
-    console.error(`❌ [API] Erreur fetch:`, error);
+    console.error(`❌ [API] Erreur:`, error instanceof Error ? error.message : error);
     throw error;
   }
 }
@@ -59,11 +46,11 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const fullURL = `${BACKEND_URL}${queryKey.join("/")}`;
+    const endpoint = queryKey.join("/") as string;
     
-    console.log(`📤 [QUERY] GET ${fullURL}`);
+    console.log(`📤 [QUERY] GET ${endpoint}`);
     
-    const res = await fetch(fullURL, {
+    const res = await fetch(endpoint, {
       credentials: "include",
     });
 
@@ -73,7 +60,7 @@ export const getQueryFn: <T>(options: {
 
     await throwIfResNotOk(res);
     const data = await res.json();
-    console.log(`📥 [QUERY] Données reçues:`, data);
+    console.log(`📥 [QUERY] Données:`, data);
     return data;
   };
 
