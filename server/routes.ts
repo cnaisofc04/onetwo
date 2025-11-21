@@ -29,6 +29,13 @@ import bcrypt from "bcrypt";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // DEBUG: Vérifier les secrets au démarrage
+  console.log('\n🔐 [STARTUP] Vérification des secrets Doppler...');
+  console.log(`📧 RESEND_API_KEY: ${process.env.RESEND_API_KEY ? '✅ CHARGÉ (' + process.env.RESEND_API_KEY.substring(0, 10) + '...)' : '❌ MANQUANT'}`);
+  console.log(`📱 TWILIO_ACCOUNT_SID: ${process.env.TWILIO_ACCOUNT_SID ? '✅ CHARGÉ' : '❌ MANQUANT'}`);
+  console.log(`📱 TWILIO_AUTH_TOKEN: ${process.env.TWILIO_AUTH_TOKEN ? '✅ CHARGÉ' : '❌ MANQUANT'}`);
+  console.log(`📱 TWILIO_PHONE_NUMBER: ${process.env.TWILIO_PHONE_NUMBER ? '✅ CHARGÉ' : '❌ MANQUANT'}`);
+
   // New Signup Session Flow Routes
 
   // POST /api/auth/signup/session - Create signup session with ALL data from steps 1-6
@@ -148,13 +155,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
     } catch (error) {
-      console.error("Create signup session error:", error);
-      // await MemoryContext.rememberErrorSolution(
-      //   `Erreur création session: ${error instanceof Error ? error.message : 'Unknown'}`,
-      //   'Vérifier validation email/pseudonyme, disponibilité base de données',
-      //   ['signup', 'session', 'error']
-      // );
-      return res.status(500).json({ error: "Erreur lors de la création de la session" });
+      console.error("🔴 [SESSION] ERREUR CRITIQUE:", error);
+      console.error("🔴 [SESSION] Type:", error instanceof Error ? error.constructor.name : typeof error);
+      console.error("🔴 [SESSION] Message:", error instanceof Error ? error.message : String(error));
+      console.error("🔴 [SESSION] Stack:", error instanceof Error ? error.stack : 'N/A');
+      if (error instanceof Error && error.message.includes('RESEND_API_KEY')) {
+        console.error('❌ RESEND_API_KEY NOT LOADED - Check dotenv/config!');
+      }
+      return res.status(500).json({ 
+        error: "Erreur lors de la création de la session",
+        details: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
