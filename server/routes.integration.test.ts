@@ -36,7 +36,10 @@ describe('Signup Integration Tests', () => {
           password: 'Test1234',
           dateOfBirth: '1990-01-01',
           phone: '+33612345678',
-          gender: 'Mr'
+          gender: 'Mr',
+          city: 'Paris',
+          country: 'France',
+          nationality: 'Française'
         });
       
       expect(response.status).toBe(201);
@@ -51,7 +54,10 @@ describe('Signup Integration Tests', () => {
           password: 'Test1234',
           dateOfBirth: '1990-01-01',
           phone: `+3361234${Date.now().toString().slice(-4)}`,
-          gender: 'Mrs'
+          gender: 'Mrs',
+          city: 'Lyon',
+          country: 'France',
+          nationality: 'Française'
         });
       
       expect(response.status).toBe(201);
@@ -66,7 +72,10 @@ describe('Signup Integration Tests', () => {
           password: 'Test1234',
           dateOfBirth: '1990-01-01',
           phone: `+3361235${Date.now().toString().slice(-4)}`,
-          gender: 'Mr_Homosexuel'
+          gender: 'Mr_Homosexuel',
+          city: 'Marseille',
+          country: 'France',
+          nationality: 'Française'
         });
       
       expect(response.status).toBe(201);
@@ -81,7 +90,10 @@ describe('Signup Integration Tests', () => {
           password: 'Test1234',
           dateOfBirth: '1990-01-01',
           phone: `+3361236${Date.now().toString().slice(-4)}`,
-          gender: 'Mrs_Homosexuelle'
+          gender: 'Mrs_Homosexuelle',
+          city: 'Toulouse',
+          country: 'France',
+          nationality: 'Française'
         });
       
       expect(response.status).toBe(201);
@@ -96,7 +108,10 @@ describe('Signup Integration Tests', () => {
           password: 'Test1234',
           dateOfBirth: '1990-01-01',
           phone: '+33612345682',
-          gender: 'InvalidGender'
+          gender: 'InvalidGender',
+          city: 'Paris',
+          country: 'France',
+          nationality: 'Française'
         });
       
       expect(response.status).toBe(400);
