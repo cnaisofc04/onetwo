@@ -13,9 +13,9 @@ export const users = pgTable("users", {
   dateOfBirth: date("date_of_birth").notNull(),
   phone: text("phone").notNull(),
   gender: text("gender").notNull(), // Mr, Mrs, Homosexuel, Homosexuelle, Transgenre, Bisexuel, MARQUE
-  city: text("city"), // Ville - optionnel pour profil ultérieurement
-  country: text("country"), // Pays - optionnel pour profil ultérieurement
-  nationality: text("nationality"), // Nationalité - optionnel pour profil ultérieurement
+  city: text("city").notNull(), // Ville - REQUIS
+  country: text("country").notNull(), // Pays - REQUIS
+  nationality: text("nationality").notNull(), // Nationalité - REQUIS
   emailVerified: boolean("email_verified").notNull().default(false),
   phoneVerified: boolean("phone_verified").notNull().default(false),
   emailVerificationCode: text("email_verification_code"),
@@ -81,9 +81,9 @@ export const insertUserSchema = createInsertSchema(users).omit({
     errorMap: () => ({ message: "Veuillez sélectionner votre identité" })
   }),
 
-  city: z.string().optional(),
-  country: z.string().optional(),
-  nationality: z.string().optional(),
+  city: z.string().min(1, "La ville est requise"),
+  country: z.string().min(1, "Le pays est requis"),
+  nationality: z.string().min(1, "La nationalité est requise"),
 });
 
 // Type export for InsertUser
