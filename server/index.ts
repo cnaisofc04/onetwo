@@ -13,10 +13,21 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const port = 5000;
+const port = 3001; // BACKEND sur 3001 (pas 5000!)
 
 // Middleware
 app.use(express.json());
+
+// CORS pour appels depuis frontend sur 5000
+app.use((req: Request, res: Response, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 // Startup verification
 console.log('\n🔐 [STARTUP] Vérification des secrets Doppler...');
@@ -27,13 +38,6 @@ console.log(`📱 TWILIO_PHONE_NUMBER: ${process.env.TWILIO_PHONE_NUMBER ? '✅ 
 
 // Setup routes
 setupRoutes(app);
-
-// Servir le frontend
-const clientPath = path.join(__dirname, '../dist');
-app.use(express.static(clientPath));
-app.get('*', (req: Request, res: Response) => {
-  res.sendFile(path.join(clientPath, 'index.html'));
-});
 
 // Démarrage serveur SANS erreur
 const server = createServer(app);
@@ -50,8 +54,9 @@ server.on('error', (err: any) => {
 });
 
 server.listen(port, '0.0.0.0', () => {
-  console.log(`✅ Serveur démarré sur http://0.0.0.0:${port}`);
-  console.log('🚀 OneTwo application ready!\n');
+  console.log(`✅ [BACKEND] Démarré sur http://0.0.0.0:${port}`);
+  console.log(`   Frontend sur: http://0.0.0.0:5000`);
+  console.log(`   API calls: /api → localhost:${port}\n`);
 });
 
 // Graceful shutdown
