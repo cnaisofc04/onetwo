@@ -1,0 +1,28 @@
+
+name: Initialisation Mémoire Automatique
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  init-memory:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Installer dépendances
+      run: npm install
+      
+    - name: Initialiser mémoire Supermemory
+      env:
+        SUPER_MEMORY_API_KEY: ${{ secrets.SUPER_MEMORY_API_KEY }}
+      run: npm run memory:init
+      continue-on-error: true
