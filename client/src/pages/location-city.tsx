@@ -43,8 +43,59 @@ export default function LocationCity() {
       setLocation("/signup");
       return;
     }
-    
-    setSessionId(storedSessionId);
+
+    // GUARD CHECK: Verify prerequisites before allowing location update
+    const checkPrerequisites = async () => {
+      try {
+        console.log('🔍 [CITY] Vérification des prérequis...');
+        const response = await fetch(`/api/auth/signup/session/${storedSessionId}`);
+        if (!response.ok) {
+          console.error('❌ [CITY] Erreur vérification session');
+          setLocation("/verify-phone");
+          return;
+        }
+        
+        const session = await response.json();
+        console.log('📋 [CITY] État de session:', {
+          phoneVerified: session.phoneVerified,
+          geolocationConsent: session.geolocationConsent,
+          termsAccepted: session.termsAccepted,
+          deviceBindingConsent: session.deviceBindingConsent
+        });
+        
+        // Block if phone not verified
+        if (!session.phoneVerified) {
+          console.error('❌ [CITY] Téléphone non vérifié - redirection vers /verify-phone');
+          toast({
+            title: "Étape manquante",
+            description: "Veuillez d'abord vérifier votre téléphone",
+            variant: "destructive",
+          });
+          setLocation("/verify-phone");
+          return;
+        }
+        
+        // Block if consents not complete
+        if (!session.geolocationConsent || !session.termsAccepted || !session.deviceBindingConsent) {
+          console.error('❌ [CITY] Consentements manquants - redirection vers consent pages');
+          toast({
+            title: "Étape manquante",
+            description: "Veuillez d'abord donner vos consentements",
+            variant: "destructive",
+          });
+          setLocation("/consent-geolocation");
+          return;
+        }
+        
+        console.log('✅ [CITY] Tous les prérequis OK');
+        setSessionId(storedSessionId);
+      } catch (error) {
+        console.error('❌ [CITY] Erreur vérification:', error);
+        setLocation("/verify-phone");
+      }
+    };
+
+    checkPrerequisites();
     trackEvent("page_view", { page: "location_city" });
   }, [toast, setLocation]);
 

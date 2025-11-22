@@ -169,6 +169,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/auth/signup/session/:id - Get signup session data (for frontend validation)
+  app.get("/api/auth/signup/session/:id", async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      console.log(`📖 [GET-SESSION] Récupération session: ${id}`);
+
+      const session = await storage.getSignupSession(id);
+      if (!session) {
+        console.log('❌ [GET-SESSION] Session non trouvée');
+        return res.status(404).json({ error: "Session non trouvée" });
+      }
+
+      console.log('✅ [GET-SESSION] Session trouvée');
+      // Return session data (without password)
+      return res.status(200).json({
+        id: session.id,
+        email: session.email,
+        phone: session.phone,
+        pseudonyme: session.pseudonyme,
+        emailVerified: session.emailVerified,
+        phoneVerified: session.phoneVerified,
+        gender: session.gender,
+        geolocationConsent: session.geolocationConsent,
+        termsAccepted: session.termsAccepted,
+        deviceBindingConsent: session.deviceBindingConsent,
+        city: session.city,
+        country: session.country,
+        nationality: session.nationality
+      });
+    } catch (error) {
+      console.error("❌ [GET-SESSION] Erreur:", error);
+      return res.status(500).json({ error: "Erreur lors de la récupération de la session" });
+    }
+  });
+
   // POST /api/auth/signup/session/:id/verify-email - Verify email code
   app.post("/api/auth/signup/session/:id/verify-email", async (req: Request, res: Response) => {
     console.log('\n🔵 [VERIFY-EMAIL-API] Début vérification email');
@@ -518,6 +553,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log('✅ [COMPLETE] Session trouvée');
+      console.log(`📋 [COMPLETE] État de session avant vérifications:`);
+      console.log(`  - emailVerified: ${session.emailVerified}`);
+      console.log(`  - phoneVerified: ${session.phoneVerified}`);
+      console.log(`  - gender: ${session.gender}`);
+      console.log(`  - password: ${session.password ? '***' : 'NULL'}`);
+      console.log(`  - phone: ${session.phone}`);
+      console.log(`  - geolocationConsent: ${session.geolocationConsent}`);
+      console.log(`  - termsAccepted: ${session.termsAccepted}`);
+      console.log(`  - deviceBindingConsent: ${session.deviceBindingConsent}`);
 
       // Verify session is complete
       if (!session.emailVerified) {
@@ -526,8 +570,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (!session.phoneVerified) {
-        console.log('❌ [COMPLETE] Téléphone non vérifié');
-        return res.status(400).json({ error: "Téléphone non vérifié" });
+        console.log('❌ [COMPLETE] Téléphone non vérifié - BLOCK');
+        return res.status(403).json({ error: "Téléphone non vérifié - complétez la vérification SMS" });
       }
 
       if (!session.gender || !session.password || !session.phone) {
@@ -537,15 +581,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Verify all consents are given
       const allConsentsGiven = await storage.verifyAllConsentsGiven(id);
+      console.log(`🔍 [COMPLETE] Vérification consentements: ${allConsentsGiven}`);
       if (!allConsentsGiven) {
-        console.log('❌ [COMPLETE] Consentements manquants');
+        console.log('❌ [COMPLETE] Consentements manquants - BLOCK');
         return res.status(403).json({ 
           error: "Consentements manquants",
           message: "Vous devez accepter tous les consentements pour finaliser votre inscription"
         });
       }
 
-      console.log('✅ [COMPLETE] Toutes les vérifications OK');
+      console.log('✅ [COMPLETE] Toutes les vérifications OK - CRÉATION USER')
 
       // Validate gender value matches expected enum
       const validGenders = ["Mr", "Mr_Homosexuel", "Mr_Bisexuel", "Mr_Transgenre", "Mrs", "Mrs_Homosexuelle", "Mrs_Bisexuelle", "Mrs_Transgenre", "MARQUE"] as const;
