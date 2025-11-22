@@ -34,7 +34,7 @@ export class VerificationService {
       console.log(`📧 [EMAIL] Tentative envoi à ${email} avec code ${code}`);
       
       const response = await resend.emails.send({
-        from: 'noreply@onetwo.dating',
+        from: 'onboarding@resend.dev',
         to: email,
         subject: 'Code de vérification OneTwo - ' + code,
         html: `
