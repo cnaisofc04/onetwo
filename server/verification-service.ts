@@ -47,7 +47,8 @@ export class VerificationService {
         `,
       });
 
-      console.log(`✅ [EMAIL] Envoyé avec succès: ${response.id}`);
+      const emailId = response.data?.id || 'unknown';
+      console.log(`✅ [EMAIL] Envoyé avec succès: ${emailId}`);
       return true;
     } catch (error) {
       console.error(`❌ [EMAIL] Erreur:`, error);

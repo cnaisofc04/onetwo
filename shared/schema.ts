@@ -237,3 +237,8 @@ export const updateLocationSchema = z.object({
 });
 
 export type UpdateLocation = z.infer<typeof updateLocationSchema>;
+
+// Export select types for User and SignupSession
+import type { InferSelectModel } from 'drizzle-orm';
+export type User = InferSelectModel<typeof users>;
+export type SignupSession = InferSelectModel<typeof signupSessions>;
