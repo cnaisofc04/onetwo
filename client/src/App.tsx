@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PostHogProvider } from "@/lib/posthog";
 import Home from "@/pages/home";
-import LanguageSelection from "@/pages/language-selection";
+import LanguageSelection from "@/pages/language-selection-joystick";
 import Signup from "@/pages/signup";
 import Login from "@/pages/login";
 import VerifyEmail from "@/pages/verify-email";
