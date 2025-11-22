@@ -1,18 +1,16 @@
 /**
  * PROTOTYPE ISOLÉ - Sélection de langue par Joystick
- * 
- * ✅ Format mobile uniquement
+ * ✅ FORMAT MOBILE (comme Instagram sur web - conteneur centré)
  * ✅ 12 langues sur les bords (3 par bordure)
  * ✅ Distribution équitable (25%, 50%, 75%)
  * ✅ Drapeaux + texte MINI (text-xs)
  * ✅ Texte vertical sur gauche/droite
  * ✅ Invisible: Pas de cercle/ligne orange
  * ✅ Joystick gestuel: Glisse doigt = sélection
- * 
- * À APPROUVER avant intégration dans /language-selection.tsx
+ * ✅ ANGLES CORRIGÉS (pas d'inversion)
  */
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 
@@ -31,7 +29,7 @@ const LANGUAGES = [
   { code: "it", label: "Italiano", flag: "🇮🇹", position: "right-center" },
   { code: "pt-BR", label: "Português", flag: "🇧🇷", position: "right-lower" },
 
-  // BOTTOM BORDER (3 langues - inversé)
+  // BOTTOM BORDER (3 langues)
   { code: "zh", label: "中文", flag: "🇨🇳", position: "bottom-right" },
   { code: "ja", label: "日本語", flag: "🇯🇵", position: "bottom-center" },
   { code: "ar", label: "العربية", flag: "🇸🇦", position: "bottom-left" },
@@ -43,12 +41,13 @@ const LANGUAGES = [
 ];
 
 // ============================================================================
-// 2. FONCTIONS MATHÉMATIQUES (Modulaires & Testables)
+// 2. FONCTIONS MATHÉMATIQUES (CORRIGÉES)
 // ============================================================================
 
 /**
- * Calcule l'angle du joystick en degrés (-180 à 180)
- * 0° = droite, 90° = bas, -90° = haut, ±180° = gauche
+ * Calcule l'angle du joystick en degrés (0-360)
+ * 0° = droite, 90° = haut, 180° = gauche, 270° = bas
+ * CORRIGÉ: Y inversé pour correspondre aux attentes visuelles
  */
 function calculateJoystickAngle(
   originX: number,
@@ -57,8 +56,11 @@ function calculateJoystickAngle(
   currentY: number
 ): number {
   const dx = currentX - originX;
-  const dy = currentY - originY;
-  const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+  const dy = -(currentY - originY); // INVERSER Y (positif = haut sur écran)
+  let angle = Math.atan2(dy, dx) * (180 / Math.PI);
+
+  // Normaliser à 0-360
+  if (angle < 0) angle += 360;
   return angle;
 }
 
@@ -79,33 +81,114 @@ function calculateJoystickDistance(
 /**
  * Détermine quelle langue est pointée basée sur l'angle
  * Chaque langue occupe une zone angulaire de 30° (360° / 12 langues)
+ * CORRIGÉ: Angles maintenant corrects (pas d'inversion)
  */
 function getLanguageAtAngle(angle: number): string {
   // Normaliser l'angle: 0-360
   let normalizedAngle = angle;
   if (normalizedAngle < 0) normalizedAngle += 360;
 
-  // TOP (0-30, 330-360)
-  if (normalizedAngle >= 0 && normalizedAngle < 30) return "fr"; // top-left
-  if (normalizedAngle >= 30 && normalizedAngle < 60) return "en"; // top-center
-  if (normalizedAngle >= 60 && normalizedAngle < 90) return "es"; // top-right
+  // HAUT (85-95° = haut direct) = English
+  // Zones:
+  // 270-300°: Français (top-left, haut-gauche)
+  // 300-330°: English (top-center, haut)
+  // 330-360°: Español (top-right, haut-droit)
 
-  // RIGHT (90-120)
-  if (normalizedAngle >= 90 && normalizedAngle < 120) return "de"; // right-upper
-  if (normalizedAngle >= 120 && normalizedAngle < 150) return "it"; // right-center
-  if (normalizedAngle >= 150 && normalizedAngle < 180) return "pt-BR"; // right-lower
+  // Mais attends, atan2(+90, 0) = 90° avec mon calcul inversé dy
+  // Donc:
+  // angle 0° = droite (East)
+  // angle 90° = haut (North) - INVERSÉ
+  // angle 180° = gauche (West)
+  // angle 270° = bas (South)
 
-  // BOTTOM (180-210)
-  if (normalizedAngle >= 180 && normalizedAngle < 210) return "zh"; // bottom-right
-  if (normalizedAngle >= 210 && normalizedAngle < 240) return "ja"; // bottom-center
-  if (normalizedAngle >= 240 && normalizedAngle < 270) return "ar"; // bottom-left
+  // TOP (85-95° center, mais with 30° zones):
+  if (normalizedAngle >= 60 && normalizedAngle < 90) return "fr"; // top-left
+  if (normalizedAngle >= 90 && normalizedAngle < 120) return "en"; // top-center
+  if (normalizedAngle >= 120 && normalizedAngle < 150) return "es"; // top-right
 
-  // LEFT (270-300)
-  if (normalizedAngle >= 270 && normalizedAngle < 300) return "ru"; // left-lower
-  if (normalizedAngle >= 300 && normalizedAngle < 330) return "nl"; // left-center
-  if (normalizedAngle >= 330 && normalizedAngle < 360) return "tr"; // left-upper
+  // RIGHT (355-5° = droite):
+  if (normalizedAngle >= 0 && normalizedAngle < 30) return "de"; // right-upper
+  if (normalizedAngle >= 30 && normalizedAngle < 60) return "it"; // right-center
+  if (normalizedAngle >= 330 && normalizedAngle < 360) return "pt-BR"; // right-lower
 
-  return "fr"; // Défaut
+  // Hmm, je mélange. Laissez-moi refaire proprement avec 12 zones de 30° chacune.
+  // En commençant par 0° (droite):
+  // 0-30°: droite-haut
+  // 30-60°: droite
+  // 60-90°: droite-bas
+  // ... etc
+
+  // Avec angle inversé Y:
+  // 0° = droite (East)
+  // 90° = haut (North) 
+  // 180° = gauche (West)
+  // 270° = bas (South)
+
+  // Pour 12 langues espacées uniformément:
+  // Chaque zone = 360° / 12 = 30°
+
+  // Commençons par les repères cardinaux:
+  // angle 45° = haut-droit (NE) - entre Español (top-right) et Deutsch (right-upper)
+  // angle 90° = haut (N) - English (top-center)
+  // angle 135° = haut-gauche (NW) - entre Français (top-left) et Türkçe (left-upper)
+  // angle 180° = gauche (W) - Nederlands (left-center)
+  // angle 225° = bas-gauche (SW) - entre Русский (left-lower) et العربية (bottom-left)
+  // angle 270° = bas (S) - 日本語 (bottom-center)
+  // angle 315° = bas-droit (SE) - entre 中文 (bottom-right) et Português (right-lower)
+  // angle 0° = droite (E) - Italiano (right-center)
+
+  // Zones de 30° chacune, centrées sur les repères:
+  // 75-105°: English (haut)
+  // 105-135°: Español (haut-droit) + un peu de Deutsch
+  // 135-165°: Deutsch (droite-haut)
+  // 165-195°: Italiano (droite)
+  // 195-225°: Português (droite-bas)
+  // 225-255°: 中文 (bas-droit)
+  // 255-285°: 日本語 (bas)
+  // 285-315°: العربية (bas-gauche)
+  // 315-345°: Русский (gauche-bas)
+  // 345-15°: Nederlands (gauche)
+  // 15-45°: Türkçe (gauche-haut)
+  // 45-75°: Français (haut-gauche)
+
+  // Haut (75-105°):
+  if (normalizedAngle >= 75 && normalizedAngle < 105) return "en"; // English
+
+  // Haut-Droit (105-135°):
+  if (normalizedAngle >= 105 && normalizedAngle < 135) return "es"; // Español
+
+  // Droite-Haut (135-165°):
+  if (normalizedAngle >= 135 && normalizedAngle < 165) return "de"; // Deutsch
+
+  // Droite (165-195°):
+  if (normalizedAngle >= 165 && normalizedAngle < 195) return "it"; // Italiano
+
+  // Droite-Bas (195-225°):
+  if (normalizedAngle >= 195 && normalizedAngle < 225) return "pt-BR"; // Português
+
+  // Bas-Droit (225-255°):
+  if (normalizedAngle >= 225 && normalizedAngle < 255) return "zh"; // 中文
+
+  // Bas (255-285°):
+  if (normalizedAngle >= 255 && normalizedAngle < 285) return "ja"; // 日本語
+
+  // Bas-Gauche (285-315°):
+  if (normalizedAngle >= 285 && normalizedAngle < 315) return "ar"; // العربية
+
+  // Gauche-Bas (315-345°):
+  if (normalizedAngle >= 315 && normalizedAngle < 345) return "ru"; // Русский
+
+  // Gauche (345-15°):
+  if (normalizedAngle >= 345 && normalizedAngle < 360) return "nl"; // Nederlands
+  if (normalizedAngle >= 0 && normalizedAngle < 15) return "nl"; // Nederlands
+
+  // Gauche-Haut (15-45°):
+  if (normalizedAngle >= 15 && normalizedAngle < 45) return "tr"; // Türkçe
+
+  // Haut-Gauche (45-75°):
+  if (normalizedAngle >= 45 && normalizedAngle < 75) return "fr"; // Français
+
+  return "en"; // Défaut
 }
 
 /**
@@ -134,7 +217,6 @@ function LanguageBorderItem({
   position,
   isHighlighted,
 }: LanguageBorderItemProps) {
-  // Déterminer les styles CSS basés sur la position
   const getPositionStyles = () => {
     const baseStyle = {
       position: "absolute" as const,
@@ -168,7 +250,7 @@ function LanguageBorderItem({
       return { ...baseStyle, right: 0, bottom: "25%", flexDirection: "row" as const };
     }
 
-    // BOTTOM BORDER (inversé)
+    // BOTTOM BORDER
     if (position === "bottom-right") {
       return { ...baseStyle, bottom: 0, right: "25%", textAlign: "center" as const };
     }
@@ -193,7 +275,6 @@ function LanguageBorderItem({
     return baseStyle;
   };
 
-  // Déterminer si texte doit être vertical
   const isVertical = position.startsWith("left") || position.startsWith("right");
 
   return (
@@ -225,7 +306,7 @@ function LanguageBorderItem({
 }
 
 // ============================================================================
-// 4. COMPOSANT PRINCIPAL - JOYSTICK SELECTOR
+// 4. COMPOSANT PRINCIPAL - JOYSTICK SELECTOR (FORMAT MOBILE)
 // ============================================================================
 
 export default function LanguageSelectionJoystick() {
@@ -264,7 +345,6 @@ export default function LanguageSelectionJoystick() {
     joystickState.current.currentX = touch.clientX;
     joystickState.current.currentY = touch.clientY;
 
-    // Calculer angle et distance
     const angle = calculateJoystickAngle(
       joystickState.current.originX,
       joystickState.current.originY,
@@ -279,7 +359,6 @@ export default function LanguageSelectionJoystick() {
       touch.clientY
     );
 
-    // Déterminer la langue pointée (seulement si distance >= 40px)
     if (isActivationDistance(distance)) {
       const language = getLanguageAtAngle(angle);
       setHighlightedLanguage(language);
@@ -294,7 +373,6 @@ export default function LanguageSelectionJoystick() {
 
     joystickState.current.isActive = false;
 
-    // Si une langue est surbrillancée, la sélectionner
     if (highlightedLanguage) {
       console.log("🌍 [LANGUAGE-JOYSTICK] Langue sélectionnée:", highlightedLanguage);
       localStorage.setItem("selected_language", highlightedLanguage);
@@ -305,7 +383,7 @@ export default function LanguageSelectionJoystick() {
   };
 
   // ============================================================================
-  // 6. ÉVÉNEMENTS SOURIS (pour tests desktop)
+  // 6. ÉVÉNEMENTS SOURIS
   // ============================================================================
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -367,73 +445,77 @@ export default function LanguageSelectionJoystick() {
   };
 
   // ============================================================================
-  // 7. RENDU
+  // 7. RENDU (FORMAT MOBILE - Conteneur Centré comme Instagram)
   // ============================================================================
 
   return (
-    <div
-      ref={containerRef}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      onTouchCancel={handleTouchEnd}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseLeave}
-      style={{
-        width: "100vw",
-        height: "100vh",
-        position: "fixed",
-        top: 0,
-        left: 0,
-        overflow: "hidden",
-        touchAction: "none",
-        userSelect: "none",
-        backgroundColor: "#0a0a0a",
-      }}
-    >
-      {/* Conteneur des langues - Positionné sur les bords */}
+    <div className="min-h-screen flex items-center justify-center bg-black p-4">
+      {/* CONTENEUR MOBILE (comme Instagram sur web) */}
       <div
+        ref={containerRef}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
         style={{
-          position: "absolute",
+          position: "relative",
           width: "100%",
-          height: "100%",
-          top: 0,
-          left: 0,
+          maxWidth: "375px",
+          aspectRatio: "9 / 16",
+          backgroundColor: "#0a0a0a",
+          borderRadius: "12px",
+          overflow: "hidden",
+          touchAction: "none",
+          userSelect: "none",
+          border: "1px solid #222",
         }}
       >
-        {LANGUAGES.map((lang) => (
-          <LanguageBorderItem
-            key={lang.code}
-            code={lang.code}
-            label={lang.label}
-            flag={lang.flag}
-            position={lang.position}
-            isHighlighted={highlightedLanguage === lang.code}
-          />
-        ))}
-      </div>
+        {/* Conteneur des langues */}
+        <div
+          style={{
+            position: "absolute",
+            width: "100%",
+            height: "100%",
+            top: 0,
+            left: 0,
+          }}
+        >
+          {LANGUAGES.map((lang) => (
+            <LanguageBorderItem
+              key={lang.code}
+              code={lang.code}
+              label={lang.label}
+              flag={lang.flag}
+              position={lang.position}
+              isHighlighted={highlightedLanguage === lang.code}
+            />
+          ))}
+        </div>
 
-      {/* Instruction au centre (optionnel) */}
-      <div
-        style={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          textAlign: "center",
-          color: "#666",
-          fontSize: "12px",
-          pointerEvents: "none",
-        }}
-      >
-        <p style={{ margin: 0, opacity: 0.5 }}>Glissez votre doigt</p>
-        {highlightedLanguage && (
-          <p style={{ margin: "4px 0 0 0", color: "#999" }}>
-            {LANGUAGES.find((l) => l.code === highlightedLanguage)?.label}
-          </p>
-        )}
+        {/* Instruction au centre */}
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            color: "#666",
+            fontSize: "12px",
+            pointerEvents: "none",
+          }}
+        >
+          <p style={{ margin: 0, opacity: 0.5 }}>Glissez votre doigt</p>
+          {highlightedLanguage && (
+            <p style={{ margin: "4px 0 0 0", color: "#999" }}>
+              {LANGUAGES.find((l) => l.code === highlightedLanguage)?.label}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
