@@ -43,13 +43,18 @@ export default function Signup() {
   // Vérifier si une session existe déjà au chargement
   useEffect(() => {
     const existingSessionId = localStorage.getItem("signup_session_id");
+    const selectedLanguage = localStorage.getItem("selected_language");
+    
+    if (selectedLanguage) {
+      console.log("🌍 [SIGNUP] Langue sélectionnée:", selectedLanguage);
+    }
+    
     if (existingSessionId) {
       setSessionId(existingSessionId);
       toast({
         title: "Session trouvée",
         description: "Reprise de votre inscription...",
       });
-      // TODO: Récupérer l'état de la session et déterminer l'étape
     }
   }, []);
 

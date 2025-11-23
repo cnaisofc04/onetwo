@@ -444,5 +444,34 @@ ALLOWED_ORIGINS=https://onetwo.app,https://www.onetwo.app
 
 ---
 
-**Dernière mise à jour**: 17 novembre 2025  
-**Version replit.md**: 1.0.0
+**Dernière mise à jour**: 23 novembre 2025  
+**Version replit.md**: 1.1.0
+
+---
+
+## 📝 Récentes Corrections (23 novembre 2025)
+
+### ✅ Joystick Language Selection - Nettoyage & Intégration
+
+**Fichiers modifiés:**
+- `client/src/pages/language-selection-joystick.tsx`
+- `client/src/pages/signup.tsx`
+
+**Corrections appliquées:**
+
+1. **Code mort supprimé** (60+ lignes)
+   - Suppression commentaires brouillon (lignes 91-152)
+   - Fonction `getLanguageAtAngle` nettoyée et simplifiée
+   - Code maintenant maintainable et lisible
+
+2. **localStorage intégré dans signup.tsx**
+   - Lecture de `selected_language` au chargement du componant
+   - Log confirmant la langue sélectionnée: `"🌍 [SIGNUP] Langue sélectionnée: fr"`
+   - Prêt pour intégration multilingue future
+
+3. **onMouseLeave corrigé** (bug desktop)
+   - Permet aux gestes sortant du conteneur de fonctionner
+   - Évite les arrêts inattendus de l'interaction
+   - Desktop user experience améliorée
+
+**Status:** ✅ Tous les tests passent - 0 erreurs TypeScript

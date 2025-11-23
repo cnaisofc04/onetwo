@@ -80,113 +80,25 @@ function calculateJoystickDistance(
 
 /**
  * Détermine quelle langue est pointée basée sur l'angle
- * Chaque langue occupe une zone angulaire de 30° (360° / 12 langues)
- * CORRIGÉ: Angles maintenant corrects (pas d'inversion)
+ * Distribution: 12 langues uniformément espacées (30° chacune)
+ * Système: 0° = droite (East), 90° = haut (North), 180° = gauche (West), 270° = bas (South)
  */
 function getLanguageAtAngle(angle: number): string {
-  // Normaliser l'angle: 0-360
   let normalizedAngle = angle;
   if (normalizedAngle < 0) normalizedAngle += 360;
 
-  // HAUT (85-95° = haut direct) = English
-  // Zones:
-  // 270-300°: Français (top-left, haut-gauche)
-  // 300-330°: English (top-center, haut)
-  // 330-360°: Español (top-right, haut-droit)
-
-  // Mais attends, atan2(+90, 0) = 90° avec mon calcul inversé dy
-  // Donc:
-  // angle 0° = droite (East)
-  // angle 90° = haut (North) - INVERSÉ
-  // angle 180° = gauche (West)
-  // angle 270° = bas (South)
-
-  // TOP (85-95° center, mais with 30° zones):
-  if (normalizedAngle >= 60 && normalizedAngle < 90) return "fr"; // top-left
-  if (normalizedAngle >= 90 && normalizedAngle < 120) return "en"; // top-center
-  if (normalizedAngle >= 120 && normalizedAngle < 150) return "es"; // top-right
-
-  // RIGHT (355-5° = droite):
-  if (normalizedAngle >= 0 && normalizedAngle < 30) return "de"; // right-upper
-  if (normalizedAngle >= 30 && normalizedAngle < 60) return "it"; // right-center
-  if (normalizedAngle >= 330 && normalizedAngle < 360) return "pt-BR"; // right-lower
-
-  // Hmm, je mélange. Laissez-moi refaire proprement avec 12 zones de 30° chacune.
-  // En commençant par 0° (droite):
-  // 0-30°: droite-haut
-  // 30-60°: droite
-  // 60-90°: droite-bas
-  // ... etc
-
-  // Avec angle inversé Y:
-  // 0° = droite (East)
-  // 90° = haut (North) 
-  // 180° = gauche (West)
-  // 270° = bas (South)
-
-  // Pour 12 langues espacées uniformément:
-  // Chaque zone = 360° / 12 = 30°
-
-  // Commençons par les repères cardinaux:
-  // angle 45° = haut-droit (NE) - entre Español (top-right) et Deutsch (right-upper)
-  // angle 90° = haut (N) - English (top-center)
-  // angle 135° = haut-gauche (NW) - entre Français (top-left) et Türkçe (left-upper)
-  // angle 180° = gauche (W) - Nederlands (left-center)
-  // angle 225° = bas-gauche (SW) - entre Русский (left-lower) et العربية (bottom-left)
-  // angle 270° = bas (S) - 日本語 (bottom-center)
-  // angle 315° = bas-droit (SE) - entre 中文 (bottom-right) et Português (right-lower)
-  // angle 0° = droite (E) - Italiano (right-center)
-
-  // Zones de 30° chacune, centrées sur les repères:
-  // 75-105°: English (haut)
-  // 105-135°: Español (haut-droit) + un peu de Deutsch
-  // 135-165°: Deutsch (droite-haut)
-  // 165-195°: Italiano (droite)
-  // 195-225°: Português (droite-bas)
-  // 225-255°: 中文 (bas-droit)
-  // 255-285°: 日本語 (bas)
-  // 285-315°: العربية (bas-gauche)
-  // 315-345°: Русский (gauche-bas)
-  // 345-15°: Nederlands (gauche)
-  // 15-45°: Türkçe (gauche-haut)
-  // 45-75°: Français (haut-gauche)
-
-  // Haut (75-105°):
-  if (normalizedAngle >= 75 && normalizedAngle < 105) return "en"; // English
-
-  // Haut-Droit (105-135°):
-  if (normalizedAngle >= 105 && normalizedAngle < 135) return "es"; // Español
-
-  // Droite-Haut (135-165°):
-  if (normalizedAngle >= 135 && normalizedAngle < 165) return "de"; // Deutsch
-
-  // Droite (165-195°):
-  if (normalizedAngle >= 165 && normalizedAngle < 195) return "it"; // Italiano
-
-  // Droite-Bas (195-225°):
-  if (normalizedAngle >= 195 && normalizedAngle < 225) return "pt-BR"; // Português
-
-  // Bas-Droit (225-255°):
-  if (normalizedAngle >= 225 && normalizedAngle < 255) return "zh"; // 中文
-
-  // Bas (255-285°):
-  if (normalizedAngle >= 255 && normalizedAngle < 285) return "ja"; // 日本語
-
-  // Bas-Gauche (285-315°):
-  if (normalizedAngle >= 285 && normalizedAngle < 315) return "ar"; // العربية
-
-  // Gauche-Bas (315-345°):
-  if (normalizedAngle >= 315 && normalizedAngle < 345) return "ru"; // Русский
-
-  // Gauche (345-15°):
-  if (normalizedAngle >= 345 && normalizedAngle < 360) return "nl"; // Nederlands
-  if (normalizedAngle >= 0 && normalizedAngle < 15) return "nl"; // Nederlands
-
-  // Gauche-Haut (15-45°):
-  if (normalizedAngle >= 15 && normalizedAngle < 45) return "tr"; // Türkçe
-
-  // Haut-Gauche (45-75°):
-  if (normalizedAngle >= 45 && normalizedAngle < 75) return "fr"; // Français
+  if (normalizedAngle >= 75 && normalizedAngle < 105) return "en"; // Haut (75-105°)
+  if (normalizedAngle >= 105 && normalizedAngle < 135) return "es"; // Haut-Droit (105-135°)
+  if (normalizedAngle >= 135 && normalizedAngle < 165) return "de"; // Droite-Haut (135-165°)
+  if (normalizedAngle >= 165 && normalizedAngle < 195) return "it"; // Droite (165-195°)
+  if (normalizedAngle >= 195 && normalizedAngle < 225) return "pt-BR"; // Droite-Bas (195-225°)
+  if (normalizedAngle >= 225 && normalizedAngle < 255) return "zh"; // Bas-Droit (225-255°)
+  if (normalizedAngle >= 255 && normalizedAngle < 285) return "ja"; // Bas (255-285°)
+  if (normalizedAngle >= 285 && normalizedAngle < 315) return "ar"; // Bas-Gauche (285-315°)
+  if (normalizedAngle >= 315 && normalizedAngle < 345) return "ru"; // Gauche-Bas (315-345°)
+  if (normalizedAngle >= 345 || normalizedAngle < 15) return "nl"; // Gauche (345-360° + 0-15°)
+  if (normalizedAngle >= 15 && normalizedAngle < 45) return "tr"; // Gauche-Haut (15-45°)
+  if (normalizedAngle >= 45 && normalizedAngle < 75) return "fr"; // Haut-Gauche (45-75°)
 
   return "en"; // Défaut
 }
@@ -441,7 +353,8 @@ export default function LanguageSelectionJoystick() {
 
   const handleMouseLeave = () => {
     joystickState.current.isActive = false;
-    setHighlightedLanguage(null);
+    // Ne pas réinitialiser highlighted - permet aux gestes qui sortent du conteneur de fonctionner
+    // (ex: glisse dehors puis dedans, ou relâche dehors)
   };
 
   // ============================================================================
