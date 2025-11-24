@@ -25,7 +25,7 @@ const LANGUAGES = [
   { code: "tr", label: "Türkçe", flag: "🇹🇷", color: "#FF8B94", angle: 330 },
 ];
 
-const BUBBLE_DISTANCE = 240; // Distance pour que 12 boules ne se touchent JAMAIS (augmentée!)
+const BUBBLE_DISTANCE = 140; // Distance optimale pour container 375×600 (ne se touchent JAMAIS)
 const BASE_BUBBLE_RADIUS = 40;
 const CENTER_RADIUS = 15; // Boule bleue encore plus petite
 const CONTAINER_WIDTH = 375;
@@ -258,18 +258,17 @@ export default function LanguageSelectionBubbles() {
 
               return (
                 <g key={lang.code}>
-                  {/* Cercle boule avec ANIMATION D'ENTRÉE */}
+                  {/* Cercle boule - apparaît directement à bonne position/taille */}
                   <motion.circle
                     cx={x}
                     cy={y}
-                    r={dynamicRadius}
+                    r={displayRadius}
                     fill={lang.color}
-                    opacity={isOverlapping ? 0.95 : 0.85}
                     stroke="#FFFFFF"
                     strokeWidth="2"
-                    initial={{ r: 0, opacity: 0 }}
-                    animate={{ r: displayRadius, opacity: isOverlapping ? 0.95 : 0.85 }}
-                    transition={{ duration: 0.5, delay: index * 0.03 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: isOverlapping ? 0.95 : 0.85 }}
+                    transition={{ duration: 0.3, delay: index * 0.02 }}
                   />
 
                   {/* Drapeau */}

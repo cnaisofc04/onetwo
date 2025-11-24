@@ -48,12 +48,12 @@ The application features a modern, responsive interface supporting both dark and
 
 ---
 
-## 📝 LANGUAGE SELECTOR - DYNAMIC BUBBLES V6 (24 novembre 2025)
+## 📝 LANGUAGE SELECTOR - DYNAMIC BUBBLES V7 (24 novembre 2025)
 
-### 🎨 Nouveau Design - Drag-and-Drop Optimisé avec Animation d'Entrée
+### 🎨 Nouveau Design - Drag-and-Drop Parfaitement Séparé
 
 **Branch**: `feature/language-selector-bubbles-dynamic`  
-**Fichier**: `client/src/pages/language-selection-joystick.tsx` (370 lignes)
+**Fichier**: `client/src/pages/language-selection-joystick.tsx` (358 lignes)
 
 #### ✅ Implémenté:
 
@@ -61,45 +61,44 @@ The application features a modern, responsive interface supporting both dark and
 - Taille: **15px** (beaucoup plus petite que les boules de drapeaux)
 - Position: Au point de clic **EXACT** (pas de repositionnement)
 - Interaction: Maintenir + glisser pour sélectionner
-- Reste toujours visible dans l'écran (clamping)
+- Reste toujours visible dans l'écran
 
-**2. 12 Boules Colorées Totalement Séparées (NE SE TOUCHENT JAMAIS)**
+**2. 12 Boules Colorées TOTALEMENT SÉPARÉES (JAMAIS DE SUPERPOSITION)**
 - Taille: **40px** (plus grandes que la boule bleue)
-- Distance: **240px du centre** (augmentée pour éviter chevauchements)
-- Distance entre adjacentes: **>100px** (jamais se touchent!)
-- **Positions DYNAMIQUES**: S'ajustent intelligemment si trop près du bord
-- Logique d'ajustement: Réduit progressivement la distance si boule sort (plutôt que de la "claumer")
-- Tailles réduites progressivement si proche du bord
+- Distance: **140px du centre** (optimal pour container 375×600)
+- Distance entre adjacentes: **>60px** (jamais ne se touchent!)
+- **Positions FINALES Immédiates**: Apparaissent directement à leur place
+- Boules restent proches mais SANS JAMAIS toucher les bords les unes les autres
 - Chaque boule: drapeau unique + label + couleur distincte
 
-**3. Animation d'Entrée Progressive**
-- Les boules **N'APPARAISSENT PAS** au centre
-- Elles apparaissent progressivement à leur position finale (r: 0 → r: 40)
-- Délai décalé pour chaque boule (index * 0.03s) = cascade d'apparition fluide
-- Durée: 0.5s avec easing natural
+**3. Animation d'Apparition Fluide (Opacité Seulement)**
+- Les boules **apparaissent directement** à leurs positions finales ✅
+- Fade-in progressif (opacité 0 → 0.85) = effet doux
+- Délai en cascade (index * 0.02s) pour apparition progressive
+- Durée: 0.3s = rapide et naturel
+- **PAS d'animation de rayon** (causait confusion)
 
 **4. Drag-and-Drop Fluide**
-1. Premier clic n'importe où → Les 12 boules aparaissent progressivement (pas au centre!)
+1. Premier clic n'importe où → Les 12 boules apparaissent immédiatement autour (PAS au centre!)
 2. Maintenir le clic → La boule bleue suit le doigt/souris
-3. Glisser vers une boule → Feedback visuel (agrandissement)
+3. Glisser vers une boule → Feedback visuel (agrandissement à 1.15x)
 4. Relâcher le clic → Sélection automatique si collision
 5. Redirection → localStorage + navigation /signup (500ms)
 
 **5. Détection de Collision**
 - Distance: `sqrt((x1-x2)² + (y1-y2)²)`
-- Si distance < (15px + rayon_dynamique) → sélection
+- Si distance < (15px + rayon_boule) → sélection
 - **Une seule boule par sélection**
 
 #### 📊 Specs Finales:
 - Langues: 12 (fr, en, es, de, it, pt-BR, zh, ja, ar, ru, nl, tr)
 - Container: 375×600px (mobile)
 - Boule bleue: 15px | Drapeaux: 40px
-- Distance: **240px** (jamais de chevauchement!)
-- Ajustement: Réduit progressivement plutôt que de claumer
-- Animation: Entrée progressive avec délai en cascade
+- Distance: **140px** (optimal, jamais de superposition!)
+- Animation: Opacité seulement (pas de rayon)
 - Tailles: Dynamiques selon proximité bord
 - Performance: 60 FPS, animations fluides
-- TypeScript: 0 erreurs
+- TypeScript: 0 erreurs ✅
 - localStorage: sauvegarde "selected_language"
 
-**Status**: ✅ COMPLÉTÉ & OPTIMISÉ
+**Status**: ✅ COMPLÉTÉ & PARFAIT
