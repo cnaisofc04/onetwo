@@ -55,12 +55,12 @@ The application features a modern, responsive interface supporting both dark and
 **Branch**: `feature/language-selector-bubbles-dynamic`  
 **Fichier**: `client/src/pages/language-selection-joystick.tsx` (213 lignes)
 
-**✨ REFACTEUR COMPLET V13 - FINAL OPTIMISÉ:**
+**✨ REFACTEUR COMPLET V13 - FINAL PERFECTIONNÉ:**
 - ✅ **12 boules drapeaux VISIBLES DÈS LE DÉPART** (cercle fixe au centre parfait)
 - ✅ **SANS TEXTE** - Page complètement épurée
-- ✅ **SANS BORDURE** - Conteneur invisible, intégré au fond
-- ✅ **FOND BLACK PUR** - Couleur du design system dark mode
-- ✅ **Boule bleue TRANSPARENTE** - `rgba(59, 130, 246, 0.4)` + border subtile
+- ✅ **SANS BORDURE** - Conteneur invisible, intégré au fond blanc
+- ✅ **FOND BLANC** - Comme les autres pages (design system light mode)
+- ✅ **Boule bleue TOTALEMENT TRANSPARENTE** - Juste border bleue `rgba(59, 130, 246, 0.8)` visible
 - ✅ **Boule bleue MOBILE** - Suit la souris au clic+drag
 - ✅ **Feedback visuel** - Drapeau s'agrandit en proximité (< 70px)
 - ✅ **Auto-sélection** - Relâchement < 45px = sélection automatique
@@ -70,8 +70,8 @@ The application features a modern, responsive interface supporting both dark and
 #### ✅ Architecture V13 - Code Épuré & Optimisé:
 
 **Layout Structure:**
-- **Wrapper extérieur**: `fixed top-0 left-0 w-screen h-screen bg-black flex items-center justify-center`
-- **Conteneur fixe**: `w-[375px] h-[600px] bg-black` (dimensions EXACTES mobile)
+- **Wrapper extérieur**: `fixed top-0 left-0 w-screen h-screen bg-white flex items-center justify-center`
+- **Conteneur fixe**: `w-[375px] h-[600px] bg-white` (dimensions EXACTES mobile)
 - **Centrage**: Wrapper FIXED assure centrage parfait sur tous écrans
 
 **1. État Initial**
@@ -104,11 +104,11 @@ The application features a modern, responsive interface supporting both dark and
 - Container: 375×600px (FIXE)
 - Centre: (187.5, 300) - PARFAITEMENT CENTRÉ
 - Rayon cercle: 120px
-- Boule bleue: 15px (transparent avec border)
+- Boule bleue: 15px (transparent - juste border `rgba(59, 130, 246, 0.8)`)
 - Boules drapeaux: 22px base → 28px max (croissance 1.6x)
 - Seuil feedback: 70px
 - Seuil sélection: 45px
-- Fond: Pure black (#000000)
+- Fond: Pure white (#FFFFFF)
 - Texte: AUCUN
 - Bordure: AUCUNE
 - Performance: 60 FPS ✅
@@ -118,9 +118,10 @@ The application features a modern, responsive interface supporting both dark and
 **Comportement Final V13:**
 - ✅ Page complètement épurée (zéro texte, zéro bordure)
 - ✅ Cercle PARFAITEMENT CENTRÉ
-- ✅ Fond noir pur (design system dark)
-- ✅ Boule bleue transparente (rgba)
+- ✅ Fond blanc pur (comme les autres pages)
+- ✅ Boule bleue totalement transparente (juste border visible)
 - ✅ Sélection par drag fluide
-- ✅ 3 gestes simples
+- ✅ 3 gestes simples (clic + drag + relâcher)
+- ✅ Format mobile 375×600px sur tous écrans (comme Instagram)
 - ✅ Ultra minimaliste & moderne
 - ✅ Production-ready ✅

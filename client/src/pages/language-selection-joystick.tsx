@@ -180,14 +180,14 @@ export function LanguageSelectionJoystick() {
   };
 
   return (
-    <div className="fixed top-0 left-0 w-screen h-screen bg-black flex items-center justify-center">
+    <div className="fixed top-0 left-0 w-screen h-screen bg-white flex items-center justify-center">
       <div
         ref={containerRef}
         onMouseDown={handleContainerMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        className="w-[375px] h-[600px] bg-black relative overflow-hidden cursor-grab active:cursor-grabbing"
+        className="w-[375px] h-[600px] bg-white relative overflow-hidden cursor-grab active:cursor-grabbing"
       >
         {/* 12 BOULES DRAPEAUX - FIXES EN CERCLE - TOUJOURS VISIBLES */}
         {LANGUAGES.map((lang, index) => {
@@ -225,7 +225,7 @@ export function LanguageSelectionJoystick() {
           );
         })}
 
-        {/* BOULE BLEUE MOBILE TRANSPARENTE */}
+        {/* BOULE BLEUE MOBILE TOTALEMENT TRANSPARENTE */}
         {blueBubblePos && (
           <motion.div
             className="absolute rounded-full z-50"
@@ -234,8 +234,8 @@ export function LanguageSelectionJoystick() {
               top: blueBubblePos.y,
               width: BLUE_BUBBLE_RADIUS * 2,
               height: BLUE_BUBBLE_RADIUS * 2,
-              backgroundColor: "rgba(59, 130, 246, 0.4)",
-              border: "2px solid rgba(59, 130, 246, 0.6)",
+              backgroundColor: "transparent",
+              border: "2px solid rgba(59, 130, 246, 0.8)",
               transform: "translate(-50%, -50%)",
             }}
             initial={{ opacity: 0, scale: 0 }}
