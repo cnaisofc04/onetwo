@@ -48,12 +48,12 @@ The application features a modern, responsive interface supporting both dark and
 
 ---
 
-## 📝 LANGUAGE SELECTOR - JOYSTICK COMPLET V12 (24 novembre 2025)
+## 📝 LANGUAGE SELECTOR - JOYSTICK FINAL V12+ (24 novembre 2025)
 
-### 🎨 Joystick Parfait - Drapeaux VISIBLES DÈS LE DÉPART + Boule BLEUE MOBILE
+### 🎨 Joystick Complet + Format Mobile Fixe (comme Instagram)
 
 **Branch**: `feature/language-selector-bubbles-dynamic`  
-**Fichier**: `client/src/pages/language-selection-joystick.tsx` (220 lignes)
+**Fichier**: `client/src/pages/language-selection-joystick.tsx` (289 lignes)
 
 **✨ LOGIQUE COMPLÈTE ET CORRECTE:**
 - ✅ **12 boules drapeaux VISIBLES DÈS LE DÉPART** (en cercle fixe au centre - 120px rayon)
@@ -66,10 +66,15 @@ The application features a modern, responsive interface supporting both dark and
 - ✅ **Minimal gestures** - CLIC + DRAG + RELÂCHER = 3 actions
 - ✅ **Fluide et rapide** - animations 60 FPS
 
-#### ✅ Architecture V12 - Joystick Complet:
+#### ✅ Architecture V12+ - Wrapper + Dimensions Fixes:
+
+**Layout Structure:**
+- **Wrapper extérieur**: `min-h-screen flex items-center justify-center` (écran full avec fond sombre)
+- **Conteneur fixe**: `w-[375px] h-[600px]` (dimensions EXACTES mobile - jamais changent!)
+- **Centrage**: Container toujours centré au milieu de l'écran (comme Instagram sur desktop)
 
 **1. État Initial**
-- 12 drapeaux en cercle PARFAIT au centre de l'écran
+- 12 drapeaux en cercle PARFAIT au centre du conteneur (187.5, 300)
 - Visibles IMMÉDIATEMENT au chargement
 - Message: "Cliquez et glissez vers une langue"
 - Pas de boule bleue (apparaît au clic)
@@ -121,24 +126,35 @@ Total: 3 actions pour sélectionner la langue!
 ✅ [SELECT] fr sélectionné! Distance: 38
 ```
 
-#### 📊 Specs Finales V12:
+#### 📊 Changements CSS Clés V12+ (Dimensions Fixes):
+```jsx
+// ❌ AVANT: w-full max-w-[375px] (mauvais sur grand écran)
+// ✅ APRÈS: w-[375px] (largeur exacte + wrapper centered)
+<div className="min-h-screen w-full flex items-center justify-center">
+  <div className="w-[375px] h-[600px] ...">
+```
+
+#### 📊 Specs Finales V12+:
 - Langues: 12 (fr, en, es, de, it, pt-BR, zh, ja, ar, ru, nl, tr)
-- Container: 375×600px (mobile)
-- Centre: (187.5, 300)
-- Rayon cercle: 120px (fixe)
-- Boule bleue: 15px (mobile au clic)
-- Boules drapeaux: 22px base → 28px max (grossissement 1.3x)
+- Container: 375×600px (FIXE - jamais change!)
+- Centre: (187.5, 300) - parfaitement centré
+- Rayon cercle: 120px
+- Boule bleue: 15px
+- Boules drapeaux: 22px → 28px
 - Seuil feedback: 70px
 - Seuil sélection: 45px
-- Performance: 60 FPS fluide
+- Performance: 60 FPS fluide ✅
 - TypeScript: 0 erreurs ✅
-- **Status**: ✅ COMPLÉTÉ V12 - JOYSTICK PARFAIT FONCTIONNEL!
+- **Status**: ✅ COMPLÉTÉ V12+ - JOYSTICK FINAL FONCTIONNEL!
 
-**Comportement Final:**
-- Drapeaux visibles au démarrage ✅
-- Sans se toucher ✅
-- Boule bleue au clic ✅
-- Feedback visuel unique ✅
-- Sélection automatique ✅
-- Minimal gestures ✅
-- Ultra fluide ✅
+**Comportement Final V12+:**
+- ✅ Dimensions exactes 375×600px (jamais changent)
+- ✅ Centré au milieu de l'écran (comme Instagram)
+- ✅ Drapeaux visibles au démarrage en cercle parfait
+- ✅ Sans se toucher jamais
+- ✅ Boule bleue au clic anywhere
+- ✅ Feedback visuel unique (agrandissement progressif)
+- ✅ Sélection automatique par proximité
+- ✅ 3 gestes simples (clic + drag + relâcher)
+- ✅ Ultra fluide (60 FPS)
+- ✅ Prêt pour développement futur

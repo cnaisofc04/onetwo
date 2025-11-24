@@ -182,14 +182,15 @@ export function LanguageSelectionJoystick() {
   };
 
   return (
-    <div
-      ref={containerRef}
-      onMouseDown={handleContainerMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
-      className="w-full max-w-[375px] h-[600px] mx-auto bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl border-2 border-slate-700 relative overflow-hidden cursor-grab active:cursor-grabbing"
-    >
+    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <div
+        ref={containerRef}
+        onMouseDown={handleContainerMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        className="w-[375px] h-[600px] bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl border-2 border-slate-700 relative overflow-hidden cursor-grab active:cursor-grabbing"
+      >
       {/* Cercle de référence (gris très léger) */}
       <svg
         className="absolute inset-0 w-full h-full"
@@ -275,6 +276,7 @@ export function LanguageSelectionJoystick() {
       {/* INFO TEXT - En bas */}
       <div className="absolute bottom-4 left-0 right-0 text-center text-slate-400 text-xs pointer-events-none">
         <p>Glissez la boule bleue vers une langue</p>
+      </div>
       </div>
     </div>
   );
