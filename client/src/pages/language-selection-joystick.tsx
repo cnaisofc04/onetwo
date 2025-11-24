@@ -1,8 +1,9 @@
 /**
- * 🎨 LANGUAGE SELECTOR - JOYSTICK CORRECT V12
- * ✅ DRAPEAUX VISIBLES DÈS LE DÉPART EN CERCLE FIXE
- * ✅ BOULE BLEUE SUIT LA SOURIS AU CLIC+DRAG
- * ✅ AUTO-SÉLECTION PAR PROXIMITÉ
+ * 🎨 LANGUAGE SELECTOR - JOYSTICK V13 FINAL
+ * ✅ CERCLE PARFAITEMENT CENTRÉ
+ * ✅ SANS TEXTE, SANS BORDURE
+ * ✅ BOULE BLEUE TRANSPARENTE
+ * ✅ COULEURS DU DESIGN SYSTEM
  */
 
 import { useState, useRef } from "react";
@@ -34,7 +35,7 @@ const BLUE_BUBBLE_RADIUS = 15;
 const SELECTION_DISTANCE = 45;
 const PROXIMITY_FEEDBACK_DISTANCE = 70;
 
-// 📍 POSITIONS FIXES DES DRAPEAUX - JAMAIS MODIFIÉES
+// 📍 POSITIONS FIXES DES DRAPEAUX
 function getFixedBubblePosition(index: number): { x: number; y: number } {
   const angle = (index * 360) / 12;
   const angleRad = (angle * Math.PI) / 180;
@@ -64,7 +65,6 @@ function getDynamicFlagRadius(
 ): number {
   if (!bluePos) return FLAG_BUBBLE_RADIUS;
 
-  // Seul le drapeau le plus proche peut s'agrandir
   if (index !== closestIndex) return FLAG_BUBBLE_RADIUS;
 
   const dist = distance(bluePos, flagPos);
@@ -98,7 +98,6 @@ export function LanguageSelectionJoystick() {
     let x = e.clientX - rect.left;
     let y = e.clientY - rect.top;
 
-    // Clamp dans le container
     x = Math.max(BLUE_BUBBLE_RADIUS, Math.min(CONTAINER_WIDTH - BLUE_BUBBLE_RADIUS, x));
     y = Math.max(BLUE_BUBBLE_RADIUS, Math.min(CONTAINER_HEIGHT - BLUE_BUBBLE_RADIUS, y));
 
@@ -120,7 +119,6 @@ export function LanguageSelectionJoystick() {
     let x = e.clientX - rect.left;
     let y = e.clientY - rect.top;
 
-    // Clamp dans le container
     x = Math.max(BLUE_BUBBLE_RADIUS, Math.min(CONTAINER_WIDTH - BLUE_BUBBLE_RADIUS, x));
     y = Math.max(BLUE_BUBBLE_RADIUS, Math.min(CONTAINER_HEIGHT - BLUE_BUBBLE_RADIUS, y));
 
@@ -182,101 +180,69 @@ export function LanguageSelectionJoystick() {
   };
 
   return (
-    <div className="fixed top-0 left-0 w-screen h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+    <div className="fixed top-0 left-0 w-screen h-screen bg-black flex items-center justify-center">
       <div
         ref={containerRef}
         onMouseDown={handleContainerMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        className="w-[375px] h-[600px] bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl border-2 border-slate-700 relative overflow-hidden cursor-grab active:cursor-grabbing"
+        className="w-[375px] h-[600px] bg-black relative overflow-hidden cursor-grab active:cursor-grabbing"
       >
-      {/* Cercle de référence (gris très léger) */}
-      <svg
-        className="absolute inset-0 w-full h-full"
-        style={{ pointerEvents: "none" }}
-      >
-        <circle
-          cx={CENTER_X}
-          cy={CENTER_Y}
-          r={CIRCLE_RADIUS}
-          fill="none"
-          stroke="rgba(100, 116, 139, 0.15)"
-          strokeWidth="1"
-          strokeDasharray="4,4"
-        />
-      </svg>
+        {/* 12 BOULES DRAPEAUX - FIXES EN CERCLE - TOUJOURS VISIBLES */}
+        {LANGUAGES.map((lang, index) => {
+          const flagPos = getFixedBubblePosition(index);
+          const dynamicRadius = getDynamicFlagRadius(
+            flagPos,
+            blueBubblePos,
+            closestFlagIndex,
+            index
+          );
 
-      {/* 12 BOULES DRAPEAUX - FIXES EN CERCLE - TOUJOURS VISIBLES */}
-      {LANGUAGES.map((lang, index) => {
-        const flagPos = getFixedBubblePosition(index);
-        const dynamicRadius = getDynamicFlagRadius(
-          flagPos,
-          blueBubblePos,
-          closestFlagIndex,
-          index
-        );
+          return (
+            <motion.div
+              key={lang.code}
+              className="absolute flex items-center justify-center rounded-full font-bold text-2xl shadow-lg transition-all"
+              style={{
+                left: flagPos.x,
+                top: flagPos.y,
+                width: dynamicRadius * 2,
+                height: dynamicRadius * 2,
+                backgroundColor: lang.color,
+                transform: "translate(-50%, -50%)",
+                opacity: 0.9,
+              }}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 0.9, scale: 1 }}
+              transition={{
+                delay: index * 0.03,
+                duration: 0.4,
+                ease: "easeOut",
+              }}
+            >
+              {lang.flag}
+            </motion.div>
+          );
+        })}
 
-        return (
+        {/* BOULE BLEUE MOBILE TRANSPARENTE */}
+        {blueBubblePos && (
           <motion.div
-            key={lang.code}
-            className="absolute flex items-center justify-center rounded-full font-bold text-2xl shadow-lg transition-all"
+            className="absolute rounded-full z-50"
             style={{
-              left: flagPos.x,
-              top: flagPos.y,
-              width: dynamicRadius * 2,
-              height: dynamicRadius * 2,
-              backgroundColor: lang.color,
+              left: blueBubblePos.x,
+              top: blueBubblePos.y,
+              width: BLUE_BUBBLE_RADIUS * 2,
+              height: BLUE_BUBBLE_RADIUS * 2,
+              backgroundColor: "rgba(59, 130, 246, 0.4)",
+              border: "2px solid rgba(59, 130, 246, 0.6)",
               transform: "translate(-50%, -50%)",
-              opacity: 0.9,
             }}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 0.9, scale: 1 }}
-            transition={{
-              delay: index * 0.03,
-              duration: 0.4,
-              ease: "easeOut",
-            }}
-          >
-            {lang.flag}
-          </motion.div>
-        );
-      })}
-
-      {/* BOULE BLEUE MOBILE - Apparaît au clic */}
-      {blueBubblePos && (
-        <motion.div
-          className="absolute w-[30px] h-[30px] bg-blue-500 rounded-full shadow-xl z-50"
-          style={{
-            left: blueBubblePos.x,
-            top: blueBubblePos.y,
-            transform: "translate(-50%, -50%)",
-          }}
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.15, ease: "easeOut" }}
-        />
-      )}
-
-      {/* MESSAGE - Si pas encore cliqué */}
-      {!blueBubblePos && (
-        <motion.div
-          className="absolute inset-0 flex flex-col items-center justify-center text-center"
-          initial={{ opacity: 1 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          <p className="text-slate-300 text-lg font-medium">
-            Cliquez et glissez
-          </p>
-          <p className="text-slate-400 text-sm mt-1">vers une langue</p>
-        </motion.div>
-      )}
-
-      {/* INFO TEXT - En bas */}
-      <div className="absolute bottom-4 left-0 right-0 text-center text-slate-400 text-xs pointer-events-none">
-        <p>Glissez la boule bleue vers une langue</p>
-      </div>
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+          />
+        )}
       </div>
     </div>
   );
