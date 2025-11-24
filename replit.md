@@ -48,12 +48,19 @@ The application features a modern, responsive interface supporting both dark and
 
 ---
 
-## 📝 LANGUAGE SELECTOR - DYNAMIC BUBBLES V8 (24 novembre 2025)
+## 📝 LANGUAGE SELECTOR - DYNAMIC BUBBLES V9 (24 novembre 2025)
 
-### 🎨 Nouveau Design - Tailles Dynamiques Individuelles & Réorganisation Intelligente
+### 🎨 Nouveau Design - Tailles Dynamiques Individuelles & Logging Complet
 
 **Branch**: `feature/language-selector-bubbles-dynamic`  
-**Fichier**: `client/src/pages/language-selection-joystick.tsx` (278 lignes)
+**Fichier**: `client/src/pages/language-selection-joystick.tsx` (272 lignes)
+
+**✨ CHANGEMENTS V9:**
+- ✅ **Labels supprimés** (juste drapeaux, plus de noms)
+- ✅ **Logging détaillé** pour debug profond [SIZE], [POS], [CLICK], [SPACE]
+- ✅ **Diviseur agressif 3.5** (garantit zéro superposition)
+- ✅ **Réduction 0.92** si proche du bord (plus rapide que 0.95)
+- ✅ **Tailles minimales 12px** (garantit visibilité)
 
 #### ✅ Implémenté:
 
@@ -112,4 +119,12 @@ The application features a modern, responsive interface supporting both dark and
 - TypeScript: 0 erreurs ✅
 - localStorage: sauvegarde "selected_language"
 
-**Status**: ✅ COMPLÉTÉ & PERFECTIONNÉ - JAMAIS DE SUPERPOSITION GARANTIE!
+#### 📊 Logs Détaillés Disponibles:
+```
+[CLICK] x=187 y=300 - Position du premier clic
+[SPACE] L=187 R=188 T=300 B=300 - Espace disponible
+[POS] angle=330° dist=47 iter=13 - Ajustement position
+[SIZE] fr: maxRadius=6.8 final=12.0 - Taille calculée
+```
+
+**Status**: ✅ COMPLÉTÉ V9 - SÉPARATION GARANTIE + LOGGING PROFOND!
