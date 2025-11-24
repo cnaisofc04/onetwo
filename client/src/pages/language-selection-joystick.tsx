@@ -1,9 +1,9 @@
 /**
- * 🎨 LANGUAGE SELECTOR - DYNAMIC BUBBLES V9
- * ✅ Tailles DYNAMIQUES INDIVIDUELLES - séparation GARANTIE
- * ✅ Labels supprimés
- * ✅ Logging détaillé pour debug
- * ✅ Réorganisation intelligente si proche du bord
+ * 🎨 LANGUAGE SELECTOR - DYNAMIC BUBBLES V10
+ * ✅ LOGIQUE SIMPLIFIÉE - Côté opposé garanti
+ * ✅ Si boule bleue trop à GAUCHE → TOUTES à DROITE
+ * ✅ Si boule bleue trop à DROITE → TOUTES à GAUCHE
+ * ✅ Idem pour haut/bas
  */
 
 import { useState, useRef, useEffect } from "react";
@@ -11,74 +11,118 @@ import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 
 const LANGUAGES = [
-  { code: "fr", label: "Français", flag: "🇫🇷", color: "#FF6B6B", angle: 0 },
-  { code: "en", label: "English", flag: "🇬🇧", color: "#4ECDC4", angle: 30 },
-  { code: "es", label: "Español", flag: "🇪🇸", color: "#FFE66D", angle: 60 },
-  { code: "de", label: "Deutsch", flag: "🇩🇪", color: "#95E1D3", angle: 90 },
-  { code: "it", label: "Italiano", flag: "🇮🇹", color: "#F38181", angle: 120 },
-  { code: "pt-BR", label: "Português", flag: "🇧🇷", color: "#AA96DA", angle: 150 },
-  { code: "zh", label: "中文", flag: "🇨🇳", color: "#FCBAD3", angle: 180 },
-  { code: "ja", label: "日本語", flag: "🇯🇵", color: "#A8D8EA", angle: 210 },
-  { code: "ar", label: "العربية", flag: "🇸🇦", color: "#FF6B6B", angle: 240 },
-  { code: "ru", label: "Русский", flag: "🇷🇺", color: "#FFD3B6", angle: 270 },
-  { code: "nl", label: "Nederlands", flag: "🇳🇱", color: "#FFAAA5", angle: 300 },
-  { code: "tr", label: "Türkçe", flag: "🇹🇷", color: "#FF8B94", angle: 330 },
+  { code: "fr", label: "Français", flag: "🇫🇷", color: "#FF6B6B" },
+  { code: "en", label: "English", flag: "🇬🇧", color: "#4ECDC4" },
+  { code: "es", label: "Español", flag: "🇪🇸", color: "#FFE66D" },
+  { code: "de", label: "Deutsch", flag: "🇩🇪", color: "#95E1D3" },
+  { code: "it", label: "Italiano", flag: "🇮🇹", color: "#F38181" },
+  { code: "pt-BR", label: "Português", flag: "🇧🇷", color: "#AA96DA" },
+  { code: "zh", label: "中文", flag: "🇨🇳", color: "#FCBAD3" },
+  { code: "ja", label: "日本語", flag: "🇯🇵", color: "#A8D8EA" },
+  { code: "ar", label: "العربية", flag: "🇸🇦", color: "#FF6B6B" },
+  { code: "ru", label: "Русский", flag: "🇷🇺", color: "#FFD3B6" },
+  { code: "nl", label: "Nederlands", flag: "🇳🇱", color: "#FFAAA5" },
+  { code: "tr", label: "Türkçe", flag: "🇹🇷", color: "#FF8B94" },
 ];
 
-const BUBBLE_DISTANCE = 140;
-const BASE_BUBBLE_RADIUS = 40;
 const CENTER_RADIUS = 15;
 const CONTAINER_WIDTH = 375;
 const CONTAINER_HEIGHT = 600;
-const DEBUG = true; // Logging détaillé
+const EDGE_THRESHOLD = 110; // Si à moins de 110px du bord
+const DEBUG = true;
 
-// 🔍 Calculer la position optimale d'une boule
-function calculateOptimalPosition(
-  centerX: number,
-  centerY: number,
-  angle: number,
-  bubbleRadius: number
-): { x: number; y: number; distance: number } {
-  const angleRad = (angle * Math.PI) / 180;
-  let distance = BUBBLE_DISTANCE;
-  let x = centerX + distance * Math.cos(angleRad);
-  let y = centerY + distance * Math.sin(angleRad);
-
-  // Si sort de l'écran, réduire progressivement la distance
-  let iterations = 0;
-  while (
-    (x < bubbleRadius || x > CONTAINER_WIDTH - bubbleRadius ||
-      y < bubbleRadius || y > CONTAINER_HEIGHT - bubbleRadius) &&
-    distance > 50
-  ) {
-    distance *= 0.92; // Plus agressif (0.92 au lieu de 0.95)
-    x = centerX + distance * Math.cos(angleRad);
-    y = centerY + distance * Math.sin(angleRad);
-    iterations++;
+// 🧠 LOGIQUE INTELLIGENTE DE POSITIONNEMENT
+// Réorganise TOUTES les boules du côté opposé si la boule bleue est près du bord
+function calculateSmartBubblePosition(
+  blueBubbleX: number,
+  blueBubbleY: number,
+  index: number,
+  bubbleRadius: number,
+  logMode?: boolean
+): { x: number; y: number; side: string } {
+  
+  // Déterminer où la boule bleue est
+  const isNearLeft = blueBubbleX < EDGE_THRESHOLD;
+  const isNearRight = blueBubbleX > CONTAINER_WIDTH - EDGE_THRESHOLD;
+  const isNearTop = blueBubbleY < EDGE_THRESHOLD;
+  const isNearBottom = blueBubbleY > CONTAINER_HEIGHT - EDGE_THRESHOLD;
+  
+  let x: number, y: number, side: string;
+  
+  // PRIORITÉ 1: Gauche/Droite (plus important)
+  if (isNearLeft) {
+    // Boule bleue À GAUCHE → TOUTES à DROITE
+    side = "RIGHT";
+    const rightZoneX = CONTAINER_WIDTH - 100; // Zone droite (x=275)
+    x = rightZoneX + ((index % 3) - 1) * 20; // Variation déterministe ±20
+    y = 50 + (index * (CONTAINER_HEIGHT - 100)) / 12; // Distribuer verticalement
+    
+    if (DEBUG && logMode && index === 0) {
+      console.log(`🔥 [REORG] Boule bleue x=${blueBubbleX.toFixed(0)} (GAUCHE!) → Toutes à DROITE (x=275±20)`);
+    }
+  } else if (isNearRight) {
+    // Boule bleue À DROITE → TOUTES à GAUCHE
+    side = "LEFT";
+    const leftZoneX = 100; // Zone gauche (x=100)
+    x = leftZoneX + ((index % 3) - 1) * 20; // Variation déterministe ±20
+    y = 50 + (index * (CONTAINER_HEIGHT - 100)) / 12;
+    
+    if (DEBUG && logMode && index === 0) {
+      console.log(`🔥 [REORG] Boule bleue x=${blueBubbleX.toFixed(0)} (DROITE!) → Toutes à GAUCHE (x=100±20)`);
+    }
   }
-
+  // PRIORITÉ 2: Haut/Bas
+  else if (isNearTop) {
+    // Boule bleue EN HAUT → TOUTES en BAS
+    side = "BOTTOM";
+    const bottomZoneY = CONTAINER_HEIGHT - 120; // Zone bas
+    y = bottomZoneY + ((index % 3) - 1) * 20; // Variation déterministe
+    x = 50 + (index * (CONTAINER_WIDTH - 100)) / 12;
+    
+    if (DEBUG && logMode && index === 0) {
+      console.log(`🔥 [REORG] Boule bleue y=${blueBubbleY.toFixed(0)} (HAUT!) → Toutes en BAS (y=480±20)`);
+    }
+  } else if (isNearBottom) {
+    // Boule bleue EN BAS → TOUTES en HAUT
+    side = "TOP";
+    const topZoneY = 100; // Zone haut
+    y = topZoneY + ((index % 3) - 1) * 20; // Variation déterministe
+    x = 50 + (index * (CONTAINER_WIDTH - 100)) / 12;
+    
+    if (DEBUG && logMode && index === 0) {
+      console.log(`🔥 [REORG] Boule bleue y=${blueBubbleY.toFixed(0)} (BAS!) → Toutes en HAUT (y=100±20)`);
+    }
+  } else {
+    // AU CENTRE → Arrangement circulaire normal
+    side = "CIRCLE";
+    const angle = (index * 360) / 12;
+    const angleRad = (angle * Math.PI) / 180;
+    const distance = 140;
+    x = blueBubbleX + distance * Math.cos(angleRad);
+    y = blueBubbleY + distance * Math.sin(angleRad);
+    
+    if (DEBUG && logMode && index === 0) {
+      console.log(`✅ [CENTER] Boule bleue x=${blueBubbleX.toFixed(0)} y=${blueBubbleY.toFixed(0)} → Cercle normal`);
+    }
+  }
+  
   // Clamp final
   x = Math.max(bubbleRadius, Math.min(CONTAINER_WIDTH - bubbleRadius, x));
   y = Math.max(bubbleRadius, Math.min(CONTAINER_HEIGHT - bubbleRadius, y));
-
-  if (DEBUG && iterations > 0) {
-    console.log(`[POS] angle=${angle}° dist=${distance.toFixed(0)} iter=${iterations}`);
-  }
-
-  return { x, y, distance };
+  
+  return { x, y, side };
 }
 
 // 📏 Calculer la taille INDIVIDUELLE d'une boule
-// Séparation GARANTIE avec diviseur agressif
 function calculateIndividualBubbleSize(
   code: string,
   x: number,
   y: number,
-  adjacentPositions: Array<{ x: number; y: number }>,
+  otherPositions: Array<{ x: number; y: number }>,
   baseRadius: number
 ): number {
-  // 1️⃣ Contraint par la distance aux BORDS
-  const margin = 10;
+  // Contraint par la distance aux BORDS
+  const margin = 8;
   const distToBorders = Math.min(
     Math.abs(x - margin),
     Math.abs(y - margin),
@@ -86,28 +130,22 @@ function calculateIndividualBubbleSize(
     Math.abs(CONTAINER_HEIGHT - y - margin)
   );
   let maxRadius = baseRadius;
-  if (distToBorders < baseRadius + 5) {
-    maxRadius = Math.max(18, distToBorders * 0.75);
+  if (distToBorders < baseRadius) {
+    maxRadius = Math.max(12, distToBorders * 0.7);
   }
 
-  // 2️⃣ Contraint par la distance aux VOISINS - TRÈS AGRESSIF
-  for (let i = 0; i < adjacentPositions.length; i++) {
-    const neighbor = adjacentPositions[i];
-    const dx = neighbor.x - x;
-    const dy = neighbor.y - y;
-    const distToNeighbor = Math.sqrt(dx * dx + dy * dy);
+  // Contraint par la distance aux AUTRES BOULES
+  for (const other of otherPositions) {
+    const dx = other.x - x;
+    const dy = other.y - y;
+    const distToOther = Math.sqrt(dx * dx + dy * dy);
     
-    // Diviseur AGRESSIF = 3.5 (au lieu de 2.5)
-    // Cela garantit maxRadius = distToNeighbor / 3.5
-    // Donc maxRadius + neighborRadius < distToNeighbor
-    const maxRadiusFromNeighbor = distToNeighbor / 3.5;
-    maxRadius = Math.min(maxRadius, maxRadiusFromNeighbor);
+    // Diviseur agressif = 3.0 pour garantir zéro contact
+    const maxRadiusFromOther = distToOther / 3.0;
+    maxRadius = Math.min(maxRadius, maxRadiusFromOther);
   }
 
-  const finalRadius = Math.max(12, maxRadius); // Min 12px
-  if (DEBUG) {
-    console.log(`[SIZE] ${code}: maxRadius=${maxRadius.toFixed(1)} final=${finalRadius.toFixed(1)}`);
-  }
+  const finalRadius = Math.max(10, maxRadius); // Min 10px
   return finalRadius;
 }
 
@@ -137,13 +175,6 @@ export default function LanguageSelectionBubbles() {
 
     if (DEBUG) {
       console.log(`[CLICK] x=${clampX.toFixed(0)} y=${clampY.toFixed(0)}`);
-      
-      // Vérifier l'espace disponible
-      const distToLeft = clampX;
-      const distToRight = CONTAINER_WIDTH - clampX;
-      const distToTop = clampY;
-      const distToBottom = CONTAINER_HEIGHT - clampY;
-      console.log(`[SPACE] L=${distToLeft} R=${distToRight} T=${distToTop} B=${distToBottom}`);
     }
 
     setCenterPos({ x: clampX, y: clampY });
@@ -202,38 +233,68 @@ export default function LanguageSelectionBubbles() {
       document.removeEventListener("mouseup", handleMouseUp);
       document.removeEventListener("touchend", handleTouchEnd);
     };
-  }, [isDragging, centerPos]);
+  }, [isDragging]);
 
   // 🎯 Détection de collision
   const detectSelection = () => {
     if (!blueBubblePos || !centerPos || selectedLanguage) return;
 
+    // Calculer toutes les positions
+    const positionsWithRadius: Array<{
+      lang: string;
+      x: number;
+      y: number;
+      radius: number;
+    }> = [];
+
     for (let i = 0; i < LANGUAGES.length; i++) {
-      const lang = LANGUAGES[i];
-      const pos = calculateOptimalPosition(centerPos.x, centerPos.y, lang.angle, BASE_BUBBLE_RADIUS);
-
-      // Positions des voisins
-      const prevLang = LANGUAGES[(i - 1 + LANGUAGES.length) % LANGUAGES.length];
-      const nextLang = LANGUAGES[(i + 1) % LANGUAGES.length];
-      
-      const prevPos = calculateOptimalPosition(centerPos.x, centerPos.y, prevLang.angle, BASE_BUBBLE_RADIUS);
-      const nextPos = calculateOptimalPosition(centerPos.x, centerPos.y, nextLang.angle, BASE_BUBBLE_RADIUS);
-
-      const dynamicRadius = calculateIndividualBubbleSize(
-        lang.code,
-        pos.x,
-        pos.y,
-        [{ x: prevPos.x, y: prevPos.y }, { x: nextPos.x, y: nextPos.y }],
-        BASE_BUBBLE_RADIUS
+      const pos = calculateSmartBubblePosition(
+        blueBubblePos.x,
+        blueBubblePos.y,
+        i,
+        40,
+        i === 0 // Log seulement pour le premier (index 0)
       );
 
-      // Distance
-      const dx = blueBubblePos.x - pos.x;
-      const dy = blueBubblePos.y - pos.y;
+      // Autres positions pour calcul de taille
+      const otherPositions = [];
+      for (let j = 0; j < LANGUAGES.length; j++) {
+        if (i !== j) {
+          const otherPos = calculateSmartBubblePosition(
+            blueBubblePos.x,
+            blueBubblePos.y,
+            j,
+            40,
+            false // Pas de log pour les autres
+          );
+          otherPositions.push({ x: otherPos.x, y: otherPos.y });
+        }
+      }
+
+      const radius = calculateIndividualBubbleSize(
+        LANGUAGES[i].code,
+        pos.x,
+        pos.y,
+        otherPositions,
+        40
+      );
+
+      positionsWithRadius.push({
+        lang: LANGUAGES[i].code,
+        x: pos.x,
+        y: pos.y,
+        radius,
+      });
+    }
+
+    // Vérifier collision
+    for (const bubble of positionsWithRadius) {
+      const dx = blueBubblePos.x - bubble.x;
+      const dy = blueBubblePos.y - bubble.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
-      if (distance < CENTER_RADIUS + dynamicRadius) {
-        handleBubbleSelect(lang.code);
+      if (distance < CENTER_RADIUS + bubble.radius) {
+        handleBubbleSelect(bubble.lang);
         return;
       }
     }
@@ -274,28 +335,39 @@ export default function LanguageSelectionBubbles() {
           viewBox="0 0 375 600"
           style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}
         >
-          {/* 🎨 BOULES COLORÉES (RENDU D'ABORD = SOUS) */}
+          {/* 🎨 BOULES COLORÉES (RENDU D'ABORD) */}
           {centerPos &&
             LANGUAGES.map((lang, index) => {
-              const pos = calculateOptimalPosition(centerPos.x, centerPos.y, lang.angle, BASE_BUBBLE_RADIUS);
+              const pos = calculateSmartBubblePosition(
+                blueBubblePos?.x || centerPos.x,
+                blueBubblePos?.y || centerPos.y,
+                index,
+                40
+              );
 
-              // Positions voisins
-              const prevLang = LANGUAGES[(index - 1 + LANGUAGES.length) % LANGUAGES.length];
-              const nextLang = LANGUAGES[(index + 1) % LANGUAGES.length];
-              
-              const prevPos = calculateOptimalPosition(centerPos.x, centerPos.y, prevLang.angle, BASE_BUBBLE_RADIUS);
-              const nextPos = calculateOptimalPosition(centerPos.x, centerPos.y, nextLang.angle, BASE_BUBBLE_RADIUS);
+              // Autres positions
+              const otherPositions = [];
+              for (let j = 0; j < LANGUAGES.length; j++) {
+                if (index !== j) {
+                  const other = calculateSmartBubblePosition(
+                    blueBubblePos?.x || centerPos.x,
+                    blueBubblePos?.y || centerPos.y,
+                    j,
+                    40
+                  );
+                  otherPositions.push({ x: other.x, y: other.y });
+                }
+              }
 
-              // 📏 Taille INDIVIDUELLE - SÉPARATION GARANTIE
               const dynamicRadius = calculateIndividualBubbleSize(
                 lang.code,
                 pos.x,
                 pos.y,
-                [{ x: prevPos.x, y: prevPos.y }, { x: nextPos.x, y: nextPos.y }],
-                BASE_BUBBLE_RADIUS
+                otherPositions,
+                40
               );
 
-              // Vérifier si boule bleue dessus
+              // Feedback si boule bleue dessus
               const isOverlapping =
                 blueBubblePos &&
                 (() => {
@@ -305,15 +377,12 @@ export default function LanguageSelectionBubbles() {
                   return distance < CENTER_RADIUS + dynamicRadius;
                 })();
 
-              const displayRadius = isOverlapping ? dynamicRadius * 1.15 : dynamicRadius;
-
               return (
                 <g key={lang.code}>
-                  {/* Cercle boule */}
                   <motion.circle
                     cx={pos.x}
                     cy={pos.y}
-                    r={displayRadius}
+                    r={isOverlapping ? dynamicRadius * 1.2 : dynamicRadius}
                     fill={lang.color}
                     stroke="#FFFFFF"
                     strokeWidth="2"
@@ -322,13 +391,12 @@ export default function LanguageSelectionBubbles() {
                     transition={{ duration: 0.3, delay: index * 0.02 }}
                   />
 
-                  {/* Drapeau SEULEMENT (pas de label) */}
                   <text
                     x={pos.x}
                     y={pos.y}
                     textAnchor="middle"
                     dominantBaseline="central"
-                    fontSize="28"
+                    fontSize="26"
                     pointerEvents="none"
                   >
                     {lang.flag}
@@ -356,7 +424,7 @@ export default function LanguageSelectionBubbles() {
             />
           )}
 
-          {/* 📝 TEXTE CENTRE */}
+          {/* 📝 TEXTE */}
           <text
             x={CONTAINER_WIDTH / 2}
             y={CONTAINER_HEIGHT / 2}

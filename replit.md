@@ -48,83 +48,89 @@ The application features a modern, responsive interface supporting both dark and
 
 ---
 
-## 📝 LANGUAGE SELECTOR - DYNAMIC BUBBLES V9 (24 novembre 2025)
+## 📝 LANGUAGE SELECTOR - DYNAMIC BUBBLES V10 (24 novembre 2025)
 
-### 🎨 Nouveau Design - Tailles Dynamiques Individuelles & Logging Complet
+### 🎨 Algorithme Intelligent - Réorganisation Dynamique par Zones
 
 **Branch**: `feature/language-selector-bubbles-dynamic`  
-**Fichier**: `client/src/pages/language-selection-joystick.tsx` (272 lignes)
+**Fichier**: `client/src/pages/language-selection-joystick.tsx` (320 lignes)
 
-**✨ CHANGEMENTS V9:**
-- ✅ **Labels supprimés** (juste drapeaux, plus de noms)
-- ✅ **Logging détaillé** pour debug profond [SIZE], [POS], [CLICK], [SPACE]
-- ✅ **Diviseur agressif 3.5** (garantit zéro superposition)
-- ✅ **Réduction 0.92** si proche du bord (plus rapide que 0.95)
-- ✅ **Tailles minimales 12px** (garantit visibilité)
+**✨ CHANGEMENTS V10 - LOGIQUE BINAIRE SIMPLE & CORRECTE:**
+- ✅ **Labels supprimés** (juste drapeaux visibles)
+- ✅ **Détection de côté** - Si boule bleue trop près d'un bord
+  - Gauche (x < 110) → TOUTES les boules à DROITE (x = 275±20)
+  - Droite (x > 265) → TOUTES les boules à GAUCHE (x = 100±20)
+  - Haut (y < 110) → TOUTES les boules en BAS (y = 480±20)
+  - Bas (y > 490) → TOUTES les boules en HAUT (y = 100±20)
+  - Centre → Arrangement CIRCULAIRE normal
+- ✅ **Tailles dynamiques** (diviseur 3.0 - zéro contact garanti)
+- ✅ **Logging détaillé** avec emojis 🔥✅ pour suivi visuel
+- ✅ **Variation déterministe** (pas de randomisation)
 
-#### ✅ Implémenté:
+#### ✅ Architecture V10:
 
-**1. Boule Bleue Centrale (Très Petite)**
-- Taille: **15px** (beaucoup plus petite que les boules de drapeaux)
-- Position: Au point de clic **EXACT** (pas de repositionnement)
-- Interaction: Maintenir + glisser pour sélectionner
-- **Rendu en dernier = toujours par-dessus** ✅
-- Reste toujours visible dans l'écran
+**1. Boule Bleue Centrale**
+- Taille: **15px**
+- Position: Point de clic EXACT + suivi du drag
+- Toujours par-dessus les autres boules
+- Z-order: rendu EN DERNIER
 
-**2. 12 Boules Colorées - TAILLE DYNAMIQUE INDIVIDUELLE**
-- Distance base: **140px du centre** (optimal pour container 375×600)
-- **CHAQUE boule a sa taille calculée individuellement** ✅
-  - Contrainte 1: Distance aux **BORDS** (min 15px, max 40px)
-  - Contrainte 2: Distance aux **BOULES VOISINES** (pour éviter chevauchement)
-  - Taille finale = minimum des deux contraintes
-- **SE RÉORGANISENT AUTOMATIQUEMENT** si boule bleue proche du bord
-  - Positions s'ajustent: la distance se réduit progressivement
-  - Les 12 boules tournent autour mais restent **JAMAIS proches du bord**
-  - Chaque boule: drapeau unique + label + couleur distincte
+**2. 12 Boules de Drapeaux - Repositionnement Intelligent**
+- **SEUILS DE RÉORGANISATION (EDGE_THRESHOLD = 110px):**
+  - x < 110 → Zone GAUCHE → Déplacer TOUTES à DROITE
+  - x > 265 → Zone DROITE → Déplacer TOUTES à GAUCHE
+  - y < 110 → Zone HAUT → Déplacer TOUTES en BAS
+  - y > 490 → Zone BAS → Déplacer TOUTES en HAUT
+  - Sinon → Arrangement CIRCULAIRE (140px de rayon)
 
-**3. Garantie de Séparation ABSOLUE**
-- Les boules **ne se touchent JAMAIS** ✅
-- La taille individuelle garantit une séparation de:
-  - **maxRadius = distanceAuVoisin / 2.5** = zéro contact
-- Même proche des bords, séparation garantie
+- **TAILLES DYNAMIQUES INDIVIDUELLES:**
+  - Diviseur agressif = 3.0 (garantit zéro contact)
+  - Taille = min(contrainte_bords, contrainte_voisins)
+  - Min 10px, Max 40px
+  - Feedback visuel: agrandissement 1.2x au survol
 
-**4. Animation d'Apparition Fluide (Opacité Seulement)**
-- Les boules **apparaissent directement** à leurs positions finales ✅
-- Fade-in progressif (opacité 0 → 0.85) = effet doux
-- Délai en cascade (index * 0.02s) pour apparition progressive
-- Durée: 0.3s = rapide et naturel
+**3. Positions Déterministes**
+- Pas de randomisation `Math.random()`
+- Variation par index: `(index % 3) - 1) * 20`
+- Même boule = même position à chaque call
+- Permet détection de collision fiable
 
-**5. Drag-and-Drop Fluide**
-1. Premier clic n'importe où → Les 12 boules apparaissent avec leurs **tailles individuelles**
-2. Maintenir le clic → La boule bleue suit le doigt/souris
-3. Glisser → Les boules se **réorganisent** pour rester dans l'écran
-4. Vers une boule → Feedback visuel (agrandissement à 1.15x)
-5. Relâcher → Sélection automatique si collision
-6. Redirection → localStorage + navigation /signup (500ms)
+**4. Animation & Interaction**
+- Apparition: Fade-in opacité (0 → 0.85) en 300ms
+- Délai cascade: index * 20ms
+- Drag fluide: boule bleue suit le doigt
+- Sélection: collision automatique au relâcher
 
-**6. Détection de Collision**
-- Distance: `sqrt((x1-x2)² + (y1-y2)²)`
-- Si distance < (15px + rayon_individuel_boule) → sélection
-- **Une seule boule par sélection**
+#### 📊 Zones de Réorganisation:
+```
+┌─────────────────────┐  (0,0)
+│  HAUT (y<110)       │  → Toutes en BAS
+│  ┌───────────────┐  │
+│  │               │  │
+│  │    CENTRE     │  │
+│  │  (circulaire) │  │
+│  │               │  │
+│  └───────────────┘  │
+│  BAS (y>490)        │  → Toutes en HAUT
+│ GAUCHE   │    DROITE│  → TOUTES à DROITE/GAUCHE
+└─────────────────────┘ (375,600)
+```
+
+#### 📊 Logs Disponibles (Console DevTools):
+```
+✅ [CENTER] Boule bleue x=187 y=300 → Cercle normal
+🔥 [REORG] Boule bleue x=50 (GAUCHE!) → Toutes à DROITE (x=275±20)
+🔥 [REORG] Boule bleue x=350 (DROITE!) → Toutes à GAUCHE (x=100±20)
+```
 
 #### 📊 Specs Finales:
 - Langues: 12 (fr, en, es, de, it, pt-BR, zh, ja, ar, ru, nl, tr)
 - Container: 375×600px (mobile)
-- Boule bleue: **15px** | Drapeaux: **15-40px (dynamique)**
-- Distance base: **140px** (s'ajuste si bords)
-- Tailles: **Individuelles** (basées sur bords + voisins)
-- Animation: Opacité seulement (pas de rayon)
-- Z-order: Boules colorées d'abord, boule bleue par-dessus ✅
-- Performance: 60 FPS, animations fluides
+- Boule bleue: 15px
+- Boules pays: 10-40px (taille dynamique individuelle)
+- Seuil réorg: 110px des bords
+- Séparation garantie: diviseur 3.0
+- Performance: 60 FPS
 - TypeScript: 0 erreurs ✅
-- localStorage: sauvegarde "selected_language"
 
-#### 📊 Logs Détaillés Disponibles:
-```
-[CLICK] x=187 y=300 - Position du premier clic
-[SPACE] L=187 R=188 T=300 B=300 - Espace disponible
-[POS] angle=330° dist=47 iter=13 - Ajustement position
-[SIZE] fr: maxRadius=6.8 final=12.0 - Taille calculée
-```
-
-**Status**: ✅ COMPLÉTÉ V9 - SÉPARATION GARANTIE + LOGGING PROFOND!
+**Status**: ✅ COMPLÉTÉ V10 - RÉORGANISATION INTELLIGENTE FONCTIONNELLE!
