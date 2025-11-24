@@ -48,89 +48,75 @@ The application features a modern, responsive interface supporting both dark and
 
 ---
 
-## 📝 LANGUAGE SELECTOR - DYNAMIC BUBBLES V10 (24 novembre 2025)
+## 📝 LANGUAGE SELECTOR - DYNAMIC BUBBLES V11 (24 novembre 2025)
 
-### 🎨 Algorithme Intelligent - Réorganisation Dynamique par Zones
+### 🎨 Comportement Joystick - Boule Bleue Fixe + Cercle Dynamique
 
 **Branch**: `feature/language-selector-bubbles-dynamic`  
-**Fichier**: `client/src/pages/language-selection-joystick.tsx` (320 lignes)
+**Fichier**: `client/src/pages/language-selection-joystick.tsx` (282 lignes)
 
-**✨ CHANGEMENTS V10 - LOGIQUE BINAIRE SIMPLE & CORRECTE:**
-- ✅ **Labels supprimés** (juste drapeaux visibles)
-- ✅ **Détection de côté** - Si boule bleue trop près d'un bord
-  - Gauche (x < 110) → TOUTES les boules à DROITE (x = 275±20)
-  - Droite (x > 265) → TOUTES les boules à GAUCHE (x = 100±20)
-  - Haut (y < 110) → TOUTES les boules en BAS (y = 480±20)
-  - Bas (y > 490) → TOUTES les boules en HAUT (y = 100±20)
-  - Centre → Arrangement CIRCULAIRE normal
-- ✅ **Tailles dynamiques** (diviseur 3.0 - zéro contact garanti)
-- ✅ **Logging détaillé** avec emojis 🔥✅ pour suivi visuel
-- ✅ **Variation déterministe** (pas de randomisation)
+**✨ CHANGEMENTS V11 - LOGIQUE CORRECTE (UTILISATEUR VALIDATED):**
+- ✅ **Boule bleue reste EXACTEMENT au clic** (pas de repositionnement)
+- ✅ **12 boules drapeaux EN CERCLE FIXE** autour de la boule bleue (140px rayon)
+- ✅ **Drag fluide** - Boule bleue peut être glissée VERS les vertes
+- ✅ **Feedback visuel** - Boules vertes s'AGRANDISSENT quand on approche (1.0x à 1.5x)
+- ✅ **Auto-sélection par proximité** - Pas besoin d'overlap exact, juste assez proche
+- ✅ **Minimal gestures** - Juste orienter vers la langue, relâcher pour confirmer
+- ✅ **Logging détaillé** avec logs système pour debug
 
-#### ✅ Architecture V10:
+#### ✅ Architecture V11 - Interaction Joystick:
 
-**1. Boule Bleue Centrale**
-- Taille: **15px**
-- Position: Point de clic EXACT + suivi du drag
-- Toujours par-dessus les autres boules
-- Z-order: rendu EN DERNIER
+**1. Phase 1: Premier Clic**
+- Utilisateur clique n'importe où dans le container
+- Boule bleue s'ARRÊTE EXACTEMENT au point de clic
+- Boule bleue: 15px, bleu-500
+- 12 boules drapeaux apparaissent en cercle AUTOUR (140px de rayon)
 
-**2. 12 Boules de Drapeaux - Repositionnement Intelligent**
-- **SEUILS DE RÉORGANISATION (EDGE_THRESHOLD = 110px):**
-  - x < 110 → Zone GAUCHE → Déplacer TOUTES à DROITE
-  - x > 265 → Zone DROITE → Déplacer TOUTES à GAUCHE
-  - y < 110 → Zone HAUT → Déplacer TOUTES en BAS
-  - y > 490 → Zone BAS → Déplacer TOUTES en HAUT
-  - Sinon → Arrangement CIRCULAIRE (140px de rayon)
+**2. Phase 2: Drag Fluide**
+- Maintenir le clic pour glisser la boule bleue
+- Boule bleue suit le doigt/souris dans le container
+- Les 12 boules RESTENT EN CERCLE FIXE autour d'elle (toujours 140px rayon)
+- Container clampé: pas de sortie en dehors des limites
 
-- **TAILLES DYNAMIQUES INDIVIDUELLES:**
-  - Diviseur agressif = 3.0 (garantit zéro contact)
-  - Taille = min(contrainte_bords, contrainte_voisins)
-  - Min 10px, Max 40px
-  - Feedback visuel: agrandissement 1.2x au survol
+**3. Phase 3: Feedback Visuel**
+- Quand boule bleue s'approche d'une verte:
+  - Distance < 80px → Boule verte S'AGRANDIT
+  - Grossissement: 1.0x (base) → 1.5x (très proche)
+  - Croissance progressive selon la distance
+- Utilisateur voit clairement quelle langue sera sélectionnée
 
-**3. Positions Déterministes**
-- Pas de randomisation `Math.random()`
-- Variation par index: `(index % 3) - 1) * 20`
-- Même boule = même position à chaque call
-- Permet détection de collision fiable
+**4. Phase 4: Auto-Sélection**
+- Relâchement du clic (mouseUp)
+- Détection de proximité: si distance < (15px + 25px) = ~50px
+- Sélection AUTOMATIQUE de la boule la plus proche
+- localStorage sauvegarde la langue
+- Redirection /signup après 500ms
 
-**4. Animation & Interaction**
-- Apparition: Fade-in opacité (0 → 0.85) en 300ms
-- Délai cascade: index * 20ms
-- Drag fluide: boule bleue suit le doigt
-- Sélection: collision automatique au relâcher
-
-#### 📊 Zones de Réorganisation:
+#### 📊 Flux Utilisateur Optimal (Minimal Gestures):
 ```
-┌─────────────────────┐  (0,0)
-│  HAUT (y<110)       │  → Toutes en BAS
-│  ┌───────────────┐  │
-│  │               │  │
-│  │    CENTRE     │  │
-│  │  (circulaire) │  │
-│  │               │  │
-│  └───────────────┘  │
-│  BAS (y>490)        │  → Toutes en HAUT
-│ GAUCHE   │    DROITE│  → TOUTES à DROITE/GAUCHE
-└─────────────────────┘ (375,600)
+1. CLIC → Boule bleue se fixe → Drapeaux en cercle
+2. DRAG → Boule bleue suit doigt → Cercle se déplace avec elle
+3. ORIENT → Approcher doucement vers drapeau → Drapeau grossit (FEEDBACK)
+4. RELÂCHER → Auto-sélection si assez proche → Redirection
+
+Total: 1 clic + 1 drag + relâcher = MIN 3 actions
 ```
 
-#### 📊 Logs Disponibles (Console DevTools):
+#### 📊 Logs Système (Console DevTools):
 ```
-✅ [CENTER] Boule bleue x=187 y=300 → Cercle normal
-🔥 [REORG] Boule bleue x=50 (GAUCHE!) → Toutes à DROITE (x=275±20)
-🔥 [REORG] Boule bleue x=350 (DROITE!) → Toutes à GAUCHE (x=100±20)
+🎯 [CLICK] Boule bleue FIXÉE à x=303 y=180
+✅ [SELECT] fr sélectionné! Distance: 45
 ```
 
 #### 📊 Specs Finales:
 - Langues: 12 (fr, en, es, de, it, pt-BR, zh, ja, ar, ru, nl, tr)
 - Container: 375×600px (mobile)
-- Boule bleue: 15px
-- Boules pays: 10-40px (taille dynamique individuelle)
-- Seuil réorg: 110px des bords
-- Séparation garantie: diviseur 3.0
-- Performance: 60 FPS
+- Boule bleue: 15px (position: clic exact + drag)
+- Boules pays: 25px base → 37.5px max (grossissement 1.0x → 1.5x)
+- Rayon cercle: 140px (FIXE)
+- Seuil proximité: 80px (pour feedback)
+- Seuil sélection: ~50px (distance center + radius)
+- Performance: 60 FPS animations fluides
 - TypeScript: 0 erreurs ✅
 
-**Status**: ✅ COMPLÉTÉ V10 - RÉORGANISATION INTELLIGENTE FONCTIONNELLE!
+**Status**: ✅ COMPLÉTÉ V11 - JOYSTICK LANGUAGE SELECTOR FONCTIONNEL!
