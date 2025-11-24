@@ -94,11 +94,32 @@ export default function Signup() {
       const errorMessage = error.message || "Erreur lors de la vérification";
       console.error('❌ [CHECK-EMAIL] Erreur:', errorMessage);
       
-      toast({
-        title: "❌ Email indisponible",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      // Si l'email existe déjà, rediriger vers login
+      if (errorMessage.includes("email est déjà utilisé")) {
+        console.log('➡️ [CHECK-EMAIL] Email existe - redirection vers /login');
+        toast({
+          title: "Compte existant",
+          description: "Cet email est déjà utilisé. Connectez-vous à votre compte.",
+          variant: "default",
+        });
+        
+        // Nettoyer localStorage avant redirection
+        localStorage.removeItem("signup_session_id");
+        localStorage.removeItem("verification_email");
+        localStorage.removeItem("signup_gender");
+        
+        // Rediriger vers login
+        setTimeout(() => {
+          setLocation('/login');
+        }, 1500);
+      } else {
+        // Autre erreur
+        toast({
+          title: "❌ Erreur de vérification",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
     },
   });
 

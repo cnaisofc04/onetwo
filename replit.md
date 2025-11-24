@@ -158,3 +158,77 @@ The application features a modern, responsive interface supporting both dark and
 - ✅ Message d'erreur maintenant clair: "Cet email est déjà utilisé"
 - ✅ Toast affiche: "❌ Erreur d'inscription"
 - ✅ Logging amélioré côté client
+
+---
+
+### ✅ 3. REDIRECTION EMAIL EXISTANT → PAGE LOGIN ✅
+
+**Problème**: L'utilisateur voyait une erreur si l'email existait, au lieu d'être redirigé vers le login.
+
+**Solution implémentée**:
+- Détecte si l'email est déjà utilisé (message "email est déjà utilisé")
+- Affiche toast informatif: "Compte existant - Connectez-vous à votre compte"
+- **Redirige automatiquement vers `/login` après 1.5s**
+- Nettoie localStorage avant redirection
+
+**Fichiers modifiés**:
+- `client/src/pages/signup.tsx` (ligne 100-127)
+
+**Résultat**: 
+- ✅ UX améliorée: l'utilisateur qui a un compte existant est redirigé vers login
+- ✅ Pas d'erreur brutale, redirection douce et intuitive
+
+---
+
+### ✅ 4. FIX: DOUBLE HASHING PASSWORD ✅
+
+**Problème**: 🔴 **Login échouait** - "Email ou mot de passe incorrect"
+
+**Cause**: Le password était **haché DEUX FOIS**:
+1. À la création de la session signup → bcrypt hash 1 ✅
+2. À la création de l'utilisateur final → bcrypt hash du hash 1 ❌
+
+**Solution implémentée**:
+- Détecte si le password est déjà un hash bcrypt (`/^\$2[aby]\$/`)
+- Si c'est un hash → utilise tel quel
+- Si c'est en clair → hache le password
+
+**Fichiers modifiés**:
+- `server/storage.ts` (ligne 74-95) - Fonction `createUser()`
+
+**Résultat**: 
+- ✅ Login fonctionne maintenant: `@Pass2025` → match le hash correct
+- ✅ Authentification fonctionnelle end-to-end
+
+---
+
+### ✅ 5. FIX: FLUX CONSENTEMENTS (BOUCLE INFINIE) ✅
+
+**Problème**: 🔴 **Boucle infinie** après accepter géolocalisation
+
+**Flux AVANT** (cassé):
+```
+✅ Accepter géolocalisation 
+→ Redirige vers /location-city
+→ /location-city vérifie TOUS les consentements
+→ Conditions ❌ & Appareil ❌ non acceptés
+→ Redirection vers /consent-geolocation (BOUCLE!)
+```
+
+**Flux APRÈS** (corrigé):
+```
+✅ Accepter géolocalisation 
+→ Redirige vers /consent-terms (conditions)
+→ Accepter conditions 
+→ Redirige vers /consent-device (appareil)
+→ Accepter appareil
+→ Redirige vers /location-city ✅
+```
+
+**Fichiers modifiés**:
+- `client/src/pages/consent-geolocation.tsx` (ligne 48-49)
+
+**Résultat**: 
+- ✅ Flux de consentement linéaire et fluide
+- ✅ Pas de boucle infinie
+- ✅ Inscription peut être finalisée
