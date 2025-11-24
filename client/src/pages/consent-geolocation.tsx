@@ -42,8 +42,8 @@ export default function ConsentGeolocation() {
         });
       }
       console.log('✅ [GEOLOCATION] Consentement enregistré');
-      console.log('➡️ [GEOLOCATION] Redirection vers /location-city');
-      setLocation("/location-city");
+      console.log('➡️ [GEOLOCATION] Redirection vers /consent-terms');
+      setLocation("/consent-terms");
     },
     onError: (error: any) => {
       toast({
