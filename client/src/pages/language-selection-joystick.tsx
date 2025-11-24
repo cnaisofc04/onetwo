@@ -1,12 +1,11 @@
 /**
- * 🎨 LANGUAGE SELECTOR - DYNAMIC BUBBLES V11
- * ✅ BOULE BLEUE RESTE AU CLIC
- * ✅ DRAPEAUX EN CERCLE FIXE AUTOUR
- * ✅ GROSSISSEMENT AU SURVOL (FEEDBACK)
- * ✅ AUTO-SÉLECTION PAR PROXIMITÉ AU RELÂCHEMENT
+ * 🎨 LANGUAGE SELECTOR - JOYSTICK CORRECT V11
+ * ✅ DRAPEAUX FIXES EN CERCLE (ne bougent JAMAIS)
+ * ✅ BOULE BLEUE MOBILE (suit la souris)
+ * ✅ SÉLECTION PAR PROXIMITÉ au relâchement
  */
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 
@@ -25,52 +24,53 @@ const LANGUAGES = [
   { code: "tr", label: "Türkçe", flag: "🇹🇷", color: "#FF8B94" },
 ];
 
-const CENTER_RADIUS = 15;
 const CONTAINER_WIDTH = 375;
 const CONTAINER_HEIGHT = 600;
-const CIRCLE_DISTANCE = 140; // Distance fixe du cercle
-const PROXIMITY_THRESHOLD = 80; // Distance pour agrandir la boule verte
-const DEBUG = true;
+const CENTER_X = CONTAINER_WIDTH / 2;
+const CENTER_Y = CONTAINER_HEIGHT / 2;
+const CIRCLE_RADIUS = 140;
+const BLUE_BUBBLE_RADIUS = 15;
+const FLAG_BUBBLE_RADIUS = 25;
+const SELECTION_DISTANCE = 50; // Distance pour sélectionner
+const PROXIMITY_FEEDBACK_DISTANCE = 80; // Distance pour feedback visuel
 
-// 🧠 POSITIONNEMENT CIRCULAIRE FIXE - TOUJOURS
-function calculateBubblePosition(
-  blueBubbleX: number,
-  blueBubbleY: number,
-  index: number
-): { x: number; y: number } {
-  // Arrangement circulaire parfait - TOUJOURS, peu importe où est la bleue
+// 📍 POSITIONS FIXES DES DRAPEAUX - JAMAIS MODIFIÉES
+function getFixedBubblePosition(index: number): { x: number; y: number } {
   const angle = (index * 360) / 12;
   const angleRad = (angle * Math.PI) / 180;
-  
-  const x = blueBubbleX + CIRCLE_DISTANCE * Math.cos(angleRad);
-  const y = blueBubbleY + CIRCLE_DISTANCE * Math.sin(angleRad);
-  
-  // Clamp aux bords du container
-  const clampedX = Math.max(CENTER_RADIUS, Math.min(CONTAINER_WIDTH - CENTER_RADIUS, x));
-  const clampedY = Math.max(CENTER_RADIUS, Math.min(CONTAINER_HEIGHT - CENTER_RADIUS, y));
-  
-  return { x: clampedX, y: clampedY };
+
+  return {
+    x: CENTER_X + CIRCLE_RADIUS * Math.cos(angleRad),
+    y: CENTER_Y + CIRCLE_RADIUS * Math.sin(angleRad),
+  };
 }
 
-// 📏 TAILLE DYNAMIQUE - Grossit si boule bleue proche
-function calculateDynamicRadius(
-  greenBubbleX: number,
-  greenBubbleY: number,
-  blueBubbleX: number,
-  blueBubbleY: number,
-  baseRadius: number = 25
+// 📐 Calculer distance
+function distance(
+  p1: { x: number; y: number },
+  p2: { x: number; y: number }
 ): number {
-  const dx = blueBubbleX - greenBubbleX;
-  const dy = blueBubbleY - greenBubbleY;
-  const distance = Math.sqrt(dx * dx + dy * dy);
-  
-  // Si proche → grossir progressivement
-  if (distance < PROXIMITY_THRESHOLD) {
-    const growthFactor = 1 + (1 - distance / PROXIMITY_THRESHOLD) * 0.5; // 1.0 to 1.5x
-    return baseRadius * growthFactor;
+  const dx = p2.x - p1.x;
+  const dy = p2.y - p1.y;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+// 📏 Taille dynamique du drapeau (feedback visuel)
+function getDynamicFlagRadius(
+  flagPos: { x: number; y: number },
+  bluePos: { x: number; y: number } | null
+): number {
+  if (!bluePos) return FLAG_BUBBLE_RADIUS;
+
+  const dist = distance(bluePos, flagPos);
+
+  if (dist < PROXIMITY_FEEDBACK_DISTANCE) {
+    // 1.0x à 1.5x en fonction de la proximité
+    const growthFactor = 1 + (1 - dist / PROXIMITY_FEEDBACK_DISTANCE) * 0.5;
+    return FLAG_BUBBLE_RADIUS * growthFactor;
   }
-  
-  return baseRadius;
+
+  return FLAG_BUBBLE_RADIUS;
 }
 
 export function LanguageSelectionJoystick() {
@@ -83,7 +83,7 @@ export function LanguageSelectionJoystick() {
   const containerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
 
-  // 🖱️ PREMIER CLIC - Positionne la boule bleue EXACTEMENT au clic
+  // 🖱️ PREMIER CLIC - Initialise le joystick
   const handleContainerClick = (e: React.MouseEvent) => {
     if (selectedLanguage || blueBubblePos) return;
 
@@ -93,80 +93,77 @@ export function LanguageSelectionJoystick() {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    setBlueBubblePos({ x, y });
+    // Position initiale = clic exact (clamped)
+    const clampedX = Math.max(
+      BLUE_BUBBLE_RADIUS,
+      Math.min(CONTAINER_WIDTH - BLUE_BUBBLE_RADIUS, x)
+    );
+    const clampedY = Math.max(
+      BLUE_BUBBLE_RADIUS,
+      Math.min(CONTAINER_HEIGHT - BLUE_BUBBLE_RADIUS, y)
+    );
 
-    if (DEBUG) {
-      console.log(
-        `🎯 [CLICK] Boule bleue FIXÉE à x=${x.toFixed(0)} y=${y.toFixed(0)}`
-      );
-    }
-  };
-
-  // 🖱️ DRAG - La boule bleue suit le doigt
-  const handleMouseDown = () => {
-    if (!blueBubblePos) return;
+    setBlueBubblePos({ x: clampedX, y: clampedY });
     isDragging.current = true;
+
+    console.log(
+      `🎯 [INIT] Joystick initié à x=${clampedX.toFixed(0)} y=${clampedY.toFixed(0)}`
+    );
   };
 
+  // 🖱️ DRAG - La boule bleue suit la souris
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging.current || !blueBubblePos) return;
 
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
 
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top;
 
     // Clamp dans le container
-    const clampedX = Math.max(CENTER_RADIUS, Math.min(CONTAINER_WIDTH - CENTER_RADIUS, x));
-    const clampedY = Math.max(CENTER_RADIUS, Math.min(CONTAINER_HEIGHT - CENTER_RADIUS, y));
+    x = Math.max(BLUE_BUBBLE_RADIUS, Math.min(CONTAINER_WIDTH - BLUE_BUBBLE_RADIUS, x));
+    y = Math.max(BLUE_BUBBLE_RADIUS, Math.min(CONTAINER_HEIGHT - BLUE_BUBBLE_RADIUS, y));
 
-    setBlueBubblePos({ x: clampedX, y: clampedY });
+    setBlueBubblePos({ x, y });
   };
 
   const handleMouseUp = () => {
     if (!isDragging.current || !blueBubblePos) return;
     isDragging.current = false;
 
-    // 🎯 DÉTECTION DE SÉLECTION - Au relâchement
+    // 🎯 DÉTECTION DE SÉLECTION
     detectSelection();
   };
 
-  // 🎯 DÉTECTION DE SÉLECTION PAR PROXIMITÉ
   const detectSelection = () => {
     if (!blueBubblePos || selectedLanguage) return;
 
+    let closestIndex = -1;
+    let closestDistance = SELECTION_DISTANCE;
+
     for (let i = 0; i < LANGUAGES.length; i++) {
-      const greenPos = calculateBubblePosition(
-        blueBubblePos.x,
-        blueBubblePos.y,
-        i
+      const flagPos = getFixedBubblePosition(i);
+      const dist = distance(blueBubblePos, flagPos);
+
+      if (dist < closestDistance) {
+        closestDistance = dist;
+        closestIndex = i;
+      }
+    }
+
+    if (closestIndex !== -1) {
+      const language = LANGUAGES[closestIndex].code;
+      setSelectedLanguage(language);
+
+      console.log(
+        `✅ [SELECT] ${language} sélectionné! Distance: ${closestDistance.toFixed(0)}`
       );
 
-      const dx = blueBubblePos.x - greenPos.x;
-      const dy = blueBubblePos.y - greenPos.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-
-      // Si à moins de 50px → sélectionner
-      const selectionDistance = CENTER_RADIUS + 25;
-      if (distance < selectionDistance) {
-        const language = LANGUAGES[i].code;
-        setSelectedLanguage(language);
-
-        if (DEBUG) {
-          console.log(
-            `✅ [SELECT] ${language} sélectionné! Distance: ${distance.toFixed(0)}`
-          );
-        }
-
-        // Sauvegarder et rediriger après un délai
-        localStorage.setItem("selected_language", language);
-        setTimeout(() => {
-          setLocation("/signup");
-        }, 500);
-
-        return;
-      }
+      localStorage.setItem("selected_language", language);
+      setTimeout(() => {
+        setLocation("/signup");
+      }, 500);
     }
   };
 
@@ -179,10 +176,8 @@ export function LanguageSelectionJoystick() {
       >
         <div className="text-center">
           <p className="text-slate-400 text-lg">Cliquez n'importe où</p>
-          <p className="text-slate-500 text-sm">Cliquez</p>
-          <p className="text-slate-600 text-xs">
-            puis maintenez et glissez vers une langue
-          </p>
+          <p className="text-slate-500 text-sm">pour initialiser</p>
+          <p className="text-slate-600 text-xs">puis glissez vers une langue</p>
         </div>
       </div>
     );
@@ -197,46 +192,36 @@ export function LanguageSelectionJoystick() {
       onMouseLeave={handleMouseUp}
       className="w-full max-w-[375px] h-[600px] mx-auto bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl border-2 border-slate-700 relative overflow-hidden cursor-grab active:cursor-grabbing"
     >
-      {/* Cercle de référence (gris léger) */}
+      {/* Cercle de référence (gris très léger) */}
       <svg
         className="absolute inset-0 w-full h-full"
         style={{ pointerEvents: "none" }}
       >
         <circle
-          cx={blueBubblePos.x}
-          cy={blueBubblePos.y}
-          r={CIRCLE_DISTANCE}
+          cx={CENTER_X}
+          cy={CENTER_Y}
+          r={CIRCLE_RADIUS}
           fill="none"
-          stroke="rgba(100, 116, 139, 0.2)"
+          stroke="rgba(100, 116, 139, 0.15)"
           strokeWidth="1"
-          strokeDasharray="5,5"
+          strokeDasharray="4,4"
         />
       </svg>
 
-      {/* 12 BOULES DRAPEAUX */}
+      {/* 12 BOULES DRAPEAUX - FIXES EN CERCLE */}
       {LANGUAGES.map((lang, index) => {
-        const pos = calculateBubblePosition(
-          blueBubblePos.x,
-          blueBubblePos.y,
-          index
-        );
-        const radius = calculateDynamicRadius(
-          pos.x,
-          pos.y,
-          blueBubblePos.x,
-          blueBubblePos.y,
-          25
-        );
+        const flagPos = getFixedBubblePosition(index);
+        const dynamicRadius = getDynamicFlagRadius(flagPos, blueBubblePos);
 
         return (
           <motion.div
             key={lang.code}
             className="absolute flex items-center justify-center rounded-full font-bold text-2xl shadow-lg"
             style={{
-              left: pos.x,
-              top: pos.y,
-              width: radius * 2,
-              height: radius * 2,
+              left: flagPos.x,
+              top: flagPos.y,
+              width: dynamicRadius * 2,
+              height: dynamicRadius * 2,
               backgroundColor: lang.color,
               transform: "translate(-50%, -50%)",
             }}
@@ -247,14 +232,13 @@ export function LanguageSelectionJoystick() {
               duration: 0.3,
               ease: "easeOut",
             }}
-            onMouseDown={handleMouseDown}
           >
             {lang.flag}
           </motion.div>
         );
       })}
 
-      {/* BOULE BLEUE CENTRALE - Toujours par-dessus */}
+      {/* BOULE BLEUE MOBILE - Toujours par-dessus */}
       <motion.div
         className="absolute w-[30px] h-[30px] bg-blue-500 rounded-full shadow-xl z-50"
         style={{
@@ -262,7 +246,6 @@ export function LanguageSelectionJoystick() {
           top: blueBubblePos.y,
           transform: "translate(-50%, -50%)",
         }}
-        onMouseDown={handleMouseDown}
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.2, ease: "easeOut" }}
@@ -270,7 +253,7 @@ export function LanguageSelectionJoystick() {
 
       {/* INFO TEXT */}
       <div className="absolute bottom-4 left-0 right-0 text-center text-slate-400 text-xs">
-        <p>Glissez vers une langue et relâchez</p>
+        <p>Glissez la boule bleue vers une langue</p>
       </div>
     </div>
   );
