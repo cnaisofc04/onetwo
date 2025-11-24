@@ -169,6 +169,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // POST /api/auth/check-email - Vérifier si un email existe (pour validation immédiate)
+  app.post("/api/auth/check-email", async (req: Request, res: Response) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email || typeof email !== 'string') {
+        return res.status(400).json({ error: "Email invalide" });
+      }
+      
+      console.log(`📧 [CHECK-EMAIL] Vérification: ${email}`);
+      const existing = await storage.getUserByEmail(email);
+      
+      if (existing) {
+        console.log('❌ [CHECK-EMAIL] Email déjà utilisé');
+        return res.status(409).json({ error: "Cet email est déjà utilisé" });
+      }
+      
+      console.log('✅ [CHECK-EMAIL] Email disponible');
+      return res.status(200).json({ available: true });
+    } catch (error) {
+      console.error("❌ [CHECK-EMAIL] Erreur:", error);
+      return res.status(500).json({ error: "Erreur lors de la vérification" });
+    }
+  });
+
   // GET /api/auth/signup/session/:id - Get signup session data (for frontend validation)
   app.get("/api/auth/signup/session/:id", async (req: Request, res: Response) => {
     try {

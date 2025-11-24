@@ -77,6 +77,31 @@ export default function Signup() {
     return phoneRegex.test(phone) || "Format invalide (ex: 0612345678 ou +33612345678)";
   };
 
+  // Vérifier si l'email existe (étape 4)
+  const checkEmailMutation = useMutation({
+    mutationFn: async (email: string) => {
+      return apiRequest("/api/auth/check-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+    },
+    onSuccess: async () => {
+      console.log('✅ [CHECK-EMAIL] Email disponible - passage à étape 5');
+      setStep(5);
+    },
+    onError: (error: any) => {
+      const errorMessage = error.message || "Erreur lors de la vérification";
+      console.error('❌ [CHECK-EMAIL] Erreur:', errorMessage);
+      
+      toast({
+        title: "❌ Email indisponible",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Step 1-3: Créer la session
   const createSessionMutation = useMutation({
     mutationFn: async (data: Partial<InsertUser>) => {
@@ -170,7 +195,22 @@ export default function Signup() {
 
     // Valider les champs
     const isValid = await form.trigger(fieldsToValidate);
-    if (isValid && step < 6) {
+    
+    if (!isValid) return;
+
+    // À l'étape 4 (email), vérifier immédiatement que l'email n'existe pas
+    if (step === 4) {
+      console.log('🔐 [SIGNUP] === ÉTAPE 4 - VÉRIFICATION EMAIL ===');
+      const email = form.getValues('email');
+      console.log('📧 [SIGNUP] Vérification email:', email);
+      
+      // Appeler la mutation pour vérifier l'email
+      await checkEmailMutation.mutateAsync(email);
+      return; // La mutation passera à étape 5 si l'email est OK
+    }
+
+    // Pour les autres étapes
+    if (step < 6) {
       console.log(`✅ [SIGNUP] Passage étape ${step} → ${step + 1}`);
       setStep(step + 1);
     }
