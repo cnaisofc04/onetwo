@@ -25,9 +25,9 @@ const LANGUAGES = [
   { code: "tr", label: "Türkçe", flag: "🇹🇷", color: "#FF8B94", angle: 330 },
 ];
 
-const BUBBLE_DISTANCE = 140;
+const BUBBLE_DISTANCE = 180; // Distance pour que 12 boules ne se touchent JAMAIS
 const BASE_BUBBLE_RADIUS = 40;
-const CENTER_RADIUS = 25; // Boule bleue plus petite
+const CENTER_RADIUS = 15; // Boule bleue encore plus petite
 const CONTAINER_WIDTH = 375;
 const CONTAINER_HEIGHT = 600;
 

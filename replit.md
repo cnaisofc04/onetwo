@@ -45,3 +45,52 @@ The application features a modern, responsive interface supporting both dark and
 - **Email Service**: Resend (for email verification).
 - **SMS Service**: Twilio (for SMS verification).
 - **Cloud Storage**: Supabase Storage (for user files).
+
+---
+
+## 📝 LANGUAGE SELECTOR - DYNAMIC BUBBLES V5 (24 novembre 2025)
+
+### 🎨 Nouveau Design - Drag-and-Drop avec Positions Dynamiques
+
+**Branch**: `feature/language-selector-bubbles-dynamic`  
+**Fichier**: `client/src/pages/language-selection-joystick.tsx` (349 lignes)
+
+#### ✅ Implémenté:
+
+**1. Boule Bleue Centrale (Très Petite)**
+- Taille: **15px** (beaucoup plus petite que les boules de drapeaux)
+- Position: Au point de clic **EXACT** (pas de repositionnement)
+- Interaction: Maintenir + glisser pour sélectionner
+- Reste toujours visible dans l'écran (clamping)
+
+**2. 12 Boules Colorées Totalement Séparées**
+- Taille: **40px** (plus grandes que la boule bleue)
+- Distance: **180px du centre** (garantit ZÉRO chevauchement)
+- Distance entre adjacentes: **>80px** (jamais se touchent)
+- **Positions DYNAMIQUES**: S'ajustent si trop près du bord
+- Tailles réduites progressivement si proche du bord
+- Chaque boule: drapeau unique + label + couleur distincte
+
+**3. Drag-and-Drop Fluide**
+1. Premier clic n'importe où → Les 12 boules apparaissent
+2. Maintenir le clic → La boule bleue suit le doigt/souris
+3. Glisser vers une boule → Feedback visuel (agrandissement)
+4. Relâcher le clic → Sélection automatique si collision
+5. Redirection → localStorage + navigation /signup (500ms)
+
+**4. Détection de Collision**
+- Distance: `sqrt((x1-x2)² + (y1-y2)²)`
+- Si distance < (15px + rayon_dynamique) → sélection
+- **Une seule boule par sélection**
+
+#### 📊 Specs Finales:
+- Langues: 12 (fr, en, es, de, it, pt-BR, zh, ja, ar, ru, nl, tr)
+- Container: 375×600px (mobile)
+- Boule bleue: 15px | Drapeaux: 40px
+- Distance: 180px (jamais de chevauchement)
+- Tailles: Dynamiques selon proximité bord
+- Performance: 60 FPS, animations fluides
+- TypeScript: 0 erreurs
+- localStorage: sauvegarde "selected_language"
+
+**Status**: ✅ COMPLÉTÉ & FONCTIONNEL
