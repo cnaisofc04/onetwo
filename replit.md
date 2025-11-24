@@ -445,42 +445,59 @@ ALLOWED_ORIGINS=https://onetwo.app,https://www.onetwo.app
 ---
 
 **Dernière mise à jour**: 24 novembre 2025  
-**Version replit.md**: 1.2.0
+**Version replit.md**: 1.3.0
 
 ---
 
-## 📝 REDESIGN JOYSTICK V2 (24 novembre 2025)
+## 📝 LANGUAGE SELECTOR - DYNAMIC BUBBLES V3 (24 novembre 2025)
 
-### 🎨 Nouveau Design - Architecture Géométrique
+### 🎨 Nouveau Design - Sélection Dynamique par Drag-and-Drop
 
-**Branch**: `feature/redesign-joystick-circles-triangles-v2`
+**Branch**: `feature/language-selector-bubbles-dynamic`
 
 #### ✅ Implémenté:
-- **Cercle vert** (centre neutre, r=50px)
-- **Cercle bleu** (interaction ring, r=90px)
-- **12 zones triangulaires rouges** avec traits noirs (30° chacune)
-- **12 cercles jaunes** aux extrémités avec drapeaux
-- **Zones bleues** aux 4 coins (design cohérent)
-- **Clic n'importe où** → Centre devient point d'activation
-- **Feedback visuel**: Triangles s'agrandissent quand survolés/sélectionnés
-- **Couleurs visibles** pour tests manuels (invisibles après approbation)
+
+**1. Boule Bleue Centrale (Draggable)**
+- Position: Au centre du clic utilisateur
+- Rayon: 45px, blanc avec bordure
+- Interaction: Maintenir + glisser pour sélectionner
+- Feedback: Opacité augmente pendant le drag
+
+**2. 12 Boules Colorées avec Drapeaux**
+- Distance fixe: 140px du centre (pas de chevauchement)
+- Rayon: 35px (augmente à 40px quand survolée par boule bleue)
+- Chaque boule a un drapeau unique + label
+- Couleurs distinctes pour chaque langue
+- Animations fluides (Framer Motion)
+
+**3. Détection de Limites (CRUCIAL)**
+- Les boules restent TOUJOURS visibles à l'écran
+- Fonction `calculateSafeCenter()` repositionne automatiquement le centre
+- Limites: min/max + distance des boules
+- Fonctionne près des bords et coins
+
+**4. Détection de Collision**
+- Au relâchement du clic, détection si boule bleue touche une boule colorée
+- Distance calculée: `sqrt((x1-x2)² + (y1-y2)²)`
+- Si distance < 80px (45+35), c'est une collision → sélection
 
 #### 🎮 Interactions:
-- Clic + glisse sur écran = sélection de langue
-- Distance > 35px = activation (12 secteurs de 30° chacun)
-- Triangle survolé: opacité 75%, drapeau: r=24px
-- Triangle sélectionné: opacité 95%, drapeau: r=28px
-- localStorage intégré → redirection /signup après sélection
+1. **Premier clic n'importe où** → Les 12 boules apparaissent autour
+2. **Maintenir le clic** → La boule bleue se "colle" au doigt/souris
+3. **Glisser vers une boule** → La boule colorée s'agrandit (feedback)
+4. **Relâcher le clic** → Détection automatique de la boule sélectionnée
+5. **Redirection** → localStorage + navigation vers /signup (500ms)
 
 #### 📊 Specs Techniques:
-- Fichier: `client/src/pages/language-selection-joystick.tsx` (519 lignes)
-- Langues: 12 (ja, zh, pt-BR, it, de, es, en, fr, tr, nl, ru, ar)
-- Architecture: Composants TriangleZone + FlagCircle + SVG Principal
-- Performance: 60 FPS, ~500ms chargement
-- TypeScript: 0 erreurs, animations fluides (Framer Motion)
-- Format: Mobile (375px × 9:16)
+- Fichier: `client/src/pages/language-selection-joystick.tsx` (284 lignes)
+- Langues: 12 (fr, en, es, de, it, pt-BR, zh, ja, ar, ru, nl, tr)
+- Container: 375×600px (mobile format 9:16)
+- Drag-and-drop: onMouseMove + onMouseUp + onTouchMove + onTouchEnd
+- Performance: 60 FPS, drag en temps réel
+- TypeScript: 0 erreurs, animations fluides
+- localStorage: "selected_language" → sauvegarde automatique
 
-**Status**: ✅ COMPLÉTÉ & TESTÉ - Prêt pour tests manuels
+**Status**: ✅ COMPLÉTÉ & FONCTIONNEL - V3 Finalisée
 
 ---
 
