@@ -25,7 +25,7 @@ const LANGUAGES = [
   { code: "tr", label: "Türkçe", flag: "🇹🇷", color: "#FF8B94", angle: 330 },
 ];
 
-const BUBBLE_DISTANCE = 180; // Distance pour que 12 boules ne se touchent JAMAIS
+const BUBBLE_DISTANCE = 240; // Distance pour que 12 boules ne se touchent JAMAIS (augmentée!)
 const BASE_BUBBLE_RADIUS = 40;
 const CENTER_RADIUS = 15; // Boule bleue encore plus petite
 const CONTAINER_WIDTH = 375;
@@ -218,12 +218,25 @@ export default function LanguageSelectionBubbles() {
         >
           {/* 🎨 BOULES COLORÉES DES DRAPEAUX (DYNAMIQUES) */}
           {centerPos &&
-            LANGUAGES.map((lang) => {
+            LANGUAGES.map((lang, index) => {
               const angleRad = (lang.angle * Math.PI) / 180;
               let x = centerPos.x + BUBBLE_DISTANCE * Math.cos(angleRad);
               let y = centerPos.y + BUBBLE_DISTANCE * Math.sin(angleRad);
 
-              // 🔒 Ajuster si trop proche du bord
+              // 🔒 Ajuster si trop proche du bord (réduire distance plutôt que de claumer)
+              let distanceUsed = BUBBLE_DISTANCE;
+              if (x < BASE_BUBBLE_RADIUS + 10 || x > CONTAINER_WIDTH - BASE_BUBBLE_RADIUS - 10 ||
+                  y < BASE_BUBBLE_RADIUS + 10 || y > CONTAINER_HEIGHT - BASE_BUBBLE_RADIUS - 10) {
+                // Réduire la distance jusqu'à ce que la boule soit dans l'écran
+                while (x < BASE_BUBBLE_RADIUS || x > CONTAINER_WIDTH - BASE_BUBBLE_RADIUS ||
+                       y < BASE_BUBBLE_RADIUS || y > CONTAINER_HEIGHT - BASE_BUBBLE_RADIUS) {
+                  distanceUsed *= 0.95;
+                  x = centerPos.x + distanceUsed * Math.cos(angleRad);
+                  y = centerPos.y + distanceUsed * Math.sin(angleRad);
+                }
+              }
+
+              // Final adjustement si encore trop proche
               const adjusted = adjustBubblePosition(x, y, BASE_BUBBLE_RADIUS);
               x = adjusted.x;
               y = adjusted.y;
@@ -245,7 +258,7 @@ export default function LanguageSelectionBubbles() {
 
               return (
                 <g key={lang.code}>
-                  {/* Cercle boule */}
+                  {/* Cercle boule avec ANIMATION D'ENTRÉE */}
                   <motion.circle
                     cx={x}
                     cy={y}
@@ -254,8 +267,9 @@ export default function LanguageSelectionBubbles() {
                     opacity={isOverlapping ? 0.95 : 0.85}
                     stroke="#FFFFFF"
                     strokeWidth="2"
-                    animate={{ r: displayRadius }}
-                    transition={{ duration: 0.15 }}
+                    initial={{ r: 0, opacity: 0 }}
+                    animate={{ r: displayRadius, opacity: isOverlapping ? 0.95 : 0.85 }}
+                    transition={{ duration: 0.5, delay: index * 0.03 }}
                   />
 
                   {/* Drapeau */}

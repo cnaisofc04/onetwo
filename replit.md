@@ -48,12 +48,12 @@ The application features a modern, responsive interface supporting both dark and
 
 ---
 
-## 📝 LANGUAGE SELECTOR - DYNAMIC BUBBLES V5 (24 novembre 2025)
+## 📝 LANGUAGE SELECTOR - DYNAMIC BUBBLES V6 (24 novembre 2025)
 
-### 🎨 Nouveau Design - Drag-and-Drop avec Positions Dynamiques
+### 🎨 Nouveau Design - Drag-and-Drop Optimisé avec Animation d'Entrée
 
 **Branch**: `feature/language-selector-bubbles-dynamic`  
-**Fichier**: `client/src/pages/language-selection-joystick.tsx` (349 lignes)
+**Fichier**: `client/src/pages/language-selection-joystick.tsx` (370 lignes)
 
 #### ✅ Implémenté:
 
@@ -63,22 +63,29 @@ The application features a modern, responsive interface supporting both dark and
 - Interaction: Maintenir + glisser pour sélectionner
 - Reste toujours visible dans l'écran (clamping)
 
-**2. 12 Boules Colorées Totalement Séparées**
+**2. 12 Boules Colorées Totalement Séparées (NE SE TOUCHENT JAMAIS)**
 - Taille: **40px** (plus grandes que la boule bleue)
-- Distance: **180px du centre** (garantit ZÉRO chevauchement)
-- Distance entre adjacentes: **>80px** (jamais se touchent)
-- **Positions DYNAMIQUES**: S'ajustent si trop près du bord
+- Distance: **240px du centre** (augmentée pour éviter chevauchements)
+- Distance entre adjacentes: **>100px** (jamais se touchent!)
+- **Positions DYNAMIQUES**: S'ajustent intelligemment si trop près du bord
+- Logique d'ajustement: Réduit progressivement la distance si boule sort (plutôt que de la "claumer")
 - Tailles réduites progressivement si proche du bord
 - Chaque boule: drapeau unique + label + couleur distincte
 
-**3. Drag-and-Drop Fluide**
-1. Premier clic n'importe où → Les 12 boules apparaissent
+**3. Animation d'Entrée Progressive**
+- Les boules **N'APPARAISSENT PAS** au centre
+- Elles apparaissent progressivement à leur position finale (r: 0 → r: 40)
+- Délai décalé pour chaque boule (index * 0.03s) = cascade d'apparition fluide
+- Durée: 0.5s avec easing natural
+
+**4. Drag-and-Drop Fluide**
+1. Premier clic n'importe où → Les 12 boules aparaissent progressivement (pas au centre!)
 2. Maintenir le clic → La boule bleue suit le doigt/souris
 3. Glisser vers une boule → Feedback visuel (agrandissement)
 4. Relâcher le clic → Sélection automatique si collision
 5. Redirection → localStorage + navigation /signup (500ms)
 
-**4. Détection de Collision**
+**5. Détection de Collision**
 - Distance: `sqrt((x1-x2)² + (y1-y2)²)`
 - Si distance < (15px + rayon_dynamique) → sélection
 - **Une seule boule par sélection**
@@ -87,10 +94,12 @@ The application features a modern, responsive interface supporting both dark and
 - Langues: 12 (fr, en, es, de, it, pt-BR, zh, ja, ar, ru, nl, tr)
 - Container: 375×600px (mobile)
 - Boule bleue: 15px | Drapeaux: 40px
-- Distance: 180px (jamais de chevauchement)
+- Distance: **240px** (jamais de chevauchement!)
+- Ajustement: Réduit progressivement plutôt que de claumer
+- Animation: Entrée progressive avec délai en cascade
 - Tailles: Dynamiques selon proximité bord
 - Performance: 60 FPS, animations fluides
 - TypeScript: 0 erreurs
 - localStorage: sauvegarde "selected_language"
 
-**Status**: ✅ COMPLÉTÉ & FONCTIONNEL
+**Status**: ✅ COMPLÉTÉ & OPTIMISÉ
