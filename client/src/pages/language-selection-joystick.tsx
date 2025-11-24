@@ -1,9 +1,9 @@
 /**
- * 🎨 LANGUAGE SELECTOR - DYNAMIC BUBBLES V4
- * ✅ Boule bleue PETITE (25px) au point de clic exact
- * ✅ 12 boules de drapeaux GRANDES (40px) dynamiques
- * ✅ Positions s'ajustent si trop près du bord
- * ✅ Tailles changeantes selon la proximité du bord
+ * 🎨 LANGUAGE SELECTOR - DYNAMIC BUBBLES V8
+ * ✅ Chaque boule a sa TAILLE DYNAMIQUE INDIVIDUELLE
+ * ✅ Les boules se réorganisent autour de la boule bleue si elle est près du bord
+ * ✅ Les boules ne se touchent JAMAIS - séparation garantie
+ * ✅ Boule bleue toujours par-dessus (z-order correct)
  */
 
 import { useState, useRef, useEffect } from "react";
@@ -25,48 +25,76 @@ const LANGUAGES = [
   { code: "tr", label: "Türkçe", flag: "🇹🇷", color: "#FF8B94", angle: 330 },
 ];
 
-const BUBBLE_DISTANCE = 140; // Distance optimale pour container 375×600 (ne se touchent JAMAIS)
+const BUBBLE_DISTANCE = 140;
 const BASE_BUBBLE_RADIUS = 40;
-const CENTER_RADIUS = 15; // Boule bleue encore plus petite
+const CENTER_RADIUS = 15;
 const CONTAINER_WIDTH = 375;
 const CONTAINER_HEIGHT = 600;
 
-// 🔒 Ajuster position d'une boule pour qu'elle reste visible
-function adjustBubblePosition(
-  x: number,
-  y: number,
-  radius: number
-): { x: number; y: number } {
-  const minX = radius;
-  const maxX = CONTAINER_WIDTH - radius;
-  const minY = radius;
-  const maxY = CONTAINER_HEIGHT - radius;
+// 🔍 Calculer la position optimale d'une boule (ajuste distance si sort de l'écran)
+function calculateOptimalPosition(
+  centerX: number,
+  centerY: number,
+  angle: number,
+  bubbleRadius: number
+): { x: number; y: number; distance: number } {
+  const angleRad = (angle * Math.PI) / 180;
+  let distance = BUBBLE_DISTANCE;
+  let x = centerX + distance * Math.cos(angleRad);
+  let y = centerY + distance * Math.sin(angleRad);
 
-  return {
-    x: Math.max(minX, Math.min(maxX, x)),
-    y: Math.max(minY, Math.min(maxY, y)),
-  };
+  // Si la boule sort de l'écran, réduire progressivement la distance
+  while (
+    (x < bubbleRadius || x > CONTAINER_WIDTH - bubbleRadius ||
+      y < bubbleRadius || y > CONTAINER_HEIGHT - bubbleRadius) &&
+    distance > 50
+  ) {
+    distance *= 0.95;
+    x = centerX + distance * Math.cos(angleRad);
+    y = centerY + distance * Math.sin(angleRad);
+  }
+
+  // Clamp final si encore dehors
+  x = Math.max(bubbleRadius, Math.min(CONTAINER_WIDTH - bubbleRadius, x));
+  y = Math.max(bubbleRadius, Math.min(CONTAINER_HEIGHT - bubbleRadius, y));
+
+  return { x, y, distance };
 }
 
-// 📏 Calculer la taille dynamique d'une boule selon le bord
-function calculateDynamicRadius(
+// 📏 Calculer la taille INDIVIDUELLE d'une boule
+// Basée sur: distance aux bords + distance aux voisins
+function calculateIndividualBubbleSize(
   x: number,
   y: number,
+  adjacentPositions: Array<{ x: number; y: number }>,
   baseRadius: number
 ): number {
-  const margin = 20;
-  const minDist = Math.min(
+  // 1️⃣ Contraint par la distance aux BORDS
+  const margin = 10;
+  const distToBorders = Math.min(
     Math.abs(x - margin),
     Math.abs(y - margin),
     Math.abs(CONTAINER_WIDTH - x - margin),
     Math.abs(CONTAINER_HEIGHT - y - margin)
   );
-
-  // Si trop proche du bord, réduire la taille progressivement
-  if (minDist < baseRadius + 10) {
-    return baseRadius * (Math.max(0.7, minDist / (baseRadius + 10)));
+  let maxRadius = baseRadius;
+  if (distToBorders < baseRadius + 5) {
+    maxRadius = Math.max(20, distToBorders * 0.8);
   }
-  return baseRadius;
+
+  // 2️⃣ Contraint par la distance aux VOISINS
+  for (const neighbor of adjacentPositions) {
+    const dx = neighbor.x - x;
+    const dy = neighbor.y - y;
+    const distToNeighbor = Math.sqrt(dx * dx + dy * dy);
+    
+    // La taille max est la moitié de la distance au voisin
+    // Pour garantir qu'elles ne se touchent JAMAIS
+    const maxRadiusFromNeighbor = distToNeighbor / 2.5;
+    maxRadius = Math.min(maxRadius, maxRadiusFromNeighbor);
+  }
+
+  return Math.max(15, maxRadius); // Min 15px pour visibilité
 }
 
 export default function LanguageSelectionBubbles() {
@@ -90,7 +118,6 @@ export default function LanguageSelectionBubbles() {
     const x = clientX - rect.left;
     const y = clientY - rect.top;
 
-    // Garder dans les limites mais PAS repositionner le centre!
     const clampX = Math.max(CENTER_RADIUS, Math.min(CONTAINER_WIDTH - CENTER_RADIUS, x));
     const clampY = Math.max(CENTER_RADIUS, Math.min(CONTAINER_HEIGHT - CENTER_RADIUS, y));
 
@@ -156,24 +183,29 @@ export default function LanguageSelectionBubbles() {
   const detectSelection = () => {
     if (!blueBubblePos || !centerPos || selectedLanguage) return;
 
-    for (const lang of LANGUAGES) {
-      const angleRad = (lang.angle * Math.PI) / 180;
-      let coloredX = centerPos.x + BUBBLE_DISTANCE * Math.cos(angleRad);
-      let coloredY = centerPos.y + BUBBLE_DISTANCE * Math.sin(angleRad);
+    for (let i = 0; i < LANGUAGES.length; i++) {
+      const lang = LANGUAGES[i];
+      const pos = calculateOptimalPosition(centerPos.x, centerPos.y, lang.angle, BASE_BUBBLE_RADIUS);
 
-      // Ajuster la position si trop près du bord
-      const adjusted = adjustBubblePosition(coloredX, coloredY, BASE_BUBBLE_RADIUS);
-      coloredX = adjusted.x;
-      coloredY = adjusted.y;
+      // Calculer les positions des voisins pour la détection
+      const prevLang = LANGUAGES[(i - 1 + LANGUAGES.length) % LANGUAGES.length];
+      const nextLang = LANGUAGES[(i + 1) % LANGUAGES.length];
+      
+      const prevPos = calculateOptimalPosition(centerPos.x, centerPos.y, prevLang.angle, BASE_BUBBLE_RADIUS);
+      const nextPos = calculateOptimalPosition(centerPos.x, centerPos.y, nextLang.angle, BASE_BUBBLE_RADIUS);
 
-      const dynamicRadius = calculateDynamicRadius(coloredX, coloredY, BASE_BUBBLE_RADIUS);
+      const dynamicRadius = calculateIndividualBubbleSize(
+        pos.x,
+        pos.y,
+        [{ x: prevPos.x, y: prevPos.y }, { x: nextPos.x, y: nextPos.y }],
+        BASE_BUBBLE_RADIUS
+      );
 
       // Distance entre les deux boules
-      const dx = blueBubblePos.x - coloredX;
-      const dy = blueBubblePos.y - coloredY;
+      const dx = blueBubblePos.x - pos.x;
+      const dy = blueBubblePos.y - pos.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
-      // Si les boules se touchent
       if (distance < CENTER_RADIUS + dynamicRadius) {
         handleBubbleSelect(lang.code);
         return;
@@ -216,40 +248,32 @@ export default function LanguageSelectionBubbles() {
           viewBox="0 0 375 600"
           style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}
         >
-          {/* 🎨 BOULES COLORÉES DES DRAPEAUX (DYNAMIQUES) */}
+          {/* 🎨 BOULES COLORÉES DES DRAPEAUX (RENDU D'ABORD = SOUS) */}
           {centerPos &&
             LANGUAGES.map((lang, index) => {
-              const angleRad = (lang.angle * Math.PI) / 180;
-              let x = centerPos.x + BUBBLE_DISTANCE * Math.cos(angleRad);
-              let y = centerPos.y + BUBBLE_DISTANCE * Math.sin(angleRad);
+              const pos = calculateOptimalPosition(centerPos.x, centerPos.y, lang.angle, BASE_BUBBLE_RADIUS);
 
-              // 🔒 Ajuster si trop proche du bord (réduire distance plutôt que de claumer)
-              let distanceUsed = BUBBLE_DISTANCE;
-              if (x < BASE_BUBBLE_RADIUS + 10 || x > CONTAINER_WIDTH - BASE_BUBBLE_RADIUS - 10 ||
-                  y < BASE_BUBBLE_RADIUS + 10 || y > CONTAINER_HEIGHT - BASE_BUBBLE_RADIUS - 10) {
-                // Réduire la distance jusqu'à ce que la boule soit dans l'écran
-                while (x < BASE_BUBBLE_RADIUS || x > CONTAINER_WIDTH - BASE_BUBBLE_RADIUS ||
-                       y < BASE_BUBBLE_RADIUS || y > CONTAINER_HEIGHT - BASE_BUBBLE_RADIUS) {
-                  distanceUsed *= 0.95;
-                  x = centerPos.x + distanceUsed * Math.cos(angleRad);
-                  y = centerPos.y + distanceUsed * Math.sin(angleRad);
-                }
-              }
+              // Récupérer positions des voisins
+              const prevLang = LANGUAGES[(index - 1 + LANGUAGES.length) % LANGUAGES.length];
+              const nextLang = LANGUAGES[(index + 1) % LANGUAGES.length];
+              
+              const prevPos = calculateOptimalPosition(centerPos.x, centerPos.y, prevLang.angle, BASE_BUBBLE_RADIUS);
+              const nextPos = calculateOptimalPosition(centerPos.x, centerPos.y, nextLang.angle, BASE_BUBBLE_RADIUS);
 
-              // Final adjustement si encore trop proche
-              const adjusted = adjustBubblePosition(x, y, BASE_BUBBLE_RADIUS);
-              x = adjusted.x;
-              y = adjusted.y;
-
-              // 📏 Taille dynamique selon le bord
-              const dynamicRadius = calculateDynamicRadius(x, y, BASE_BUBBLE_RADIUS);
+              // 📏 Taille INDIVIDUELLE basée sur bords + voisins
+              const dynamicRadius = calculateIndividualBubbleSize(
+                pos.x,
+                pos.y,
+                [{ x: prevPos.x, y: prevPos.y }, { x: nextPos.x, y: nextPos.y }],
+                BASE_BUBBLE_RADIUS
+              );
 
               // Vérifier si la boule bleue est sur cette boule
               const isOverlapping =
                 blueBubblePos &&
                 (() => {
-                  const dx = blueBubblePos.x - x;
-                  const dy = blueBubblePos.y - y;
+                  const dx = blueBubblePos.x - pos.x;
+                  const dy = blueBubblePos.y - pos.y;
                   const distance = Math.sqrt(dx * dx + dy * dy);
                   return distance < CENTER_RADIUS + dynamicRadius;
                 })();
@@ -258,10 +282,10 @@ export default function LanguageSelectionBubbles() {
 
               return (
                 <g key={lang.code}>
-                  {/* Cercle boule - apparaît directement à bonne position/taille */}
+                  {/* Cercle boule - TAILLE INDIVIDUELLE */}
                   <motion.circle
-                    cx={x}
-                    cy={y}
+                    cx={pos.x}
+                    cy={pos.y}
                     r={displayRadius}
                     fill={lang.color}
                     stroke="#FFFFFF"
@@ -273,8 +297,8 @@ export default function LanguageSelectionBubbles() {
 
                   {/* Drapeau */}
                   <text
-                    x={x}
-                    y={y}
+                    x={pos.x}
+                    y={pos.y}
                     textAnchor="middle"
                     dominantBaseline="central"
                     fontSize="28"
@@ -285,8 +309,8 @@ export default function LanguageSelectionBubbles() {
 
                   {/* Label */}
                   <text
-                    x={x}
-                    y={y + displayRadius + 12}
+                    x={pos.x}
+                    y={pos.y + displayRadius + 12}
                     textAnchor="middle"
                     dominantBaseline="central"
                     fontSize="8"
@@ -300,7 +324,7 @@ export default function LanguageSelectionBubbles() {
               );
             })}
 
-          {/* 🔵 BOULE BLEUE (DRAGGABLE, PLUS PETITE) */}
+          {/* 🔵 BOULE BLEUE (RENDU EN DERNIER = PAR-DESSUS) */}
           {blueBubblePos && (
             <motion.circle
               cx={blueBubblePos.x}

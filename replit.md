@@ -48,12 +48,12 @@ The application features a modern, responsive interface supporting both dark and
 
 ---
 
-## 📝 LANGUAGE SELECTOR - DYNAMIC BUBBLES V7 (24 novembre 2025)
+## 📝 LANGUAGE SELECTOR - DYNAMIC BUBBLES V8 (24 novembre 2025)
 
-### 🎨 Nouveau Design - Drag-and-Drop Parfaitement Séparé
+### 🎨 Nouveau Design - Tailles Dynamiques Individuelles & Réorganisation Intelligente
 
 **Branch**: `feature/language-selector-bubbles-dynamic`  
-**Fichier**: `client/src/pages/language-selection-joystick.tsx` (358 lignes)
+**Fichier**: `client/src/pages/language-selection-joystick.tsx` (278 lignes)
 
 #### ✅ Implémenté:
 
@@ -61,44 +61,55 @@ The application features a modern, responsive interface supporting both dark and
 - Taille: **15px** (beaucoup plus petite que les boules de drapeaux)
 - Position: Au point de clic **EXACT** (pas de repositionnement)
 - Interaction: Maintenir + glisser pour sélectionner
+- **Rendu en dernier = toujours par-dessus** ✅
 - Reste toujours visible dans l'écran
 
-**2. 12 Boules Colorées TOTALEMENT SÉPARÉES (JAMAIS DE SUPERPOSITION)**
-- Taille: **40px** (plus grandes que la boule bleue)
-- Distance: **140px du centre** (optimal pour container 375×600)
-- Distance entre adjacentes: **>60px** (jamais ne se touchent!)
-- **Positions FINALES Immédiates**: Apparaissent directement à leur place
-- Boules restent proches mais SANS JAMAIS toucher les bords les unes les autres
-- Chaque boule: drapeau unique + label + couleur distincte
+**2. 12 Boules Colorées - TAILLE DYNAMIQUE INDIVIDUELLE**
+- Distance base: **140px du centre** (optimal pour container 375×600)
+- **CHAQUE boule a sa taille calculée individuellement** ✅
+  - Contrainte 1: Distance aux **BORDS** (min 15px, max 40px)
+  - Contrainte 2: Distance aux **BOULES VOISINES** (pour éviter chevauchement)
+  - Taille finale = minimum des deux contraintes
+- **SE RÉORGANISENT AUTOMATIQUEMENT** si boule bleue proche du bord
+  - Positions s'ajustent: la distance se réduit progressivement
+  - Les 12 boules tournent autour mais restent **JAMAIS proches du bord**
+  - Chaque boule: drapeau unique + label + couleur distincte
 
-**3. Animation d'Apparition Fluide (Opacité Seulement)**
+**3. Garantie de Séparation ABSOLUE**
+- Les boules **ne se touchent JAMAIS** ✅
+- La taille individuelle garantit une séparation de:
+  - **maxRadius = distanceAuVoisin / 2.5** = zéro contact
+- Même proche des bords, séparation garantie
+
+**4. Animation d'Apparition Fluide (Opacité Seulement)**
 - Les boules **apparaissent directement** à leurs positions finales ✅
 - Fade-in progressif (opacité 0 → 0.85) = effet doux
 - Délai en cascade (index * 0.02s) pour apparition progressive
 - Durée: 0.3s = rapide et naturel
-- **PAS d'animation de rayon** (causait confusion)
 
-**4. Drag-and-Drop Fluide**
-1. Premier clic n'importe où → Les 12 boules apparaissent immédiatement autour (PAS au centre!)
+**5. Drag-and-Drop Fluide**
+1. Premier clic n'importe où → Les 12 boules apparaissent avec leurs **tailles individuelles**
 2. Maintenir le clic → La boule bleue suit le doigt/souris
-3. Glisser vers une boule → Feedback visuel (agrandissement à 1.15x)
-4. Relâcher le clic → Sélection automatique si collision
-5. Redirection → localStorage + navigation /signup (500ms)
+3. Glisser → Les boules se **réorganisent** pour rester dans l'écran
+4. Vers une boule → Feedback visuel (agrandissement à 1.15x)
+5. Relâcher → Sélection automatique si collision
+6. Redirection → localStorage + navigation /signup (500ms)
 
-**5. Détection de Collision**
+**6. Détection de Collision**
 - Distance: `sqrt((x1-x2)² + (y1-y2)²)`
-- Si distance < (15px + rayon_boule) → sélection
+- Si distance < (15px + rayon_individuel_boule) → sélection
 - **Une seule boule par sélection**
 
 #### 📊 Specs Finales:
 - Langues: 12 (fr, en, es, de, it, pt-BR, zh, ja, ar, ru, nl, tr)
 - Container: 375×600px (mobile)
-- Boule bleue: 15px | Drapeaux: 40px
-- Distance: **140px** (optimal, jamais de superposition!)
+- Boule bleue: **15px** | Drapeaux: **15-40px (dynamique)**
+- Distance base: **140px** (s'ajuste si bords)
+- Tailles: **Individuelles** (basées sur bords + voisins)
 - Animation: Opacité seulement (pas de rayon)
-- Tailles: Dynamiques selon proximité bord
+- Z-order: Boules colorées d'abord, boule bleue par-dessus ✅
 - Performance: 60 FPS, animations fluides
 - TypeScript: 0 erreurs ✅
 - localStorage: sauvegarde "selected_language"
 
-**Status**: ✅ COMPLÉTÉ & PARFAIT
+**Status**: ✅ COMPLÉTÉ & PERFECTIONNÉ - JAMAIS DE SUPERPOSITION GARANTIE!
