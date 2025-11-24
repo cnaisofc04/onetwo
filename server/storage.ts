@@ -72,8 +72,12 @@ export class DBStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    // Hash the password before storing
-    const hashedPassword = await bcrypt.hash(insertUser.password, 10);
+    // Detect if password is already hashed (bcrypt format starts with $2a$, $2b$, or $2y$)
+    const isBcryptHash = /^\$2[aby]\$/.test(insertUser.password);
+    
+    const hashedPassword = isBcryptHash 
+      ? insertUser.password  // Already hashed, use as-is
+      : await bcrypt.hash(insertUser.password, 10);  // Plain password, hash it
     
     const [user] = await db
       .insert(users)
