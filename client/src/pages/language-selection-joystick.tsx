@@ -182,7 +182,7 @@ export function LanguageSelectionJoystick() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="fixed top-0 left-0 w-screen h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
       <div
         ref={containerRef}
         onMouseDown={handleContainerMouseDown}
