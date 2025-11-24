@@ -1,9 +1,6 @@
 /**
- * 🎨 LANGUAGE SELECTOR - JOYSTICK V13 FINAL
- * ✅ CERCLE PARFAITEMENT CENTRÉ
- * ✅ SANS TEXTE, SANS BORDURE
- * ✅ BOULE BLEUE TRANSPARENTE
- * ✅ COULEURS DU DESIGN SYSTEM
+ * 🎨 LANGUAGE SELECTOR - JOYSTICK V13 DEBUGGED & CENTERED
+ * ✅ CERCLE PARFAITEMENT CENTRÉ AVEC DÉBOGAGE SVG
  */
 
 import { useState, useRef } from "react";
@@ -35,7 +32,7 @@ const BLUE_BUBBLE_RADIUS = 15;
 const SELECTION_DISTANCE = 45;
 const PROXIMITY_FEEDBACK_DISTANCE = 70;
 
-// 📍 POSITIONS FIXES DES DRAPEAUX
+// 📍 POSITIONS FIXES - UTILISER DES PIXELS ENTIERS POUR ÉVITER LE ROUNDING
 function getFixedBubblePosition(index: number): { x: number; y: number } {
   const angle = (index * 360) / 12;
   const angleRad = (angle * Math.PI) / 180;
@@ -56,7 +53,7 @@ function distance(
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-// 📏 Taille dynamique du drapeau (feedback visuel)
+// 📏 Taille dynamique du drapeau
 function getDynamicFlagRadius(
   flagPos: { x: number; y: number },
   bluePos: { x: number; y: number } | null,
@@ -64,7 +61,6 @@ function getDynamicFlagRadius(
   index: number
 ): number {
   if (!bluePos) return FLAG_BUBBLE_RADIUS;
-
   if (index !== closestIndex) return FLAG_BUBBLE_RADIUS;
 
   const dist = distance(bluePos, flagPos);
@@ -88,7 +84,7 @@ export function LanguageSelectionJoystick() {
   const containerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
 
-  // 🖱️ CLIC - Initialise le joystick à la position du clic
+  // 🖱️ CLIC
   const handleContainerMouseDown = (e: React.MouseEvent) => {
     if (selectedLanguage) return;
 
@@ -109,7 +105,7 @@ export function LanguageSelectionJoystick() {
     );
   };
 
-  // 🖱️ DRAG - La boule bleue suit la souris
+  // 🖱️ DRAG
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging.current || !blueBubblePos || selectedLanguage) return;
 
@@ -124,7 +120,6 @@ export function LanguageSelectionJoystick() {
 
     setBlueBubblePos({ x, y });
 
-    // Déterminer le drapeau le plus proche
     let closestIdx = -1;
     let closestDist = Infinity;
 
@@ -140,7 +135,7 @@ export function LanguageSelectionJoystick() {
     setClosestFlagIndex(closestIdx);
   };
 
-  // 🖱️ RELÂCHEMENT - Détecte la sélection
+  // 🖱️ RELÂCHEMENT
   const handleMouseUp = () => {
     if (!isDragging.current || !blueBubblePos) return;
     isDragging.current = false;
@@ -189,7 +184,49 @@ export function LanguageSelectionJoystick() {
         onMouseLeave={handleMouseUp}
         className="w-[375px] h-[600px] bg-white relative overflow-hidden cursor-grab active:cursor-grabbing"
       >
-        {/* 12 BOULES DRAPEAUX - FIXES EN CERCLE - TOUJOURS VISIBLES */}
+        {/* SVG DÉBOGAGE - CROIX + CERCLE DE RÉFÉRENCE */}
+        <svg
+          className="absolute inset-0 w-full h-full"
+          style={{ pointerEvents: "none", zIndex: 1 }}
+        >
+          {/* Ligne verticale au centre (vert) */}
+          <line
+            x1={CENTER_X}
+            y1="0"
+            x2={CENTER_X}
+            y2={CONTAINER_HEIGHT}
+            stroke="rgba(34, 197, 94, 0.4)"
+            strokeWidth="2"
+          />
+          {/* Ligne horizontale au centre (vert) */}
+          <line
+            x1="0"
+            y1={CENTER_Y}
+            x2={CONTAINER_WIDTH}
+            y2={CENTER_Y}
+            stroke="rgba(34, 197, 94, 0.4)"
+            strokeWidth="2"
+          />
+          {/* Cercle de référence (vert transparent) */}
+          <circle
+            cx={CENTER_X}
+            cy={CENTER_Y}
+            r={CIRCLE_RADIUS}
+            fill="none"
+            stroke="rgba(34, 197, 94, 0.3)"
+            strokeWidth="1"
+            strokeDasharray="4,4"
+          />
+          {/* Point rouge au centre exact */}
+          <circle
+            cx={CENTER_X}
+            cy={CENTER_Y}
+            r="3"
+            fill="rgba(239, 68, 68, 0.8)"
+          />
+        </svg>
+
+        {/* 12 BOULES DRAPEAUX - FIXES EN CERCLE */}
         {LANGUAGES.map((lang, index) => {
           const flagPos = getFixedBubblePosition(index);
           const dynamicRadius = getDynamicFlagRadius(
@@ -202,7 +239,7 @@ export function LanguageSelectionJoystick() {
           return (
             <motion.div
               key={lang.code}
-              className="absolute flex items-center justify-center rounded-full font-bold text-2xl shadow-lg transition-all"
+              className="absolute flex items-center justify-center rounded-full font-bold text-2xl shadow-lg transition-all z-10"
               style={{
                 left: flagPos.x,
                 top: flagPos.y,
@@ -225,7 +262,7 @@ export function LanguageSelectionJoystick() {
           );
         })}
 
-        {/* BOULE BLEUE MOBILE TOTALEMENT TRANSPARENTE */}
+        {/* BOULE BLEUE MOBILE TRANSPARENTE */}
         {blueBubblePos && (
           <motion.div
             className="absolute rounded-full z-50"
