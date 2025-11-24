@@ -1,13 +1,12 @@
 /**
- * PROTOTYPE ISOLÉ - Sélection de langue par Joystick
- * ✅ FORMAT MOBILE (comme Instagram sur web - conteneur centré)
- * ✅ 12 langues sur les bords (3 par bordure)
- * ✅ Distribution équitable (25%, 50%, 75%)
- * ✅ Drapeaux + texte MINI (text-xs)
- * ✅ Texte vertical sur gauche/droite
- * ✅ Invisible: Pas de cercle/ligne orange
- * ✅ Joystick gestuel: Glisse doigt = sélection
- * ✅ ANGLES CORRIGÉS (pas d'inversion)
+ * 🎨 REDESIGN V2 - Sélection de langue par Joystick Géométrique
+ * ✅ Cercle vert (neutre) + Cercle bleu (interaction ring)
+ * ✅ 12 zones triangulaires rouges avec traits noirs
+ * ✅ 12 cercles jaunes aux extrémités pour les drapeaux
+ * ✅ Clic n'importe où = activation du centre
+ * ✅ Zones triangulaires s'agrandissent à la sélection
+ * ✅ Couleurs visibles (tests manuels) → invisibles après approbation
+ * ✅ Format mobile (375px, 9:16)
  */
 
 import { useState, useRef } from "react";
@@ -15,40 +14,35 @@ import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 
 // ============================================================================
-// 1. DONNÉES & CONFIGURATION
+// 1. CONFIGURATION & DONNÉES
 // ============================================================================
 
 const LANGUAGES = [
-  // TOP BORDER (3 langues)
-  { code: "fr", label: "Français", flag: "🇫🇷", position: "top-left" },
-  { code: "en", label: "English", flag: "🇬🇧", position: "top-center" },
-  { code: "es", label: "Español", flag: "🇪🇸", position: "top-right" },
+  // TOP
+  { code: "fr", label: "Français", flag: "🇫🇷", angle: 45 },
+  { code: "en", label: "English", flag: "🇬🇧", angle: 90 },
+  { code: "es", label: "Español", flag: "🇪🇸", angle: 135 },
 
-  // RIGHT BORDER (3 langues)
-  { code: "de", label: "Deutsch", flag: "🇩🇪", position: "right-upper" },
-  { code: "it", label: "Italiano", flag: "🇮🇹", position: "right-center" },
-  { code: "pt-BR", label: "Português", flag: "🇧🇷", position: "right-lower" },
+  // RIGHT
+  { code: "de", label: "Deutsch", flag: "🇩🇪", angle: 180 },
+  { code: "it", label: "Italiano", flag: "🇮🇹", angle: 225 },
+  { code: "pt-BR", label: "Português", flag: "🇧🇷", angle: 270 },
 
-  // BOTTOM BORDER (3 langues)
-  { code: "zh", label: "中文", flag: "🇨🇳", position: "bottom-right" },
-  { code: "ja", label: "日本語", flag: "🇯🇵", position: "bottom-center" },
-  { code: "ar", label: "العربية", flag: "🇸🇦", position: "bottom-left" },
+  // BOTTOM
+  { code: "zh", label: "中文", flag: "🇨🇳", angle: 315 },
+  { code: "ja", label: "日本語", flag: "🇯🇵", angle: 0 },
+  { code: "ar", label: "العربية", flag: "🇸🇦", angle: 45 + 360 },
 
-  // LEFT BORDER (3 langues)
-  { code: "ru", label: "Русский", flag: "🇷🇺", position: "left-lower" },
-  { code: "nl", label: "Nederlands", flag: "🇳🇱", position: "left-center" },
-  { code: "tr", label: "Türkçe", flag: "🇹🇷", position: "left-upper" },
+  // LEFT
+  { code: "ru", label: "Русский", flag: "🇷🇺", angle: 90 + 360 },
+  { code: "nl", label: "Nederlands", flag: "🇳🇱", angle: 135 + 360 },
+  { code: "tr", label: "Türkçe", flag: "🇹🇷", angle: 180 + 360 },
 ];
 
 // ============================================================================
-// 2. FONCTIONS MATHÉMATIQUES (CORRIGÉES)
+// 2. CALCULS MATHÉMATIQUES
 // ============================================================================
 
-/**
- * Calcule l'angle du joystick en degrés (0-360)
- * 0° = droite, 90° = haut, 180° = gauche, 270° = bas
- * CORRIGÉ: Y inversé pour correspondre aux attentes visuelles
- */
 function calculateJoystickAngle(
   originX: number,
   originY: number,
@@ -56,17 +50,13 @@ function calculateJoystickAngle(
   currentY: number
 ): number {
   const dx = currentX - originX;
-  const dy = -(currentY - originY); // INVERSER Y (positif = haut sur écran)
+  const dy = -(currentY - originY);
   let angle = Math.atan2(dy, dx) * (180 / Math.PI);
 
-  // Normaliser à 0-360
   if (angle < 0) angle += 360;
   return angle;
 }
 
-/**
- * Calcule la distance du joystick en pixels
- */
 function calculateJoystickDistance(
   originX: number,
   originY: number,
@@ -78,155 +68,158 @@ function calculateJoystickDistance(
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-/**
- * Détermine quelle langue est pointée basée sur l'angle
- * Distribution: 12 langues uniformément espacées (30° chacune)
- * Système: 0° = droite (East), 90° = haut (North), 180° = gauche (West), 270° = bas (South)
- */
 function getLanguageAtAngle(angle: number): string {
-  let normalizedAngle = angle;
-  if (normalizedAngle < 0) normalizedAngle += 360;
+  let normalized = angle;
+  if (normalized < 0) normalized += 360;
 
-  if (normalizedAngle >= 75 && normalizedAngle < 105) return "en"; // Haut (75-105°)
-  if (normalizedAngle >= 105 && normalizedAngle < 135) return "es"; // Haut-Droit (105-135°)
-  if (normalizedAngle >= 135 && normalizedAngle < 165) return "de"; // Droite-Haut (135-165°)
-  if (normalizedAngle >= 165 && normalizedAngle < 195) return "it"; // Droite (165-195°)
-  if (normalizedAngle >= 195 && normalizedAngle < 225) return "pt-BR"; // Droite-Bas (195-225°)
-  if (normalizedAngle >= 225 && normalizedAngle < 255) return "zh"; // Bas-Droit (225-255°)
-  if (normalizedAngle >= 255 && normalizedAngle < 285) return "ja"; // Bas (255-285°)
-  if (normalizedAngle >= 285 && normalizedAngle < 315) return "ar"; // Bas-Gauche (285-315°)
-  if (normalizedAngle >= 315 && normalizedAngle < 345) return "ru"; // Gauche-Bas (315-345°)
-  if (normalizedAngle >= 345 || normalizedAngle < 15) return "nl"; // Gauche (345-360° + 0-15°)
-  if (normalizedAngle >= 15 && normalizedAngle < 45) return "tr"; // Gauche-Haut (15-45°)
-  if (normalizedAngle >= 45 && normalizedAngle < 75) return "fr"; // Haut-Gauche (45-75°)
+  // 12 langues = 30° chacune
+  if (normalized >= 345 || normalized < 15) return "ja"; // 0°
+  if (normalized >= 15 && normalized < 45) return "zh"; // 30°
+  if (normalized >= 45 && normalized < 75) return "pt-BR"; // 60°
+  if (normalized >= 75 && normalized < 105) return "it"; // 90°
+  if (normalized >= 105 && normalized < 135) return "de"; // 120°
+  if (normalized >= 135 && normalized < 165) return "es"; // 150°
+  if (normalized >= 165 && normalized < 195) return "en"; // 180°
+  if (normalized >= 195 && normalized < 225) return "fr"; // 210°
+  if (normalized >= 225 && normalized < 255) return "tr"; // 240°
+  if (normalized >= 255 && normalized < 285) return "nl"; // 270°
+  if (normalized >= 285 && normalized < 315) return "ru"; // 300°
+  if (normalized >= 315 && normalized < 345) return "ar"; // 330°
 
-  return "en"; // Défaut
+  return "en";
 }
 
-/**
- * Vérifie si la distance est suffisante pour activation (40px minimum)
- */
 function isActivationDistance(distance: number): boolean {
-  return distance >= 40;
+  return distance >= 35;
 }
 
 // ============================================================================
-// 3. COMPOSANT LANGUE SUR BORDURE
+// 3. COMPOSANT ZONE TRIANGULAIRE
 // ============================================================================
 
-interface LanguageBorderItemProps {
-  code: string;
-  label: string;
-  flag: string;
-  position: string;
+interface TriangleZoneProps {
+  lang: (typeof LANGUAGES)[0];
   isHighlighted: boolean;
+  isSelected: boolean;
 }
 
-function LanguageBorderItem({
-  code,
-  label,
-  flag,
-  position,
-  isHighlighted,
-}: LanguageBorderItemProps) {
-  const getPositionStyles = () => {
-    const baseStyle = {
-      position: "absolute" as const,
-      display: "flex",
-      flexDirection: "column" as const,
-      alignItems: "center",
-      justifyContent: "center",
-      gap: "2px",
-      margin: "8px",
-    };
+function TriangleZone({ lang, isHighlighted, isSelected }: TriangleZoneProps) {
+  const centerX = 187.5; // 375/2
+  const centerY = 430; // Centre vertical (576*0.747)
 
-    // TOP BORDER
-    if (position === "top-left") {
-      return { ...baseStyle, top: 0, left: "25%", textAlign: "center" as const };
-    }
-    if (position === "top-center") {
-      return { ...baseStyle, top: 0, left: "50%", transform: "translateX(-50%)", textAlign: "center" as const };
-    }
-    if (position === "top-right") {
-      return { ...baseStyle, top: 0, right: "25%", textAlign: "center" as const };
-    }
+  // Rayon externes
+  const innerRadius = 90; // Cercle bleu
+  const outerRadius = 280; // Bord écran
 
-    // RIGHT BORDER
-    if (position === "right-upper") {
-      return { ...baseStyle, right: 0, top: "25%", flexDirection: "row" as const };
-    }
-    if (position === "right-center") {
-      return { ...baseStyle, right: 0, top: "50%", transform: "translateY(-50%)", flexDirection: "row" as const };
-    }
-    if (position === "right-lower") {
-      return { ...baseStyle, right: 0, bottom: "25%", flexDirection: "row" as const };
-    }
+  // Points du triangle
+  const angle1 = (lang.angle - 15) * (Math.PI / 180);
+  const angle2 = (lang.angle + 15) * (Math.PI / 180);
 
-    // BOTTOM BORDER
-    if (position === "bottom-right") {
-      return { ...baseStyle, bottom: 0, right: "25%", textAlign: "center" as const };
-    }
-    if (position === "bottom-center") {
-      return { ...baseStyle, bottom: 0, left: "50%", transform: "translateX(-50%)", textAlign: "center" as const };
-    }
-    if (position === "bottom-left") {
-      return { ...baseStyle, bottom: 0, left: "25%", textAlign: "center" as const };
-    }
+  const x1 = centerX + innerRadius * Math.cos(angle1);
+  const y1 = centerY - innerRadius * Math.sin(angle1);
+  const x2 = centerX + innerRadius * Math.cos(angle2);
+  const y2 = centerY - innerRadius * Math.sin(angle2);
 
-    // LEFT BORDER
-    if (position === "left-lower") {
-      return { ...baseStyle, left: 0, bottom: "25%", flexDirection: "row" as const };
-    }
-    if (position === "left-center") {
-      return { ...baseStyle, left: 0, top: "50%", transform: "translateY(-50%)", flexDirection: "row" as const };
-    }
-    if (position === "left-upper") {
-      return { ...baseStyle, left: 0, top: "25%", flexDirection: "row" as const };
-    }
+  const x3 = centerX + outerRadius * Math.cos((lang.angle * Math.PI) / 180);
+  const y3 = centerY - outerRadius * Math.sin((lang.angle * Math.PI) / 180);
 
-    return baseStyle;
-  };
+  const pathData = `M ${x1} ${y1} L ${x2} ${y2} L ${x3} ${y3} Z`;
 
-  const isVertical = position.startsWith("left") || position.startsWith("right");
+  // Couleur selon sélection (visible pour tests)
+  const fillColor = isSelected ? "#FF7766" : isHighlighted ? "#FF6655" : "#FF5555";
+  const opacity = isSelected ? 0.9 : isHighlighted ? 0.7 : 0.5;
 
   return (
-    <motion.div
-      style={getPositionStyles()}
+    <motion.path
+      d={pathData}
+      fill={fillColor}
+      fillOpacity={opacity}
+      stroke="#000000"
+      strokeWidth="2"
       animate={{
-        scale: isHighlighted ? 2.0 : 1.0,
-        opacity: isHighlighted ? 1 : 0.7,
+        fillOpacity: isSelected ? 0.95 : isHighlighted ? 0.75 : 0.5,
       }}
-      transition={{
-        duration: 0.15,
-        type: "spring",
-        stiffness: 300,
-        damping: 20,
-      }}
-    >
-      {/* Drapeau MINI */}
-      <div className="text-xl leading-none">{flag}</div>
-
-      {/* Texte MINI */}
-      <div
-        className="text-xs font-medium whitespace-nowrap leading-tight"
-        style={isVertical ? { writingMode: "vertical-rl", textOrientation: "mixed" } : {}}
-      >
-        {label}
-      </div>
-    </motion.div>
+      transition={{ duration: 0.2 }}
+    />
   );
 }
 
 // ============================================================================
-// 4. COMPOSANT PRINCIPAL - JOYSTICK SELECTOR (FORMAT MOBILE)
+// 4. COMPOSANT DRAPEAU (cercle jaune + texte)
+// ============================================================================
+
+interface FlagCircleProps {
+  lang: (typeof LANGUAGES)[0];
+  isHighlighted: boolean;
+  isSelected: boolean;
+}
+
+function FlagCircle({ lang, isHighlighted, isSelected }: FlagCircleProps) {
+  const centerX = 187.5;
+  const centerY = 430;
+  const radius = 280;
+
+  const angleRad = (lang.angle * Math.PI) / 180;
+  const x = centerX + radius * Math.cos(angleRad);
+  const y = centerY - radius * Math.sin(angleRad);
+
+  // Cercle jaune (visible pour tests)
+  const circleRadius = isSelected ? 28 : isHighlighted ? 24 : 20;
+  const circleColor = "#FFDD00";
+
+  return (
+    <g>
+      {/* Cercle jaune */}
+      <motion.circle 
+        cx={x} 
+        cy={y} 
+        r={20}
+        fill={circleColor} 
+        opacity={0.9}
+        animate={{ r: circleRadius }}
+        initial={{ r: 20 }}
+        transition={{ duration: 0.2 }}
+      />
+
+      {/* Drapeau */}
+      <text
+        x={x}
+        y={y}
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontSize="24"
+        pointerEvents="none"
+      >
+        {lang.flag}
+      </text>
+
+      {/* Label (petit) */}
+      <text
+        x={x}
+        y={y + circleRadius + 16}
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontSize="10"
+        fill="#FFFFFF"
+        fontWeight="500"
+        pointerEvents="none"
+      >
+        {lang.label}
+      </text>
+    </g>
+  );
+}
+
+// ============================================================================
+// 5. COMPOSANT PRINCIPAL
 // ============================================================================
 
 export default function LanguageSelectionJoystick() {
   const [, setLocation] = useLocation();
   const [highlightedLanguage, setHighlightedLanguage] = useState<string | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // État du joystick
   const joystickState = useRef({
     isActive: false,
     originX: 0,
@@ -236,39 +229,48 @@ export default function LanguageSelectionJoystick() {
   });
 
   // ============================================================================
-  // 5. GESTIONNAIRES D'ÉVÉNEMENTS
+  // 6. ÉVÉNEMENTS TACTILES
   // ============================================================================
 
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
     const touch = e.touches[0];
     joystickState.current.isActive = true;
-    joystickState.current.originX = touch.clientX;
-    joystickState.current.originY = touch.clientY;
-    joystickState.current.currentX = touch.clientX;
-    joystickState.current.currentY = touch.clientY;
+    joystickState.current.originX = touch.clientX - rect.left;
+    joystickState.current.originY = touch.clientY - rect.top;
+    joystickState.current.currentX = touch.clientX - rect.left;
+    joystickState.current.currentY = touch.clientY - rect.top;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     e.preventDefault();
     if (!joystickState.current.isActive) return;
 
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
     const touch = e.touches[0];
-    joystickState.current.currentX = touch.clientX;
-    joystickState.current.currentY = touch.clientY;
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+
+    joystickState.current.currentX = x;
+    joystickState.current.currentY = y;
 
     const angle = calculateJoystickAngle(
       joystickState.current.originX,
       joystickState.current.originY,
-      touch.clientX,
-      touch.clientY
+      x,
+      y
     );
 
     const distance = calculateJoystickDistance(
       joystickState.current.originX,
       joystickState.current.originY,
-      touch.clientX,
-      touch.clientY
+      x,
+      y
     );
 
     if (isActivationDistance(distance)) {
@@ -281,51 +283,62 @@ export default function LanguageSelectionJoystick() {
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     e.preventDefault();
-    if (!joystickState.current.isActive) return;
-
     joystickState.current.isActive = false;
 
     if (highlightedLanguage) {
+      setSelectedLanguage(highlightedLanguage);
       console.log("🌍 [LANGUAGE-JOYSTICK] Langue sélectionnée:", highlightedLanguage);
       localStorage.setItem("selected_language", highlightedLanguage);
-      setLocation("/signup");
+
+      setTimeout(() => {
+        setLocation("/signup");
+      }, 500);
     } else {
       setHighlightedLanguage(null);
     }
   };
 
   // ============================================================================
-  // 6. ÉVÉNEMENTS SOURIS
+  // 7. ÉVÉNEMENTS SOURIS
   // ============================================================================
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
     joystickState.current.isActive = true;
-    joystickState.current.originX = e.clientX;
-    joystickState.current.originY = e.clientY;
-    joystickState.current.currentX = e.clientX;
-    joystickState.current.currentY = e.clientY;
+    joystickState.current.originX = e.clientX - rect.left;
+    joystickState.current.originY = e.clientY - rect.top;
+    joystickState.current.currentX = e.clientX - rect.left;
+    joystickState.current.currentY = e.clientY - rect.top;
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
     e.preventDefault();
     if (!joystickState.current.isActive) return;
 
-    joystickState.current.currentX = e.clientX;
-    joystickState.current.currentY = e.clientY;
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    joystickState.current.currentX = x;
+    joystickState.current.currentY = y;
 
     const angle = calculateJoystickAngle(
       joystickState.current.originX,
       joystickState.current.originY,
-      e.clientX,
-      e.clientY
+      x,
+      y
     );
 
     const distance = calculateJoystickDistance(
       joystickState.current.originX,
       joystickState.current.originY,
-      e.clientX,
-      e.clientY
+      x,
+      y
     );
 
     if (isActivationDistance(distance)) {
@@ -338,14 +351,16 @@ export default function LanguageSelectionJoystick() {
 
   const handleMouseUp = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (!joystickState.current.isActive) return;
-
     joystickState.current.isActive = false;
 
     if (highlightedLanguage) {
+      setSelectedLanguage(highlightedLanguage);
       console.log("🌍 [LANGUAGE-JOYSTICK] Langue sélectionnée:", highlightedLanguage);
       localStorage.setItem("selected_language", highlightedLanguage);
-      setLocation("/signup");
+
+      setTimeout(() => {
+        setLocation("/signup");
+      }, 500);
     } else {
       setHighlightedLanguage(null);
     }
@@ -353,17 +368,18 @@ export default function LanguageSelectionJoystick() {
 
   const handleMouseLeave = () => {
     joystickState.current.isActive = false;
-    // Ne pas réinitialiser highlighted - permet aux gestes qui sortent du conteneur de fonctionner
-    // (ex: glisse dehors puis dedans, ou relâche dehors)
   };
 
   // ============================================================================
-  // 7. RENDU (FORMAT MOBILE - Conteneur Centré comme Instagram)
+  // 8. RENDU
   // ============================================================================
+
+  const centerX = 187.5;
+  const centerY = 430;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black p-4">
-      {/* CONTENEUR MOBILE (comme Instagram sur web) */}
+      {/* CONTENEUR MOBILE */}
       <div
         ref={containerRef}
         onTouchStart={handleTouchStart}
@@ -387,48 +403,119 @@ export default function LanguageSelectionJoystick() {
           border: "1px solid #222",
         }}
       >
-        {/* Conteneur des langues */}
-        <div
+        {/* SVG PRINCIPAL */}
+        <svg
+          width="100%"
+          height="100%"
+          viewBox="0 0 375 600"
           style={{
             position: "absolute",
-            width: "100%",
-            height: "100%",
             top: 0,
             left: 0,
           }}
         >
-          {LANGUAGES.map((lang) => (
-            <LanguageBorderItem
-              key={lang.code}
-              code={lang.code}
-              label={lang.label}
-              flag={lang.flag}
-              position={lang.position}
-              isHighlighted={highlightedLanguage === lang.code}
+          {/* Zones triangulaires rouges + zones bleues */}
+          <defs>
+            {/* Zone bleue = coins arrondis (défaut) */}
+            <path
+              id="blueCornerTopLeft"
+              d="M 0 0 L 80 0 Q 60 30 40 50 L 0 40 Z"
+              fill="#3399FF"
+              opacity="0.4"
             />
-          ))}
-        </div>
+            <path
+              id="blueCornerTopRight"
+              d="M 375 0 L 295 0 Q 315 30 335 50 L 375 40 Z"
+              fill="#3399FF"
+              opacity="0.4"
+            />
+            <path
+              id="blueCornerBottomRight"
+              d="M 375 600 L 295 600 Q 315 570 335 550 L 375 560 Z"
+              fill="#3399FF"
+              opacity="0.4"
+            />
+            <path
+              id="blueCornerBottomLeft"
+              d="M 0 600 L 80 600 Q 60 570 40 550 L 0 560 Z"
+              fill="#3399FF"
+              opacity="0.4"
+            />
+          </defs>
 
-        {/* Instruction au centre */}
-        <div
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            color: "#666",
-            fontSize: "12px",
-            pointerEvents: "none",
-          }}
-        >
-          <p style={{ margin: 0, opacity: 0.5 }}>Glissez votre doigt</p>
-          {highlightedLanguage && (
-            <p style={{ margin: "4px 0 0 0", color: "#999" }}>
-              {LANGUAGES.find((l) => l.code === highlightedLanguage)?.label}
-            </p>
-          )}
-        </div>
+          {/* ZONES BLEUES (coins) */}
+          <use href="#blueCornerTopLeft" />
+          <use href="#blueCornerTopRight" />
+          <use href="#blueCornerBottomRight" />
+          <use href="#blueCornerBottomLeft" />
+
+          {/* ZONES TRIANGULAIRES ROUGES */}
+          <g>
+            {LANGUAGES.map((lang) => (
+              <TriangleZone
+                key={lang.code}
+                lang={lang}
+                isHighlighted={highlightedLanguage === lang.code}
+                isSelected={selectedLanguage === lang.code}
+              />
+            ))}
+          </g>
+
+          {/* CERCLE BLEU (interaction ring) */}
+          <circle
+            cx={centerX}
+            cy={centerY}
+            r="90"
+            fill="none"
+            stroke="#0099FF"
+            strokeWidth="3"
+            opacity="0.6"
+          />
+
+          {/* Traits noirs entre secteurs (12 segments) */}
+          <g stroke="#000000" strokeWidth="2">
+            {LANGUAGES.map((lang) => {
+              const angle = (lang.angle * Math.PI) / 180;
+              const x1 = centerX + 70 * Math.cos(angle);
+              const y1 = centerY - 70 * Math.sin(angle);
+              const x2 = centerX + 100 * Math.cos(angle);
+              const y2 = centerY - 100 * Math.sin(angle);
+              return (
+                <line key={`line-${lang.code}`} x1={x1} y1={y1} x2={x2} y2={y2} />
+              );
+            })}
+          </g>
+
+          {/* CERCLE VERT (centre neutre) */}
+          <circle cx={centerX} cy={centerY} r="50" fill="#00AA00" opacity="0.8" />
+
+          {/* CERCLES JAUNES + DRAPEAUX */}
+          <g>
+            {LANGUAGES.map((lang) => (
+              <FlagCircle
+                key={lang.code}
+                lang={lang}
+                isHighlighted={highlightedLanguage === lang.code}
+                isSelected={selectedLanguage === lang.code}
+              />
+            ))}
+          </g>
+
+          {/* TEXTE CENTRE */}
+          <text
+            x={centerX}
+            y={centerY}
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize="14"
+            fill="#FFFFFF"
+            fontWeight="bold"
+            pointerEvents="none"
+            opacity="0.7"
+          >
+            Sélectionner
+          </text>
+        </svg>
       </div>
     </div>
   );

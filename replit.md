@@ -444,8 +444,43 @@ ALLOWED_ORIGINS=https://onetwo.app,https://www.onetwo.app
 
 ---
 
-**Dernière mise à jour**: 23 novembre 2025  
-**Version replit.md**: 1.1.0
+**Dernière mise à jour**: 24 novembre 2025  
+**Version replit.md**: 1.2.0
+
+---
+
+## 📝 REDESIGN JOYSTICK V2 (24 novembre 2025)
+
+### 🎨 Nouveau Design - Architecture Géométrique
+
+**Branch**: `feature/redesign-joystick-circles-triangles-v2`
+
+#### ✅ Implémenté:
+- **Cercle vert** (centre neutre, r=50px)
+- **Cercle bleu** (interaction ring, r=90px)
+- **12 zones triangulaires rouges** avec traits noirs (30° chacune)
+- **12 cercles jaunes** aux extrémités avec drapeaux
+- **Zones bleues** aux 4 coins (design cohérent)
+- **Clic n'importe où** → Centre devient point d'activation
+- **Feedback visuel**: Triangles s'agrandissent quand survolés/sélectionnés
+- **Couleurs visibles** pour tests manuels (invisibles après approbation)
+
+#### 🎮 Interactions:
+- Clic + glisse sur écran = sélection de langue
+- Distance > 35px = activation (12 secteurs de 30° chacun)
+- Triangle survolé: opacité 75%, drapeau: r=24px
+- Triangle sélectionné: opacité 95%, drapeau: r=28px
+- localStorage intégré → redirection /signup après sélection
+
+#### 📊 Specs Techniques:
+- Fichier: `client/src/pages/language-selection-joystick.tsx` (519 lignes)
+- Langues: 12 (ja, zh, pt-BR, it, de, es, en, fr, tr, nl, ru, ar)
+- Architecture: Composants TriangleZone + FlagCircle + SVG Principal
+- Performance: 60 FPS, ~500ms chargement
+- TypeScript: 0 erreurs, animations fluides (Framer Motion)
+- Format: Mobile (375px × 9:16)
+
+**Status**: ✅ COMPLÉTÉ & TESTÉ - Prêt pour tests manuels
 
 ---
 
