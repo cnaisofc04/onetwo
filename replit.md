@@ -48,7 +48,9 @@ The application features a modern, responsive interface supporting both dark and
 
 ---
 
-## 📝 LANGUAGE SELECTOR - JOYSTICK FINAL V13 TERMINÉ ✅ (24 novembre 2025)
+## 📝 FIXES & AMÉLIORATIONS (24 novembre 2025)
+
+### ✅ 1. LANGUAGE SELECTOR - JOYSTICK FINAL V13 TERMINÉ ✅
 
 ### 🎨 Joystick Minimaliste - Épuré & PARFAITEMENT Centré (comme Instagram)
 
@@ -131,3 +133,28 @@ The application features a modern, responsive interface supporting both dark and
 1. **SVG viewBox explicite** - `viewBox="0 0 375 600"` pour mapper correctement
 2. **overflow-visible** - Permet au positionnement de fonctionner correctement
 3. **Positionnement CSS robuste** - `left: X, top: Y, transform: translate(-50%, -50%)`
+
+---
+
+### ✅ 2. FIX: MESSAGE D'ERREUR EMAIL DUPLIQUÉ - NOW VISIBLE ✅
+
+**Problème**: L'utilisateur ne voyait pas le message d'erreur quand l'email était déjà utilisé.
+
+**Cause**: Le message d'erreur s'affichait au format JSON brut au lieu du message lisible:
+```
+❌ AVANT: "409: {"error":"Cet email est déjà utilisé"}"
+✅ APRÈS: "Cet email est déjà utilisé"
+```
+
+**Solution implémentée**:
+1. **Parser JSON dans `client/src/lib/queryClient.ts`** - Extrait le message d'erreur du JSON
+2. **Améliorer toast dans `client/src/pages/signup.tsx`** - Title plus clair avec emoji ❌
+
+**Fichiers modifiés**:
+- `client/src/lib/queryClient.ts` (lignes 4-20)
+- `client/src/pages/signup.tsx` (lignes 111-120)
+
+**Résultat**: 
+- ✅ Message d'erreur maintenant clair: "Cet email est déjà utilisé"
+- ✅ Toast affiche: "❌ Erreur d'inscription"
+- ✅ Logging amélioré côté client

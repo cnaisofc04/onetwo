@@ -106,9 +106,12 @@ export default function Signup() {
       setLocation('/verify-email');
     },
     onError: (error: any) => {
+      const errorMessage = error.message || "Impossible de créer la session";
+      console.error('❌ [SESSION] Erreur:', errorMessage);
+      
       toast({
-        title: "Erreur",
-        description: error.message || "Impossible de créer la session",
+        title: "❌ Erreur d'inscription",
+        description: errorMessage,
         variant: "destructive",
       });
     },

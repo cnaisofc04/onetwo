@@ -4,7 +4,17 @@ async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
     console.error(`❌ [API] Erreur HTTP ${res.status}:`, text);
-    throw new Error(`${res.status}: ${text}`);
+    
+    // Parser le JSON si possible pour extraire le message d'erreur
+    let errorMessage = text;
+    try {
+      const json = JSON.parse(text);
+      errorMessage = json.error || json.message || text;
+    } catch {
+      // Si ce n'est pas du JSON, garder le texte brut
+    }
+    
+    throw new Error(errorMessage);
   }
 }
 
