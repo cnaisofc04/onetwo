@@ -1,9 +1,9 @@
 /**
- * 🎨 LANGUAGE SELECTOR - DYNAMIC BUBBLES V2
- * ✅ Boule bleue centrale (maintenir + glisser)
- * ✅ 12 boules colorées (toujours visibles, jamais hors écran)
- * ✅ Drag-and-drop (relâchement = sélection)
- * ✅ Interaction: maintenir clic + glisser vers la boule choisie
+ * 🎨 LANGUAGE SELECTOR - DYNAMIC BUBBLES V4
+ * ✅ Boule bleue PETITE (25px) au point de clic exact
+ * ✅ 12 boules de drapeaux GRANDES (40px) dynamiques
+ * ✅ Positions s'ajustent si trop près du bord
+ * ✅ Tailles changeantes selon la proximité du bord
  */
 
 import { useState, useRef, useEffect } from "react";
@@ -25,28 +25,48 @@ const LANGUAGES = [
   { code: "tr", label: "Türkçe", flag: "🇹🇷", color: "#FF8B94", angle: 330 },
 ];
 
-const BUBBLE_DISTANCE = 140; // Distance des boules
-const BUBBLE_RADIUS = 35; // Rayon des boules
-const CENTER_RADIUS = 45; // Rayon de la boule bleue
+const BUBBLE_DISTANCE = 140;
+const BASE_BUBBLE_RADIUS = 40;
+const CENTER_RADIUS = 25; // Boule bleue plus petite
 const CONTAINER_WIDTH = 375;
 const CONTAINER_HEIGHT = 600;
 
-// 🔒 Calculer la zone sûre pour le centre (boules toujours visibles)
-function calculateSafeCenter(x: number, y: number): { x: number; y: number } {
-  let safeX = x;
-  let safeY = y;
+// 🔒 Ajuster position d'une boule pour qu'elle reste visible
+function adjustBubblePosition(
+  x: number,
+  y: number,
+  radius: number
+): { x: number; y: number } {
+  const minX = radius;
+  const maxX = CONTAINER_WIDTH - radius;
+  const minY = radius;
+  const maxY = CONTAINER_HEIGHT - radius;
 
-  // Limites horizontales
-  const minX = CENTER_RADIUS + BUBBLE_DISTANCE + BUBBLE_RADIUS;
-  const maxX = CONTAINER_WIDTH - (CENTER_RADIUS + BUBBLE_DISTANCE + BUBBLE_RADIUS);
-  safeX = Math.max(minX, Math.min(maxX, x));
+  return {
+    x: Math.max(minX, Math.min(maxX, x)),
+    y: Math.max(minY, Math.min(maxY, y)),
+  };
+}
 
-  // Limites verticales
-  const minY = CENTER_RADIUS + BUBBLE_DISTANCE + BUBBLE_RADIUS;
-  const maxY = CONTAINER_HEIGHT - (CENTER_RADIUS + BUBBLE_DISTANCE + BUBBLE_RADIUS);
-  safeY = Math.max(minY, Math.min(maxY, y));
+// 📏 Calculer la taille dynamique d'une boule selon le bord
+function calculateDynamicRadius(
+  x: number,
+  y: number,
+  baseRadius: number
+): number {
+  const margin = 20;
+  const minDist = Math.min(
+    Math.abs(x - margin),
+    Math.abs(y - margin),
+    Math.abs(CONTAINER_WIDTH - x - margin),
+    Math.abs(CONTAINER_HEIGHT - y - margin)
+  );
 
-  return { x: safeX, y: safeY };
+  // Si trop proche du bord, réduire la taille progressivement
+  if (minDist < baseRadius + 10) {
+    return baseRadius * (Math.max(0.7, minDist / (baseRadius + 10)));
+  }
+  return baseRadius;
 }
 
 export default function LanguageSelectionBubbles() {
@@ -56,11 +76,10 @@ export default function LanguageSelectionBubbles() {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [pointerStartPos, setPointerStartPos] = useState<{ x: number; y: number } | null>(null);
 
-  // 📍 Premier clic - Afficher les boules
+  // 📍 Premier clic - Afficher les boules AU POINT EXACT DU CLIC
   const handleContainerMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
-    if (centerPos) return; // Déjà activé
+    if (centerPos) return;
 
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -70,11 +89,13 @@ export default function LanguageSelectionBubbles() {
 
     const x = clientX - rect.left;
     const y = clientY - rect.top;
-    const safe = calculateSafeCenter(x, y);
 
-    setCenterPos(safe);
-    setBlueBubblePos(safe);
-    setPointerStartPos(safe);
+    // Garder dans les limites mais PAS repositionner le centre!
+    const clampX = Math.max(CENTER_RADIUS, Math.min(CONTAINER_WIDTH - CENTER_RADIUS, x));
+    const clampY = Math.max(CENTER_RADIUS, Math.min(CONTAINER_HEIGHT - CENTER_RADIUS, y));
+
+    setCenterPos({ x: clampX, y: clampY });
+    setBlueBubblePos({ x: clampX, y: clampY });
     setIsDragging(true);
   };
 
@@ -89,7 +110,6 @@ export default function LanguageSelectionBubbles() {
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
 
-      // Limiter dans les limites du container
       const clampX = Math.max(CENTER_RADIUS, Math.min(CONTAINER_WIDTH - CENTER_RADIUS, x));
       const clampY = Math.max(CENTER_RADIUS, Math.min(CONTAINER_HEIGHT - CENTER_RADIUS, y));
 
@@ -134,20 +154,27 @@ export default function LanguageSelectionBubbles() {
 
   // 🎯 Détection: boule bleue au-dessus d'une boule colorée?
   const detectSelection = () => {
-    if (!blueBubblePos || !centerPos) return;
+    if (!blueBubblePos || !centerPos || selectedLanguage) return;
 
     for (const lang of LANGUAGES) {
       const angleRad = (lang.angle * Math.PI) / 180;
-      const coloredX = centerPos.x + BUBBLE_DISTANCE * Math.cos(angleRad);
-      const coloredY = centerPos.y + BUBBLE_DISTANCE * Math.sin(angleRad);
+      let coloredX = centerPos.x + BUBBLE_DISTANCE * Math.cos(angleRad);
+      let coloredY = centerPos.y + BUBBLE_DISTANCE * Math.sin(angleRad);
+
+      // Ajuster la position si trop près du bord
+      const adjusted = adjustBubblePosition(coloredX, coloredY, BASE_BUBBLE_RADIUS);
+      coloredX = adjusted.x;
+      coloredY = adjusted.y;
+
+      const dynamicRadius = calculateDynamicRadius(coloredX, coloredY, BASE_BUBBLE_RADIUS);
 
       // Distance entre les deux boules
       const dx = blueBubblePos.x - coloredX;
       const dy = blueBubblePos.y - coloredY;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
-      // Si les boules se touchent/chevauchent
-      if (distance < CENTER_RADIUS + BUBBLE_RADIUS) {
+      // Si les boules se touchent
+      if (distance < CENTER_RADIUS + dynamicRadius) {
         handleBubbleSelect(lang.code);
         return;
       }
@@ -189,12 +216,20 @@ export default function LanguageSelectionBubbles() {
           viewBox="0 0 375 600"
           style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}
         >
-          {/* 🎨 BOULES COLORÉES AUTOUR */}
+          {/* 🎨 BOULES COLORÉES DES DRAPEAUX (DYNAMIQUES) */}
           {centerPos &&
             LANGUAGES.map((lang) => {
               const angleRad = (lang.angle * Math.PI) / 180;
-              const x = centerPos.x + BUBBLE_DISTANCE * Math.cos(angleRad);
-              const y = centerPos.y + BUBBLE_DISTANCE * Math.sin(angleRad);
+              let x = centerPos.x + BUBBLE_DISTANCE * Math.cos(angleRad);
+              let y = centerPos.y + BUBBLE_DISTANCE * Math.sin(angleRad);
+
+              // 🔒 Ajuster si trop proche du bord
+              const adjusted = adjustBubblePosition(x, y, BASE_BUBBLE_RADIUS);
+              x = adjusted.x;
+              y = adjusted.y;
+
+              // 📏 Taille dynamique selon le bord
+              const dynamicRadius = calculateDynamicRadius(x, y, BASE_BUBBLE_RADIUS);
 
               // Vérifier si la boule bleue est sur cette boule
               const isOverlapping =
@@ -203,10 +238,10 @@ export default function LanguageSelectionBubbles() {
                   const dx = blueBubblePos.x - x;
                   const dy = blueBubblePos.y - y;
                   const distance = Math.sqrt(dx * dx + dy * dy);
-                  return distance < CENTER_RADIUS + BUBBLE_RADIUS;
+                  return distance < CENTER_RADIUS + dynamicRadius;
                 })();
 
-              const radius = isOverlapping ? 40 : BUBBLE_RADIUS;
+              const displayRadius = isOverlapping ? dynamicRadius * 1.15 : dynamicRadius;
 
               return (
                 <g key={lang.code}>
@@ -214,12 +249,12 @@ export default function LanguageSelectionBubbles() {
                   <motion.circle
                     cx={x}
                     cy={y}
-                    r={BUBBLE_RADIUS}
+                    r={dynamicRadius}
                     fill={lang.color}
                     opacity={isOverlapping ? 0.95 : 0.85}
                     stroke="#FFFFFF"
                     strokeWidth="2"
-                    animate={{ r: radius }}
+                    animate={{ r: displayRadius }}
                     transition={{ duration: 0.15 }}
                   />
 
@@ -238,10 +273,10 @@ export default function LanguageSelectionBubbles() {
                   {/* Label */}
                   <text
                     x={x}
-                    y={y + radius + 14}
+                    y={y + displayRadius + 12}
                     textAnchor="middle"
                     dominantBaseline="central"
-                    fontSize="9"
+                    fontSize="8"
                     fill="#FFFFFF"
                     fontWeight="bold"
                     pointerEvents="none"
@@ -252,7 +287,7 @@ export default function LanguageSelectionBubbles() {
               );
             })}
 
-          {/* 🔵 BOULE BLEUE (DRAGGABLE) */}
+          {/* 🔵 BOULE BLEUE (DRAGGABLE, PLUS PETITE) */}
           {blueBubblePos && (
             <motion.circle
               cx={blueBubblePos.x}
@@ -260,8 +295,8 @@ export default function LanguageSelectionBubbles() {
               r={CENTER_RADIUS}
               fill="#4169E1"
               stroke="#FFFFFF"
-              strokeWidth="3"
-              opacity={isDragging ? 0.9 : 0.8}
+              strokeWidth="2"
+              opacity={isDragging ? 0.9 : 0.85}
               animate={{
                 cx: blueBubblePos.x,
                 cy: blueBubblePos.y,
