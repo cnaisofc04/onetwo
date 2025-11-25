@@ -1056,10 +1056,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: "Erreur lors de la création du token" });
       }
 
-      // Create reset URL with correct domain from request
-      const protocol = req.secure ? 'https' : 'http';
-      const host = req.get('host') || 'localhost:5000';
-      const resetUrl = `${protocol}://${host}/reset-password?token=${resetToken}`;
+      // Create reset URL with correct public domain from Replit
+      const replitDomain = process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN;
+      const publicDomain = replitDomain || 'localhost:5000';
+      const resetUrl = `https://${publicDomain}/reset-password?token=${resetToken}`;
 
       // Send email with reset link
       await VerificationService.sendPasswordResetEmail(email, resetUrl);
