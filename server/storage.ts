@@ -40,6 +40,11 @@ export interface IStorage {
   
   // Location methods
   updateSessionLocation(id: string, location: UpdateLocation): Promise<SignupSession | undefined>;
+
+  // Password reset methods
+  setPasswordResetToken(email: string, token: string, expiry: Date): Promise<boolean>;
+  verifyPasswordResetToken(token: string): Promise<User | undefined>;
+  resetPassword(token: string, newPassword: string): Promise<boolean>;
 }
 
 // PostgreSQL Database Storage Implementation
@@ -358,6 +363,88 @@ export class DBStorage implements IStorage {
     } catch (error) {
       console.error('❌ [STORAGE] Error updating session location:', error);
       return undefined;
+    }
+  }
+
+  async setPasswordResetToken(email: string, token: string, expiry: Date): Promise<boolean> {
+    try {
+      console.log(`🔐 [STORAGE] Création token reset pour ${email}`);
+      await db
+        .update(users)
+        .set({
+          passwordResetToken: token,
+          passwordResetExpiry: expiry,
+        })
+        .where(eq(users.email, email.toLowerCase()));
+      console.log(`✅ [STORAGE] Token reset créé pour ${email}`);
+      return true;
+    } catch (error) {
+      console.error('❌ [STORAGE] Error setting password reset token:', error);
+      return false;
+    }
+  }
+
+  async verifyPasswordResetToken(token: string): Promise<User | undefined> {
+    try {
+      console.log(`🔐 [STORAGE] Vérification token reset: ${token.substring(0, 10)}...`);
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.passwordResetToken, token))
+        .limit(1);
+
+      if (!user) {
+        console.log(`❌ [STORAGE] Token invalide`);
+        return undefined;
+      }
+
+      // Check if token has expired
+      const now = new Date();
+      if (!user.passwordResetExpiry || now > user.passwordResetExpiry) {
+        console.log(`❌ [STORAGE] Token expiré`);
+        return undefined;
+      }
+
+      console.log(`✅ [STORAGE] Token valide pour ${user.email}`);
+      return user;
+    } catch (error) {
+      console.error('❌ [STORAGE] Error verifying password reset token:', error);
+      return undefined;
+    }
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<boolean> {
+    try {
+      console.log(`🔐 [STORAGE] Réinitialisation password avec token: ${token.substring(0, 10)}...`);
+      
+      // Verify token exists and is valid
+      const user = await this.verifyPasswordResetToken(token);
+      if (!user) {
+        console.log(`❌ [STORAGE] Token invalide ou expiré`);
+        return false;
+      }
+
+      // Detect if password is already hashed (bcrypt format)
+      const isBcryptHash = /^\$2[aby]\$/.test(newPassword);
+      const hashedPassword = isBcryptHash 
+        ? newPassword  
+        : await bcrypt.hash(newPassword, 10);
+
+      // Update password and clear reset token
+      await db
+        .update(users)
+        .set({
+          password: hashedPassword,
+          passwordResetToken: null,
+          passwordResetExpiry: null,
+        })
+        .where(eq(users.id, user.id));
+
+      console.log(`✅ [STORAGE] Password réinitialisé pour ${user.email}`);
+      return true;
+    } catch (error) {
+      console.error('❌ [STORAGE] Error resetting password:', error);
+      return false;
     }
   }
 }

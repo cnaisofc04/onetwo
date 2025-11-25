@@ -25,6 +25,8 @@ export const users = pgTable("users", {
   geolocationConsent: boolean("geolocation_consent").notNull().default(false),
   termsAccepted: boolean("terms_accepted").notNull().default(false),
   deviceBindingConsent: boolean("device_binding_consent").notNull().default(false),
+  passwordResetToken: text("password_reset_token"),
+  passwordResetExpiry: timestamp("password_reset_expiry"),
   // Note: NO bio field (design decision)
 });
 
@@ -240,5 +242,23 @@ export type UpdateLocation = z.infer<typeof updateLocationSchema>;
 
 // Export select types for User and SignupSession
 import type { InferSelectModel } from 'drizzle-orm';
+// Password reset schemas
+export const forgotPasswordSchema = z.object({
+  email: z.string().email("Email invalide").toLowerCase(),
+});
+
+export type ForgotPassword = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1, "Token requis"),
+  newPassword: z.string()
+    .min(8, "Le mot de passe doit contenir au moins 8 caractères")
+    .regex(/[A-Z]/, "Le mot de passe doit contenir au moins une majuscule")
+    .regex(/[a-z]/, "Le mot de passe doit contenir au moins une minuscule")
+    .regex(/[0-9]/, "Le mot de passe doit contenir au moins un chiffre"),
+});
+
+export type ResetPassword = z.infer<typeof resetPasswordSchema>;
+
 export type User = InferSelectModel<typeof users>;
 export type SignupSession = InferSelectModel<typeof signupSessions>;

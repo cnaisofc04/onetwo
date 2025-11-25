@@ -8,6 +8,8 @@ import Home from "@/pages/home";
 import LanguageSelection from "@/pages/language-selection-joystick";
 import Signup from "@/pages/signup";
 import Login from "@/pages/login";
+import ForgotPassword from "@/pages/forgot-password";
+import ResetPassword from "@/pages/reset-password";
 import VerifyEmail from "@/pages/verify-email";
 import VerifyPhone from "@/pages/verify-phone";
 import ConsentGeolocation from "@/pages/consent-geolocation";
@@ -26,6 +28,8 @@ function Router() {
       <Route path="/language-selection" component={LanguageSelection} />
       <Route path="/signup" component={Signup} />
       <Route path="/login" component={Login} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
       <Route path="/verify-email" component={VerifyEmail} />
       <Route path="/verify-phone" component={VerifyPhone} />
       <Route path="/consent-geolocation" component={ConsentGeolocation} />

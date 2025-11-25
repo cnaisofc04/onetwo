@@ -73,4 +73,37 @@ export class VerificationService {
       return false;
     }
   }
+
+  static async sendPasswordResetEmail(email: string, resetUrl: string): Promise<boolean> {
+    try {
+      console.log(`📧 [PASSWORD-RESET] Tentative envoi email reset à ${email}`);
+      
+      const response = await resend.emails.send({
+        from: 'onboarding@resend.dev',
+        to: email,
+        subject: 'Réinitialiser votre mot de passe OneTwo',
+        html: `
+          <div style="font-family: Arial; text-align: center; padding: 20px;">
+            <h1>Réinitialiser votre mot de passe</h1>
+            <p>Vous avez demandé la réinitialisation de votre mot de passe OneTwo.</p>
+            <p>Cliquez sur le lien ci-dessous pour réinitialiser votre mot de passe:</p>
+            <a href="${resetUrl}" style="display: inline-block; background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; margin: 20px 0;">
+              Réinitialiser mon mot de passe
+            </a>
+            <p style="color: #666; font-size: 12px; margin-top: 20px;">
+              Ce lien expirera dans 1 heure.<br/>
+              Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.
+            </p>
+          </div>
+        `,
+      });
+
+      const emailId = response.data?.id || 'unknown';
+      console.log(`✅ [PASSWORD-RESET] Email envoyé avec succès: ${emailId}`);
+      return true;
+    } catch (error) {
+      console.error(`❌ [PASSWORD-RESET] Erreur:`, error);
+      return false;
+    }
+  }
 }

@@ -172,6 +172,17 @@ export default function Login() {
                 {loginMutation.isPending ? "Connexion..." : "Se connecter"}
               </Button>
 
+              <Link href="/forgot-password">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full h-14 text-base font-semibold"
+                  data-testid="button-forgot-password"
+                >
+                  🔑 Mot de passe oublié?
+                </Button>
+              </Link>
+
               <Link href="/">
                 <Button
                   type="button"
