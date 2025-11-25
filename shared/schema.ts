@@ -260,5 +260,20 @@ export const resetPasswordSchema = z.object({
 
 export type ResetPassword = z.infer<typeof resetPasswordSchema>;
 
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Ancien mot de passe requis"),
+  newPassword: z.string()
+    .min(8, "Le mot de passe doit contenir au moins 8 caractères")
+    .regex(/[A-Z]/, "Le mot de passe doit contenir au moins une majuscule")
+    .regex(/[a-z]/, "Le mot de passe doit contenir au moins une minuscule")
+    .regex(/[0-9]/, "Le mot de passe doit contenir au moins un chiffre"),
+  confirmPassword: z.string().min(1, "Confirmation requise"),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Les mots de passe ne correspondent pas",
+  path: ["confirmPassword"],
+});
+
+export type ChangePassword = z.infer<typeof changePasswordSchema>;
+
 export type User = InferSelectModel<typeof users>;
 export type SignupSession = InferSelectModel<typeof signupSessions>;

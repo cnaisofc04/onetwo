@@ -10,6 +10,7 @@ import Signup from "@/pages/signup";
 import Login from "@/pages/login";
 import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
+import ChangePassword from "@/pages/change-password";
 import VerifyEmail from "@/pages/verify-email";
 import VerifyPhone from "@/pages/verify-phone";
 import ConsentGeolocation from "@/pages/consent-geolocation";
@@ -30,6 +31,7 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />
+      <Route path="/change-password" component={ChangePassword} />
       <Route path="/verify-email" component={VerifyEmail} />
       <Route path="/verify-phone" component={VerifyPhone} />
       <Route path="/consent-geolocation" component={ConsentGeolocation} />

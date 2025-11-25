@@ -77,6 +77,42 @@ export default function Signup() {
     return phoneRegex.test(phone) || "Format invalide (ex: 0612345678 ou +33612345678)";
   };
 
+  // Vérifier si le pseudonyme existe (étape 1)
+  const checkPseudonymeMutation = useMutation({
+    mutationFn: async (pseudonyme: string) => {
+      return apiRequest("/api/auth/check-pseudonyme", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pseudonyme }),
+      });
+    },
+    onSuccess: async () => {
+      console.log('✅ [CHECK-PSEUDO] Pseudonyme disponible - passage à étape 2');
+      setStep(2);
+    },
+    onError: (error: any) => {
+      const errorMessage = error.message || "Erreur lors de la vérification";
+      console.error('❌ [CHECK-PSEUDO] Erreur:', errorMessage);
+      
+      // Si le pseudo existe déjà
+      if (errorMessage.includes("pseudonyme est déjà pris")) {
+        console.log('➡️ [CHECK-PSEUDO] Pseudo existe - afficher erreur');
+        toast({
+          title: "❌ Pseudonyme indisponible",
+          description: "Ce pseudonyme est déjà pris. Essayez un autre.",
+          variant: "destructive",
+        });
+      } else {
+        // Autre erreur
+        toast({
+          title: "❌ Erreur de vérification",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
+    },
+  });
+
   // Vérifier si l'email existe (étape 4)
   const checkEmailMutation = useMutation({
     mutationFn: async (email: string) => {
@@ -218,6 +254,17 @@ export default function Signup() {
     const isValid = await form.trigger(fieldsToValidate);
     
     if (!isValid) return;
+
+    // À l'étape 1 (pseudonyme), vérifier immédiatement que le pseudonyme n'existe pas
+    if (step === 1) {
+      console.log('🔐 [SIGNUP] === ÉTAPE 1 - VÉRIFICATION PSEUDONYME ===');
+      const pseudonyme = form.getValues('pseudonyme');
+      console.log('👤 [SIGNUP] Vérification pseudonyme:', pseudonyme);
+      
+      // Appeler la mutation pour vérifier le pseudonyme
+      await checkPseudonymeMutation.mutateAsync(pseudonyme);
+      return; // La mutation passera à étape 2 si le pseudo est OK
+    }
 
     // À l'étape 4 (email), vérifier immédiatement que l'email n'existe pas
     if (step === 4) {

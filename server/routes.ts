@@ -198,6 +198,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // POST /api/auth/check-pseudonyme - Vérifier si un pseudonyme existe (pour validation immédiate)
+  app.post("/api/auth/check-pseudonyme", async (req: Request, res: Response) => {
+    try {
+      const { pseudonyme } = req.body;
+      
+      if (!pseudonyme || typeof pseudonyme !== 'string') {
+        return res.status(400).json({ error: "Pseudonyme invalide" });
+      }
+      
+      console.log(`👤 [CHECK-PSEUDO] Vérification: ${pseudonyme}`);
+      const existing = await storage.getUserByPseudonyme(pseudonyme);
+      
+      if (existing) {
+        console.log('❌ [CHECK-PSEUDO] Pseudonyme déjà pris');
+        return res.status(409).json({ error: "Ce pseudonyme est déjà pris" });
+      }
+      
+      console.log('✅ [CHECK-PSEUDO] Pseudonyme disponible');
+      return res.status(200).json({ available: true });
+    } catch (error) {
+      console.error("❌ [CHECK-PSEUDO] Erreur:", error);
+      return res.status(500).json({ error: "Erreur lors de la vérification" });
+    }
+  });
+
   // GET /api/auth/signup/session/:id - Get signup session data (for frontend validation)
   app.get("/api/auth/signup/session/:id", async (req: Request, res: Response) => {
     try {
@@ -1111,6 +1136,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Reset password error:", error);
       return res.status(500).json({ error: "Erreur lors de la réinitialisation du mot de passe" });
+    }
+  });
+
+  // POST /api/auth/change-password - Change password for logged-in user
+  app.post("/api/auth/change-password", async (req: Request, res: Response) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ error: "Ancien et nouveau mot de passe requis" });
+      }
+      
+      console.log('🔐 [CHANGE-PASSWORD] Demande de changement de mot de passe');
+      
+      // TODO: Get user from session/JWT when auth is implemented
+      // For now, this endpoint is a placeholder
+      // In production, you would:
+      // 1. Get userId from req.user (set by auth middleware)
+      // 2. Get user from database
+      // 3. Verify currentPassword matches user.password
+      // 4. Hash newPassword
+      // 5. Update user.password
+      // 6. Send email notification
+      
+      return res.status(501).json({ 
+        error: "Session management not yet fully implemented",
+        message: "Cette fonctionnalité sera disponible après l'implémentation de la gestion de session" 
+      });
+    } catch (error) {
+      console.error("Change password error:", error);
+      return res.status(500).json({ error: "Erreur lors du changement du mot de passe" });
     }
   });
 
