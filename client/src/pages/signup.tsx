@@ -7,6 +7,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DynamicKeyboard } from "@/components/keyboard";
 import {
   Form,
   FormControl,
@@ -34,6 +35,7 @@ export default function Signup() {
 
   const [step, setStep] = useState(1);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [keyboardMode, setKeyboardMode] = useState<'lowercase' | 'uppercase' | 'numbers' | 'special'>('lowercase');
 
   // Use a custom setter for step to potentially add logic later
   const setCurrentStep = (newStep: number) => {
@@ -306,26 +308,52 @@ export default function Signup() {
 
         <Form {...form}>
           <form className="space-y-6">
-            {/* Step 1: Pseudonyme */}
+            {/* Step 1: Pseudonyme WITH DYNAMIC KEYBOARD */}
             {step === 1 && (
-              <FormField
-                control={form.control}
-                name="pseudonyme"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-base font-medium">Pseudonyme</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="Votre pseudonyme"
-                        className="h-12 text-base"
-                        data-testid="input-pseudonyme"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <>
+                <FormField
+                  control={form.control}
+                  name="pseudonyme"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-base font-medium">Pseudonyme</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Votre pseudonyme"
+                          className="h-12 text-base"
+                          data-testid="input-pseudonyme"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                {/* CLAVIER DYNAMIQUE */}
+                <div className="my-8 border rounded-lg p-4 bg-muted">
+                  <p className="text-sm text-muted-foreground mb-4 text-center">
+                    💡 Ou utilisez le clavier dynamique ci-dessous
+                  </p>
+                  <div className="flex justify-center">
+                    <DynamicKeyboard
+                      onCharacterSelected={(char) => {
+                        const current = form.getValues('pseudonyme');
+                        if (char === '\b') {
+                          form.setValue('pseudonyme', current.slice(0, -1));
+                        } else if (char !== '\n' && char !== ' ') {
+                          if (current.length < 20) {
+                            form.setValue('pseudonyme', current + char);
+                          }
+                        }
+                      }}
+                      inputValue={form.getValues('pseudonyme')}
+                      mode={keyboardMode}
+                      onModeChange={setKeyboardMode}
+                    />
+                  </div>
+                </div>
+              </>
             )}
 
             {/* Step 2: Date of Birth */}
