@@ -7,7 +7,6 @@ import { PostHogProvider } from "@/lib/posthog";
 import Home from "@/pages/home";
 import LanguageSelection from "@/pages/language-selection-joystick";
 import Signup from "@/pages/signup";
-import SignupWithKeyboard from "@/pages/signup-with-keyboard";
 import Login from "@/pages/login";
 import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
@@ -29,7 +28,6 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/language-selection" component={LanguageSelection} />
       <Route path="/signup" component={Signup} />
-      <Route path="/signup-with-keyboard" component={SignupWithKeyboard} />
       <Route path="/login" component={Login} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />
