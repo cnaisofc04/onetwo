@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import twilio from 'twilio';
+import crypto from 'crypto';
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
@@ -19,8 +20,8 @@ const twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 
 export class VerificationService {
   static generateVerificationCode(): string {
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    console.log(`🔑 [VERIFY] Code généré: ${code}`);
+    const code = crypto.randomInt(100000, 1000000).toString();
+    console.log(`🔑 [VERIFY] Code généré: ${code} (✅ crypto-secure)`);
     return code;
   }
 

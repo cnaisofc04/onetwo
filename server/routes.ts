@@ -29,6 +29,7 @@ import { fromZodError } from "zod-validation-error";
 import { VerificationService } from "./verification-service";
 import { SupermemoryService } from "./supermemory-service";
 import { MemoryContext } from "./memory-context";
+import { CleanupService } from "./cleanup-service";
 import bcrypt from "bcrypt";
 import { z } from "zod";
 
@@ -39,6 +40,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   console.log(`📱 TWILIO_ACCOUNT_SID: ${process.env.TWILIO_ACCOUNT_SID ? '✅ CHARGÉ' : '❌ MANQUANT'}`);
   console.log(`📱 TWILIO_AUTH_TOKEN: ${process.env.TWILIO_AUTH_TOKEN ? '✅ CHARGÉ' : '❌ MANQUANT'}`);
   console.log(`📱 TWILIO_PHONE_NUMBER: ${process.env.TWILIO_PHONE_NUMBER ? '✅ CHARGÉ' : '❌ MANQUANT'}`);
+
+  CleanupService.startCleanupInterval(5 * 60 * 1000);
 
   // New Signup Session Flow Routes
 

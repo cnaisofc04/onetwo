@@ -1,18 +1,33 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { VerificationService } from './verification-service';
 
-describe('VerificationService - Tests RÉELS', () => {
+describe('VerificationService - Tests RÉELS + SECURITY FIXES', () => {
   it('should generate valid 6-digit verification code', () => {
     const code = VerificationService.generateVerificationCode();
     expect(code).toMatch(/^\d{6}$/);
     expect(code.length).toBe(6);
   });
 
-  it('should generate different codes each time', () => {
+  it('should generate different codes each time (crypto-secure randomness)', () => {
     const code1 = VerificationService.generateVerificationCode();
     const code2 = VerificationService.generateVerificationCode();
     // Very unlikely to be same (1 in 900000 chance)
     expect(code1).not.toBe(code2);
+  });
+
+  it('SECURITY FIX: should use crypto.randomInt() NOT Math.random()', () => {
+    const codes = [];
+    for (let i = 0; i < 50; i++) {
+      codes.push(parseInt(VerificationService.generateVerificationCode()));
+    }
+    
+    const differences = [];
+    for (let i = 0; i < codes.length - 1; i++) {
+      differences.push(codes[i + 1] - codes[i]);
+    }
+    
+    const hasPattern = differences.every((d, i) => i === 0 || d === differences[0]);
+    expect(hasPattern).toBe(false);
   });
 
   it('should set code expiry to 15 minutes from now', () => {

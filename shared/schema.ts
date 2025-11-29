@@ -143,6 +143,9 @@ export const signupSessions = pgTable("signup_sessions", {
   termsAccepted: boolean("terms_accepted").notNull().default(false),
   deviceBindingConsent: boolean("device_binding_consent").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  expiresAt: timestamp("expires_at").notNull().default(
+    sql`now() + interval '30 minutes'`
+  ),
 });
 
 // Insert schema for signup session
@@ -233,9 +236,21 @@ export const updateConsentsSchema = z.object({
 export type UpdateConsents = z.infer<typeof updateConsentsSchema>;
 
 export const updateLocationSchema = z.object({
-  city: z.string().min(1, "La ville est requise").optional(),
-  country: z.string().min(1, "Le pays est requis").optional(),
-  nationality: z.string().min(1, "La nationalité est requise").optional(),
+  city: z.string()
+    .min(1, "La ville est requise")
+    .max(100)
+    .regex(/^[a-zA-Z0-9\s\-'àâäèéêëìîïòôöùûüœæçñ]+$/, "Caractères invalides")
+    .optional(),
+  country: z.string()
+    .min(1, "Le pays est requis")
+    .max(100)
+    .regex(/^[a-zA-Z\s\-'àâäèéêëìîïòôöùûüœæçñ]+$/, "Caractères invalides")
+    .optional(),
+  nationality: z.string()
+    .min(1, "La nationalité est requise")
+    .max(100)
+    .regex(/^[a-zA-Z\s\-àâäèéêëìîïòôöùûüœæçñ]+$/, "Caractères invalides")
+    .optional(),
 });
 
 export type UpdateLocation = z.infer<typeof updateLocationSchema>;
