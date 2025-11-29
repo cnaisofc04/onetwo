@@ -30,10 +30,22 @@ import { VerificationService } from "./verification-service";
 import { SupermemoryService } from "./supermemory-service";
 import { MemoryContext } from "./memory-context";
 import { CleanupService } from "./cleanup-service";
+import {
+  loginLimiter,
+  signupLimiter,
+  verificationLimiter,
+  emailLimiter,
+  passwordResetLimiter,
+  apiLimiter,
+} from "./rate-limiter";
+import { securityLogger } from "./security-logger";
+import { asyncHandler } from "./error-handler";
 import bcrypt from "bcrypt";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Apply global API rate limiter
+  app.use(apiLimiter);
   // DEBUG: Vérifier les secrets au démarrage
   console.log('\n🔐 [STARTUP] Vérification des secrets Doppler...');
   console.log(`📧 RESEND_API_KEY: ${process.env.RESEND_API_KEY ? '✅ CHARGÉ (' + process.env.RESEND_API_KEY.substring(0, 10) + '...)' : '❌ MANQUANT'}`);
@@ -46,7 +58,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // New Signup Session Flow Routes
 
   // POST /api/auth/signup/session - Create signup session with ALL data from steps 1-6
-  app.post("/api/auth/signup/session", async (req: Request, res: Response) => {
+  app.post("/api/auth/signup/session", signupLimiter, async (req: Request, res: Response) => {
     console.log('\n🟢 [SESSION] Début création session');
     console.log('📝 [SESSION] Body:', JSON.stringify(req.body, null, 2));
 
