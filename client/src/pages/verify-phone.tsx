@@ -74,10 +74,10 @@ export default function VerifyPhone() {
       console.log('✅ [VERIFY-PHONE] Téléphone vérifié avec succès!');
       toast({
         title: "Téléphone vérifié !",
-        description: "Passons aux consentements",
+        description: "Passons à votre localisation",
       });
-      console.log('➡️ [VERIFY-PHONE] Redirection vers /consent-geolocation');
-      setLocation("/consent-geolocation");
+      console.log('➡️ [VERIFY-PHONE] Redirection vers /location-city');
+      setLocation("/location-city");
     },
     onError: (error: any) => {
       toast({

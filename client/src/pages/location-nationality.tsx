@@ -70,10 +70,10 @@ export default function LocationNationality() {
       console.log('✅ [NATIONALITY] Nationalité enregistrée');
       toast({
         title: "Nationalité enregistrée",
-        description: "Passons aux conditions d'utilisation",
+        description: "Passons à la géolocalisation",
       });
-      console.log('➡️ [NATIONALITY] Redirection vers /consent-terms');
-      setLocation("/consent-terms");
+      console.log('➡️ [NATIONALITY] Redirection vers /consent-geolocation');
+      setLocation("/consent-geolocation");
     },
     onError: (error: any) => {
       console.error('❌ [NATIONALITY] Erreur:', error);

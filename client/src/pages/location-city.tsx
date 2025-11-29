@@ -44,7 +44,7 @@ export default function LocationCity() {
       return;
     }
 
-    // GUARD CHECK: Verify prerequisites before allowing location update
+    // GUARD CHECK: Verify phone is verified before allowing location update
     const checkPrerequisites = async () => {
       try {
         console.log('🔍 [CITY] Vérification des prérequis...');
@@ -57,10 +57,7 @@ export default function LocationCity() {
         
         const session = await response.json();
         console.log('📋 [CITY] État de session:', {
-          phoneVerified: session.phoneVerified,
-          geolocationConsent: session.geolocationConsent,
-          termsAccepted: session.termsAccepted,
-          deviceBindingConsent: session.deviceBindingConsent
+          phoneVerified: session.phoneVerified
         });
         
         // Block if phone not verified
@@ -75,19 +72,7 @@ export default function LocationCity() {
           return;
         }
         
-        // Block if consents not complete
-        if (!session.geolocationConsent || !session.termsAccepted || !session.deviceBindingConsent) {
-          console.error('❌ [CITY] Consentements manquants - redirection vers consent pages');
-          toast({
-            title: "Étape manquante",
-            description: "Veuillez d'abord donner vos consentements",
-            variant: "destructive",
-          });
-          setLocation("/consent-geolocation");
-          return;
-        }
-        
-        console.log('✅ [CITY] Tous les prérequis OK');
+        console.log('✅ [CITY] Téléphone vérifié - OK pour localisation');
         setSessionId(storedSessionId);
       } catch (error) {
         console.error('❌ [CITY] Erreur vérification:', error);
