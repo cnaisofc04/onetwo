@@ -13,6 +13,8 @@ import {
   securityContextMiddleware,
 } from './security-middleware';
 import { globalErrorHandler } from './error-handler';
+import { storageFactory } from './storage-factory';
+import { testAllSupabaseConnections } from './supabase-client';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -30,6 +32,16 @@ app.use(secureCorsMiddleware());
 // Startup
 (async () => {
   try {
+    // Initialiser la factory de storage (détecte Replit vs Supabase)
+    console.log('\n🏭 [STARTUP] Initialisation layer storage...');
+    await storageFactory.initialize();
+
+    // Test connexions Supabase si actif
+    if (storageFactory.getBackend() === 'supabase') {
+      console.log('\n🧪 [STARTUP] Test connexions Supabase...');
+      await testAllSupabaseConnections();
+    }
+
     // Setup routes
     await registerRoutes(app);
 
