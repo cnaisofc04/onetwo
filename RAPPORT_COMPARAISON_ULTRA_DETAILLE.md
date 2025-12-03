@@ -220,10 +220,7 @@ STATUS: 🟡 PARTIAL - Core auth fonctionne, profiling complet à faire
     ├─ 404 page
     └─ Home link
 
-❌ MANQUANTES (3 pages):
-
-19. Welcome/Landing page
-    └─ Premier écran de l'app
+❌ MANQUANTES (2 pages):
 
 20. Auth Choice page
     ├─ S'inscrire / Se connecter
@@ -235,9 +232,9 @@ STATUS: 🟡 PARTIAL - Core auth fonctionne, profiling complet à faire
     └─ Profile browsing
 
 📊 PAGES AUDIT:
-Complètes:        18 pages (85%)
-Manquantes:        3 pages (15%)
-À compléter:       home.tsx (missing UI components)
+Complètes:        19 pages (90%)
+Manquantes:        2 pages (10%)
+Note: home.tsx sert de Welcome/Landing page (✅ VALIDÉE)
 ```
 
 ---
