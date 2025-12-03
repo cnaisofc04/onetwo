@@ -6,8 +6,8 @@ echo ""
 
 # Tuer les anciens processus sur 3001 et 5000
 echo "🧹 Nettoyage anciens processus..."
-lsof -ti:3001 | xargs kill -9 2>/dev/null || true
-lsof -ti:5000 | xargs kill -9 2>/dev/null || true
+pkill -f "tsx server/index.ts" 2>/dev/null || true
+pkill -f "vite --host 0.0.0.0 --port 5000" 2>/dev/null || true
 
 echo "✅ Ports nettoyés"
 echo ""
