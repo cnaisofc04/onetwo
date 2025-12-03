@@ -701,7 +701,7 @@ Responsive:            ✅ MOBILE-FIRST
    ├─ Like/Dislike/SuperLike system
    ├─ Matches tab
    ├─ User profile viewing
-   ├─ Chat/Messaging (future)
+   ├─ Système de commentaires (photos, vidéos, carousel, story)
    ├─ Notifications
    ├─ Premium features
    └─ Admin dashboard
