@@ -1,6 +1,7 @@
 node_modules
 dist
 .DS_Store
+
 # Local env files
 .env
 .env.local
@@ -12,3 +13,22 @@ dist
 secrets.json
 secrets-migration.json
 .doppler
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Doppler secrets
+doppler.json
+.doppler
+*DOPPLER_TOKEN*
+
+# ---------------------------------------------------------
+# SENSITIVE FILES – NEVER TRACK THESE AGAIN
+# ---------------------------------------------------------
+
+# Sensitive Markdown reports
+AUDIT_FINAL_COMPLET_21_NOV.md
+SOLUTION
+
