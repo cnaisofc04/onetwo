@@ -1,0 +1,185 @@
+🚀 DÉMARRAGE ONETWO - BACKEND + FRONTEND
+========================================
+
+🧹 Nettoyage anciens processus...
+✅ Ports nettoyés
+
+🔧 Démarrage backend (port 3001)...
+✅ Backend PID: 1495
+ [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+
+🏭 [STARTUP] Initialisation layer storage...
+
+🏭 [STORAGE] Initialisation Factory Storage
+✅ [STORAGE] Backend: REPLIT (Neon PostgreSQL)
+📊 [STORAGE] Backend actif: REPLIT
+
+
+🔐 [STARTUP] Vérification des secrets Doppler...
+📧 RESEND_API_KEY: ✅ CHARGÉ (re_iYEmPrW...)
+📱 TWILIO_ACCOUNT_SID: ✅ CHARGÉ
+📱 TWILIO_AUTH_TOKEN: ✅ CHARGÉ
+📱 TWILIO_PHONE_NUMBER: ✅ CHARGÉ
+⏱️ [CLEANUP] Interval de nettoyage: 5 minutes
+
+✅ [BACKEND] Démarré sur http://0.0.0.0:3001
+📡 [PROXY] Frontend sur 5000 → API sur 3001
+🚀 OneTwo application ready!
+
+🎨 Démarrage frontend (port 5000)...
+
+  VITE v6.4.1  ready in 331 ms
+
+  ➜  Local:   http://localhost:5000/
+  ➜  Network: http://172.31.66.226:5000/
+  ➜  press h + enter to show help
+
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+👤 [CHECK-PSEUDO] Vérification: gabriel
+✅ [CHECK-PSEUDO] Pseudonyme disponible
+📧 [CHECK-EMAIL] Vérification: cnaisofc04@gmail.com
+✅ [CHECK-EMAIL] Email disponible
+
+🟢 [SESSION] Début création session
+📝 [SESSION] Body: {
+  "language": "fr",
+  "pseudonyme": "gabriel",
+  "dateOfBirth": "1989-12-07",
+  "email": "cnaisofc04@gmail.com",
+  "phone": "+33624041138",
+  "gender": "Mr",
+  "password": "@Pass2025"
+}
+🌍 [SESSION] Langue: fr
+✅ [SESSION] Validation réussie
+📧 [SESSION] Email: cnaisofc04@gmail.com
+👤 [SESSION] Pseudonyme: gabriel
+🔍 [SESSION] Vérification email existant...
+✅ [SESSION] Email disponible
+🔍 [SESSION] Vérification pseudonyme existant...
+✅ [SESSION] Pseudonyme disponible
+🔐 [SESSION] Hachage du mot de passe...
+✅ [SESSION] Mot de passe haché
+💾 [SESSION] Création en base de données...
+✅ [SESSION] Session créée: fc635072-3a23-4987-9524-151637a3cc1a
+📱 [SESSION] Téléphone enregistré: +33624041138
+👤 [SESSION] Genre enregistré: Mr
+🔑 [SESSION] Génération code email...
+🔑 [VERIFY] Code généré: 889412 (✅ crypto-secure)
+📬 [SESSION] Code: 889412 (expire: 2025-12-06T16:18:47.550Z)
+💾 [SESSION] Enregistrement code en base...
+✅ [SESSION] Code enregistré
+📧 [SESSION] Envoi email...
+📧 [EMAIL] Tentative envoi à cnaisofc04@gmail.com avec code 889412
+✅ [EMAIL] Envoyé avec succès: unknown
+✅ [SESSION] Email envoyé
+🔑 [SESSION] Génération code SMS...
+🔑 [VERIFY] Code généré: 673742 (✅ crypto-secure)
+📬 [SESSION] Code SMS: 673742 (expire: 2025-12-06T16:18:47.728Z)
+💾 [SESSION] Enregistrement code SMS en base...
+✅ [SESSION] Code SMS enregistré
+📱 [SESSION] Envoi SMS...
+📱 [SMS] Tentative envoi à +33624041138 avec code 673742
+❌ [SMS] Erreur: RestException [Error]: 'From' +76225300881 is not a Twilio phone number or Short Code country mismatch
+    at success (/home/runner/workspace/node_modules/twilio/lib/base/Version.js:79:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Function.sendPhoneVerification (/home/runner/workspace/server/verification-service.ts:64:24)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:161:23) {
+  status: 400,
+  code: 21659,
+  moreInfo: 'https://www.twilio.com/docs/errors/21659',
+  details: undefined
+}
+❌ [SESSION] SMS ÉCHEC
+⚠️  [SESSION] Code SMS visible en console pour test: 673742
+🎉 [SESSION] Réponse envoyée au client
+
+
+🔵 [VERIFY-EMAIL-API] Début vérification email
+🔵 [VERIFY-EMAIL-API] SessionId: fc635072-3a23-4987-9524-151637a3cc1a
+🔵 [VERIFY-EMAIL-API] Body: {
+  "code": "673742"
+}
+🔍 [VERIFY-EMAIL-API] Vérification du code: 673742
+❌ [VERIFY-EMAIL-API] Code invalide ou expiré
+
+🔵 [VERIFY-EMAIL-API] Début vérification email
+🔵 [VERIFY-EMAIL-API] SessionId: fc635072-3a23-4987-9524-151637a3cc1a
+🔵 [VERIFY-EMAIL-API] Body: {
+  "code": "889412"
+}
+🔍 [VERIFY-EMAIL-API] Vérification du code: 889412
+✅ [VERIFY-EMAIL-API] Email vérifié avec succès!
+📖 [GET-SESSION] Récupération session: fc635072-3a23-4987-9524-151637a3cc1a
+✅ [GET-SESSION] Session trouvée
+
+🌍 [LOCATION] Début mise à jour localisation
+📝 [LOCATION] Body: {
+  "city": "Paris"
+}
+🆔 [LOCATION] SessionId: fc635072-3a23-4987-9524-151637a3cc1a
+✅ [LOCATION] Validation réussie
+💾 [LOCATION] Mise à jour en base...
+💾 [STORAGE] Mise à jour location session fc635072-3a23-4987-9524-151637a3cc1a: { city: 'Paris' }
+✅ [STORAGE] Location mise à jour pour session fc635072-3a23-4987-9524-151637a3cc1a
+✅ [LOCATION] Localisation mise à jour
+🏙️ [LOCATION] Ville: Paris
+🌍 [LOCATION] Pays: non défini
+🛂 [LOCATION] Nationalité: non définie
+
+🌍 [LOCATION] Début mise à jour localisation
+📝 [LOCATION] Body: {
+  "country": "France"
+}
+🆔 [LOCATION] SessionId: fc635072-3a23-4987-9524-151637a3cc1a
+✅ [LOCATION] Validation réussie
+💾 [LOCATION] Mise à jour en base...
+💾 [STORAGE] Mise à jour location session fc635072-3a23-4987-9524-151637a3cc1a: { country: 'France' }
+✅ [STORAGE] Location mise à jour pour session fc635072-3a23-4987-9524-151637a3cc1a
+✅ [LOCATION] Localisation mise à jour
+🏙️ [LOCATION] Ville: Paris
+🌍 [LOCATION] Pays: France
+🛂 [LOCATION] Nationalité: non définie
+
+🌍 [LOCATION] Début mise à jour localisation
+📝 [LOCATION] Body: {
+  "nationality": "Bresilienne"
+}
+🆔 [LOCATION] SessionId: fc635072-3a23-4987-9524-151637a3cc1a
+✅ [LOCATION] Validation réussie
+💾 [LOCATION] Mise à jour en base...
+💾 [STORAGE] Mise à jour location session fc635072-3a23-4987-9524-151637a3cc1a: { nationality: 'Bresilienne' }
+✅ [STORAGE] Location mise à jour pour session fc635072-3a23-4987-9524-151637a3cc1a
+✅ [LOCATION] Localisation mise à jour
+🏙️ [LOCATION] Ville: Paris
+🌍 [LOCATION] Pays: France
+🛂 [LOCATION] Nationalité: Bresilienne
+
+🎯 [COMPLETE] Début finalisation inscription
+🆔 [COMPLETE] SessionId: fc635072-3a23-4987-9524-151637a3cc1a
+✅ [COMPLETE] Session trouvée
+📋 [COMPLETE] État de session avant vérifications:
+  - emailVerified: true
+  - phoneVerified: true
+  - gender: Mr
+  - password: ***
+  - phone: +33624041138
+  - geolocationConsent: true
+  - termsAccepted: true
+  - deviceBindingConsent: true
+🔍 [COMPLETE] Vérification consentements: true
+✅ [COMPLETE] Toutes les vérifications OK - CRÉATION USER
+💾 [COMPLETE] Création utilisateur final...
+✅ [COMPLETE] Utilisateur créé: 84a2ac3d-26ae-490e-98da-4ab67948cd4a
+🏙️ [COMPLETE] Ville: Paris
+🌍 [COMPLETE] Pays: France
+🛂 [COMPLETE] Nationalité: Bresilienne
+🗑️ [COMPLETE] Suppression session temporaire...
+✅ [COMPLETE] Session supprimée
+🎉 [COMPLETE] Inscription finalisée avec succès!
+
+🔐 [STORAGE] Création token reset pour cnaisofc04@gmail.com
+✅ [STORAGE] Token reset créé pour cnaisofc04@gmail.com
+📧 [PASSWORD-RESET] Tentative envoi email reset à cnaisofc04@gmail.com
+✅ [PASSWORD-RESET] Email envoyé avec succès: unknown
+📧 [FORGOT-PASSWORD] Email de réinitialisation envoyé à cnaisofc04@gmail.com
