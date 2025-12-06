@@ -7,24 +7,16 @@ const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
 const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER;
 
-const isDevelopment = process.env.NODE_ENV !== 'production';
-
-let resend: Resend | null = null;
-let twilioClient: ReturnType<typeof twilio> | null = null;
-
-if (RESEND_API_KEY) {
-  resend = new Resend(RESEND_API_KEY);
-  console.log('✅ [VERIFY] Resend client initialized');
-} else {
-  console.warn('⚠️ [VERIFY] RESEND_API_KEY not configured - email verification disabled');
+// Vérifier que les clés existent
+if (!RESEND_API_KEY) {
+  throw new Error('❌ RESEND_API_KEY est manquante! Vérifiez Doppler.');
+}
+if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
+  throw new Error('❌ Twilio credentials manquantes! Vérifiez Doppler.');
 }
 
-if (TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN && TWILIO_PHONE_NUMBER) {
-  twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
-  console.log('✅ [VERIFY] Twilio client initialized');
-} else {
-  console.warn('⚠️ [VERIFY] Twilio credentials not configured - SMS verification disabled');
-}
+const resend = new Resend(RESEND_API_KEY);
+const twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 
 export class VerificationService {
   static generateVerificationCode(): string {
@@ -39,11 +31,6 @@ export class VerificationService {
   }
 
   static async sendEmailVerification(email: string, code: string): Promise<boolean> {
-    if (!resend) {
-      console.log(`📧 [EMAIL] Mock envoi à ${email} avec code ${code} (Resend non configuré)`);
-      return isDevelopment;
-    }
-
     try {
       console.log(`📧 [EMAIL] Tentative envoi à ${email} avec code ${code}`);
       
@@ -71,11 +58,6 @@ export class VerificationService {
   }
 
   static async sendPhoneVerification(phone: string, code: string): Promise<boolean> {
-    if (!twilioClient) {
-      console.log(`📱 [SMS] Mock envoi à ${phone} avec code ${code} (Twilio non configuré)`);
-      return isDevelopment;
-    }
-
     try {
       console.log(`📱 [SMS] Tentative envoi à ${phone} avec code ${code}`);
       
@@ -94,11 +76,6 @@ export class VerificationService {
   }
 
   static async sendPasswordResetEmail(email: string, resetUrl: string): Promise<boolean> {
-    if (!resend) {
-      console.log(`📧 [PASSWORD-RESET] Mock envoi à ${email} (Resend non configuré)`);
-      return isDevelopment;
-    }
-
     try {
       console.log(`📧 [PASSWORD-RESET] Tentative envoi email reset à ${email}`);
       
