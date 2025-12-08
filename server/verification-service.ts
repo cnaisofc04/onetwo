@@ -7,29 +7,25 @@ const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
 const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER;
 
-// Vérifier que les clés existent ET ne sont pas des placeholders
-if (!RESEND_API_KEY || RESEND_API_KEY.includes('VOTRE_CLE') || RESEND_API_KEY.length < 20) {
-  console.error('❌ RESEND_API_KEY invalide dans Doppler:', RESEND_API_KEY?.substring(0, 20));
-  throw new Error('❌ RESEND_API_KEY est invalide! Valeur actuelle: ' + (RESEND_API_KEY || 'vide'));
+// Vérifier que les clés existent
+if (!RESEND_API_KEY) {
+  console.warn('⚠️ RESEND_API_KEY manquante!');
 }
-if (!TWILIO_ACCOUNT_SID || TWILIO_ACCOUNT_SID.length !== 34 || !TWILIO_ACCOUNT_SID.startsWith('AC')) {
-  console.error('❌ TWILIO_ACCOUNT_SID invalide dans Doppler:', TWILIO_ACCOUNT_SID);
-  throw new Error('❌ TWILIO_ACCOUNT_SID invalide! Doit faire 34 caractères et commencer par AC');
+if (!TWILIO_ACCOUNT_SID) {
+  console.warn('⚠️ TWILIO_ACCOUNT_SID manquant!');
 }
-if (!TWILIO_AUTH_TOKEN || TWILIO_AUTH_TOKEN.length !== 32) {
-  console.error('❌ TWILIO_AUTH_TOKEN invalide dans Doppler - longueur:', TWILIO_AUTH_TOKEN?.length);
-  throw new Error('❌ TWILIO_AUTH_TOKEN invalide! Doit faire 32 caractères');
+if (!TWILIO_AUTH_TOKEN) {
+  console.warn('⚠️ TWILIO_AUTH_TOKEN manquant!');
 }
-if (!TWILIO_PHONE_NUMBER || !TWILIO_PHONE_NUMBER.startsWith('+')) {
-  console.error('❌ TWILIO_PHONE_NUMBER invalide dans Doppler:', TWILIO_PHONE_NUMBER);
-  throw new Error('❌ TWILIO_PHONE_NUMBER invalide! Doit commencer par +');
+if (!TWILIO_PHONE_NUMBER) {
+  console.warn('⚠️ TWILIO_PHONE_NUMBER manquant!');
 }
 
-console.log('✅ Secrets validés:');
-console.log('  - RESEND_API_KEY:', RESEND_API_KEY.substring(0, 10) + '...');
-console.log('  - TWILIO_ACCOUNT_SID:', TWILIO_ACCOUNT_SID.substring(0, 10) + '...');
-console.log('  - TWILIO_AUTH_TOKEN: [MASKED]');
-console.log('  - TWILIO_PHONE_NUMBER:', TWILIO_PHONE_NUMBER);
+console.log('📧 Secrets chargés:');
+console.log('  - RESEND_API_KEY:', RESEND_API_KEY ? (RESEND_API_KEY.substring(0, 10) + '...') : '❌ MANQUANT');
+console.log('  - TWILIO_ACCOUNT_SID:', TWILIO_ACCOUNT_SID ? (TWILIO_ACCOUNT_SID.substring(0, 10) + '...') : '❌ MANQUANT');
+console.log('  - TWILIO_AUTH_TOKEN:', TWILIO_AUTH_TOKEN ? '[MASKED]' : '❌ MANQUANT');
+console.log('  - TWILIO_PHONE_NUMBER:', TWILIO_PHONE_NUMBER || '❌ MANQUANT');
 
 const resend = new Resend(RESEND_API_KEY);
 const twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
