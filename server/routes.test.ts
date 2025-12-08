@@ -23,8 +23,9 @@ describe('API Routes - Authentication', () => {
   });
 
   beforeEach(() => {
-    vi.spyOn(VerificationService, 'sendEmailVerification').mockResolvedValue(true);
-    vi.spyOn(VerificationService, 'sendPhoneVerification').mockResolvedValue(true);
+    // Don't mock - use real API calls via Doppler
+    // vi.spyOn(VerificationService, 'sendEmailVerification').mockResolvedValue(true);
+    // vi.spyOn(VerificationService, 'sendPhoneVerification').mockResolvedValue(true);
   });
 
   describe('POST /api/auth/signup', () => {

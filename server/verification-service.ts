@@ -60,6 +60,19 @@ export class VerificationService {
     return expiry;
   }
 
+  static isCodeValid(storedCode: string, providedCode: string, expiry: Date): boolean {
+    if (new Date() > expiry) {
+      console.log('❌ Code expiré');
+      return false;
+    }
+    if (storedCode !== providedCode) {
+      console.log('❌ Code invalide');
+      return false;
+    }
+    console.log('✅ Code valide');
+    return true;
+  }
+
   static async sendEmailVerification(email: string, code: string): Promise<boolean> {
     try {
       console.log(`📧 [EMAIL] Tentative envoi RÉEL à ${email} avec code ${code}`);
