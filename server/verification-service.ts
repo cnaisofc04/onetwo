@@ -27,8 +27,8 @@ console.log('  - TWILIO_ACCOUNT_SID:', TWILIO_ACCOUNT_SID ? (TWILIO_ACCOUNT_SID.
 console.log('  - TWILIO_AUTH_TOKEN:', TWILIO_AUTH_TOKEN ? '[MASKED]' : '❌ MANQUANT');
 console.log('  - TWILIO_PHONE_NUMBER:', TWILIO_PHONE_NUMBER || '❌ MANQUANT');
 
-const resend = new Resend(RESEND_API_KEY);
-const twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
+const twilioClient = (TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN) ? twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN) : null;
 
 export class VerificationService {
   static generateVerificationCode(): string {
@@ -45,6 +45,12 @@ export class VerificationService {
   static async sendEmailVerification(email: string, code: string): Promise<boolean> {
     try {
       console.log(`📧 [EMAIL] Tentative envoi à ${email} avec code ${code}`);
+      
+      if (!resend) {
+        console.warn('⚠️ [EMAIL] Resend non configuré - simulation d\'envoi');
+        console.log(`🔑 [DEV MODE] Code pour ${email}: ${code}`);
+        return true;
+      }
       
       const response = await resend.emails.send({
         from: 'onboarding@resend.dev',
@@ -73,6 +79,12 @@ export class VerificationService {
     try {
       console.log(`📱 [SMS] Tentative envoi à ${phone} avec code ${code}`);
       
+      if (!twilioClient || !TWILIO_PHONE_NUMBER) {
+        console.warn('⚠️ [SMS] Twilio non configuré - simulation d\'envoi');
+        console.log(`🔑 [DEV MODE] Code pour ${phone}: ${code}`);
+        return true;
+      }
+      
       const response = await twilioClient.messages.create({
         body: `OneTwo - Code de vérification: ${code}`,
         from: TWILIO_PHONE_NUMBER,
@@ -90,6 +102,12 @@ export class VerificationService {
   static async sendPasswordResetEmail(email: string, resetUrl: string): Promise<boolean> {
     try {
       console.log(`📧 [PASSWORD-RESET] Tentative envoi email reset à ${email}`);
+      
+      if (!resend) {
+        console.warn('⚠️ [PASSWORD-RESET] Resend non configuré - simulation d\'envoi');
+        console.log(`🔗 [DEV MODE] Reset URL pour ${email}: ${resetUrl}`);
+        return true;
+      }
       
       const response = await resend.emails.send({
         from: 'onboarding@resend.dev',
