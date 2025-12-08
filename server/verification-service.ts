@@ -148,6 +148,7 @@ export class VerificationService {
 
       const emailId = response.data?.id || 'unknown';
       console.log(`✅ [PASSWORD-RESET] Email envoyé avec succès via Resend: ${emailId}`);
+      console.log(`🔗 [PASSWORD-RESET] Lien de reset: ${resetUrl}`);
       return true;
     } catch (error) {
       console.error(`❌ [PASSWORD-RESET] Erreur Resend:`, error);
