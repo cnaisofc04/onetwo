@@ -27,15 +27,26 @@ console.log('  - TWILIO_ACCOUNT_SID:', TWILIO_ACCOUNT_SID ? (TWILIO_ACCOUNT_SID.
 console.log('  - TWILIO_AUTH_TOKEN:', TWILIO_AUTH_TOKEN ? '[MASKED]' : '❌ MANQUANT');
 console.log('  - TWILIO_PHONE_NUMBER:', TWILIO_PHONE_NUMBER || '❌ MANQUANT');
 
-if (!RESEND_API_KEY) {
-  throw new Error('❌ RESEND_API_KEY est OBLIGATOIRE pour l\'envoi d\'emails. Configurez Doppler ou ajoutez le secret.');
-}
-if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
-  throw new Error('❌ TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN et TWILIO_PHONE_NUMBER sont OBLIGATOIRES pour l\'envoi de SMS. Configurez Doppler ou ajoutez les secrets.');
+const isResendConfigured = RESEND_API_KEY && RESEND_API_KEY !== 'VOTRE_CLE_COMPLETE_ICI' && RESEND_API_KEY.startsWith('re_');
+const isTwilioConfigured = TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN && TWILIO_PHONE_NUMBER && TWILIO_ACCOUNT_SID.startsWith('AC');
+
+if (!isResendConfigured) {
+  console.error('❌ RESEND_API_KEY invalide ou placeholder! Valeur actuelle:', RESEND_API_KEY?.substring(0, 10) || 'VIDE');
+  console.error('   Les vraies cles Resend commencent par "re_"');
+  console.error('   Mettez a jour la cle dans Doppler: https://dashboard.doppler.com');
 }
 
-const resend = new Resend(RESEND_API_KEY);
-const twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+if (!isTwilioConfigured) {
+  console.error('❌ Configuration Twilio invalide!');
+  console.error('   TWILIO_ACCOUNT_SID doit commencer par "AC"');
+}
+
+const resend = isResendConfigured ? new Resend(RESEND_API_KEY) : null;
+const twilioClient = isTwilioConfigured ? twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN) : null;
+
+console.log('📧 Services de verification:');
+console.log('  - Resend (Email):', isResendConfigured ? '✅ CONFIGURE' : '❌ NON CONFIGURE');
+console.log('  - Twilio (SMS):', isTwilioConfigured ? '✅ CONFIGURE' : '❌ NON CONFIGURE');
 
 export class VerificationService {
   static generateVerificationCode(): string {
@@ -52,6 +63,12 @@ export class VerificationService {
   static async sendEmailVerification(email: string, code: string): Promise<boolean> {
     try {
       console.log(`📧 [EMAIL] Tentative envoi RÉEL à ${email} avec code ${code}`);
+      
+      if (!resend) {
+        console.error('❌ [EMAIL] Resend NON CONFIGURE - impossible d\'envoyer l\'email');
+        console.error('   Configurez RESEND_API_KEY dans Doppler avec une vraie cle (commence par "re_")');
+        return false;
+      }
       
       const response = await resend.emails.send({
         from: 'onboarding@resend.dev',
@@ -80,6 +97,12 @@ export class VerificationService {
     try {
       console.log(`📱 [SMS] Tentative envoi RÉEL à ${phone} avec code ${code}`);
       
+      if (!twilioClient) {
+        console.error('❌ [SMS] Twilio NON CONFIGURE - impossible d\'envoyer le SMS');
+        console.error('   Configurez TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN et TWILIO_PHONE_NUMBER dans Doppler');
+        return false;
+      }
+      
       const response = await twilioClient.messages.create({
         body: `OneTwo - Code de vérification: ${code}`,
         from: TWILIO_PHONE_NUMBER,
@@ -97,6 +120,11 @@ export class VerificationService {
   static async sendPasswordResetEmail(email: string, resetUrl: string): Promise<boolean> {
     try {
       console.log(`📧 [PASSWORD-RESET] Tentative envoi RÉEL email reset à ${email}`);
+      
+      if (!resend) {
+        console.error('❌ [PASSWORD-RESET] Resend NON CONFIGURE - impossible d\'envoyer l\'email');
+        return false;
+      }
       
       const response = await resend.emails.send({
         from: 'onboarding@resend.dev',
