@@ -27,8 +27,15 @@ console.log('  - TWILIO_ACCOUNT_SID:', TWILIO_ACCOUNT_SID ? (TWILIO_ACCOUNT_SID.
 console.log('  - TWILIO_AUTH_TOKEN:', TWILIO_AUTH_TOKEN ? '[MASKED]' : '❌ MANQUANT');
 console.log('  - TWILIO_PHONE_NUMBER:', TWILIO_PHONE_NUMBER || '❌ MANQUANT');
 
-const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
-const twilioClient = (TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN) ? twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN) : null;
+if (!RESEND_API_KEY) {
+  throw new Error('❌ RESEND_API_KEY est OBLIGATOIRE pour l\'envoi d\'emails. Configurez Doppler ou ajoutez le secret.');
+}
+if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
+  throw new Error('❌ TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN et TWILIO_PHONE_NUMBER sont OBLIGATOIRES pour l\'envoi de SMS. Configurez Doppler ou ajoutez les secrets.');
+}
+
+const resend = new Resend(RESEND_API_KEY);
+const twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 
 export class VerificationService {
   static generateVerificationCode(): string {
@@ -44,13 +51,7 @@ export class VerificationService {
 
   static async sendEmailVerification(email: string, code: string): Promise<boolean> {
     try {
-      console.log(`📧 [EMAIL] Tentative envoi à ${email} avec code ${code}`);
-      
-      if (!resend) {
-        console.warn('⚠️ [EMAIL] Resend non configuré - simulation d\'envoi');
-        console.log(`🔑 [DEV MODE] Code pour ${email}: ${code}`);
-        return true;
-      }
+      console.log(`📧 [EMAIL] Tentative envoi RÉEL à ${email} avec code ${code}`);
       
       const response = await resend.emails.send({
         from: 'onboarding@resend.dev',
@@ -67,23 +68,17 @@ export class VerificationService {
       });
 
       const emailId = response.data?.id || 'unknown';
-      console.log(`✅ [EMAIL] Envoyé avec succès: ${emailId}`);
+      console.log(`✅ [EMAIL] Envoyé avec succès via Resend: ${emailId}`);
       return true;
     } catch (error) {
-      console.error(`❌ [EMAIL] Erreur:`, error);
+      console.error(`❌ [EMAIL] Erreur Resend:`, error);
       return false;
     }
   }
 
   static async sendPhoneVerification(phone: string, code: string): Promise<boolean> {
     try {
-      console.log(`📱 [SMS] Tentative envoi à ${phone} avec code ${code}`);
-      
-      if (!twilioClient || !TWILIO_PHONE_NUMBER) {
-        console.warn('⚠️ [SMS] Twilio non configuré - simulation d\'envoi');
-        console.log(`🔑 [DEV MODE] Code pour ${phone}: ${code}`);
-        return true;
-      }
+      console.log(`📱 [SMS] Tentative envoi RÉEL à ${phone} avec code ${code}`);
       
       const response = await twilioClient.messages.create({
         body: `OneTwo - Code de vérification: ${code}`,
@@ -91,23 +86,17 @@ export class VerificationService {
         to: phone,
       });
 
-      console.log(`✅ [SMS] Envoyé avec succès: ${response.sid}`);
+      console.log(`✅ [SMS] Envoyé avec succès via Twilio: ${response.sid}`);
       return true;
     } catch (error) {
-      console.error(`❌ [SMS] Erreur:`, error);
+      console.error(`❌ [SMS] Erreur Twilio:`, error);
       return false;
     }
   }
 
   static async sendPasswordResetEmail(email: string, resetUrl: string): Promise<boolean> {
     try {
-      console.log(`📧 [PASSWORD-RESET] Tentative envoi email reset à ${email}`);
-      
-      if (!resend) {
-        console.warn('⚠️ [PASSWORD-RESET] Resend non configuré - simulation d\'envoi');
-        console.log(`🔗 [DEV MODE] Reset URL pour ${email}: ${resetUrl}`);
-        return true;
-      }
+      console.log(`📧 [PASSWORD-RESET] Tentative envoi RÉEL email reset à ${email}`);
       
       const response = await resend.emails.send({
         from: 'onboarding@resend.dev',
@@ -130,10 +119,10 @@ export class VerificationService {
       });
 
       const emailId = response.data?.id || 'unknown';
-      console.log(`✅ [PASSWORD-RESET] Email envoyé avec succès: ${emailId}`);
+      console.log(`✅ [PASSWORD-RESET] Email envoyé avec succès via Resend: ${emailId}`);
       return true;
     } catch (error) {
-      console.error(`❌ [PASSWORD-RESET] Erreur:`, error);
+      console.error(`❌ [PASSWORD-RESET] Erreur Resend:`, error);
       return false;
     }
   }
