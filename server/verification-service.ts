@@ -22,10 +22,10 @@ if (!TWILIO_PHONE_NUMBER) {
 }
 
 console.log('📧 Secrets chargés:');
-console.log('  - RESEND_API_KEY:', RESEND_API_KEY ? (RESEND_API_KEY.substring(0, 10) + '...') : '❌ MANQUANT');
-console.log('  - TWILIO_ACCOUNT_SID:', TWILIO_ACCOUNT_SID ? (TWILIO_ACCOUNT_SID.substring(0, 10) + '...') : '❌ MANQUANT');
-console.log('  - TWILIO_AUTH_TOKEN:', TWILIO_AUTH_TOKEN ? '[MASKED]' : '❌ MANQUANT');
-console.log('  - TWILIO_PHONE_NUMBER:', TWILIO_PHONE_NUMBER || '❌ MANQUANT');
+console.log('  - RESEND_API_KEY:', RESEND_API_KEY ? '[CONFIGURED]' : '❌ MANQUANT');
+console.log('  - TWILIO_ACCOUNT_SID:', TWILIO_ACCOUNT_SID ? '[CONFIGURED]' : '❌ MANQUANT');
+console.log('  - TWILIO_AUTH_TOKEN:', TWILIO_AUTH_TOKEN ? '[CONFIGURED]' : '❌ MANQUANT');
+console.log('  - TWILIO_PHONE_NUMBER:', TWILIO_PHONE_NUMBER ? '[CONFIGURED]' : '❌ MANQUANT');
 
 const isResendConfigured = RESEND_API_KEY && RESEND_API_KEY !== 'VOTRE_CLE_COMPLETE_ICI' && RESEND_API_KEY.startsWith('re_');
 const isTwilioConfigured = TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN && TWILIO_PHONE_NUMBER && TWILIO_ACCOUNT_SID.startsWith('AC');

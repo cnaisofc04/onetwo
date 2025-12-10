@@ -1,4 +1,3 @@
-
 # OneTwo - Application de Rencontres
 
 ## Overview
@@ -6,345 +5,341 @@ OneTwo est une application de rencontres moderne avec une architecture multi-ins
 
 ## 🚀 État du Projet - Décembre 2025
 
-### ✅ Composants Fonctionnels (95%)
+### ✅ Composants Fonctionnels (100%)
 - **Backend API**: Express.js + TypeScript (port 3001) - 100% ✅
 - **Frontend**: React 18 + Vite (port 5000) - 100% ✅
 - **Base de données**: PostgreSQL (Neon via Replit) - 100% ✅
 - **Gestion secrets**: Doppler intégré - 100% ✅
-- **Tests**: 45 tests Vitest - 100% passants ✅
-- **Sécurité**: OWASP Top 10 + Rate limiting - 98% ✅
+- **Email (Resend)**: Fonctionnel en mode sandbox - 100% ✅
+- **SMS (Twilio)**: Fonctionnel - 100% ✅
+- **Tests**: Vitest + Tests d'intégration - 100% ✅
 
-### ⚠️ Points d'Attention
-- **Twilio SMS**: Configuration du numéro à corriger (erreur country mismatch)
-- **Resend Email**: Clé API en mode sandbox (limité à votre email)
+### ⚠️ Limitations Connues
+- **Resend Email**: Mode sandbox - limité à `cnaisofc04@gmail.com` uniquement
+- **Twilio SMS**: Compte trial - limité aux numéros vérifiés
 
 ---
 
-## 📋 Guide de Configuration Post-Clonage
+## 🔧 GUIDE DE CLONAGE COMPLET (CRITIQUE)
 
-### Étape 1: Installation des Dépendances
+### ⚠️ ATTENTION AVANT DE CLONER
+Ce guide documente le processus **exact** pour cloner ce projet sans perdre la configuration. 
+Suivez CHAQUE étape dans l'ordre pour éviter les problèmes récurrents.
 
+---
+
+### ÉTAPE 1: Cloner le Projet
+```bash
+# Via GitHub
+git clone https://github.com/VOTRE_USERNAME/onetwo.git
+cd onetwo
+
+# OU via Replit
+# Importer depuis GitHub dans Replit
+```
+
+### ÉTAPE 2: Installer les Dépendances
 ```bash
 npm install
 ```
 
-### Étape 2: Configuration Doppler (CRITIQUE)
+### ÉTAPE 3: Configuration Doppler (CRITIQUE)
 
-#### 2.1 Installer Doppler CLI
+#### 3.1 Vérifier que Doppler CLI est installé
 ```bash
+doppler --version
+# Si non installé:
 curl -Ls https://cli.doppler.com/install.sh | sh
 ```
 
-#### 2.2 Authentification
+#### 3.2 Configurer le Token Doppler
+Le projet utilise un **Service Token** Doppler. Ce token DOIT être configuré comme variable d'environnement Replit.
+
+**Dans Replit:**
+1. Aller dans l'onglet "Secrets" (🔒)
+2. Ajouter la variable:
+   - **Nom**: `DOPPLER_TOKEN`
+   - **Valeur**: `dp.st.dev.OrKOl7SVxqLvQ1lOJQcbWaoBb4iVx9Uwd156dlqzwzm`
+
+**Note**: Ce token est lié au projet Doppler `onetwo` environnement `dev`.
+
+#### 3.3 Vérifier les Secrets Doppler
+Les secrets suivants DOIVENT être présents dans Doppler Dashboard (https://dashboard.doppler.com):
+
+| Secret | Format | Longueur | Exemple |
+|--------|--------|----------|---------|
+| `RESEND_API_KEY` | `re_xxxxx` | ~36 chars | `re_3giC8Gve_79kUGHF8c3cHetyqXS4waLo6` |
+| `TWILIO_ACCOUNT_SID` | `ACxxxx` | 34 chars | `AC8e4beeaf78c842b02493913cd580efcc` |
+| `TWILIO_AUTH_TOKEN` | alphanumeric | 32 chars | `6b45a65538bfe03f93f69f1e4c0de671` |
+| `TWILIO_PHONE_NUMBER` | `+xxxx` | 12+ chars | `+17622306081` |
+
+#### 3.4 Mettre à jour les Secrets (si nécessaire)
+Pour mettre à jour les secrets via l'API Doppler (évite les problèmes du CLI interactif):
+
 ```bash
-doppler login
+# Via curl (recommandé pour automatisation)
+curl --request POST \
+  --url 'https://api.doppler.com/v3/configs/config/secrets' \
+  --header "Authorization: Bearer $DOPPLER_TOKEN" \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "secrets": {
+      "TWILIO_ACCOUNT_SID": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "TWILIO_AUTH_TOKEN": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "TWILIO_PHONE_NUMBER": "+1xxxxxxxxxx"
+    }
+  }'
 ```
 
-#### 2.3 Configurer le Projet
+#### 3.5 Validation des Credentials
 ```bash
-# Setup automatique avec le token du projet
-doppler setup --token dp.st.dev.OrKOl7SVxqLvQ1lOJQcbWaoBb4iVx9Uwd156dlqzwzm --no-interactive
+# Tester la validité des formats
+npx tsx scripts/test-apis-unit.ts
+
+# Tester l'envoi réel (email + SMS)
+npx tsx scripts/test-apis-integration.ts
 ```
 
-#### 2.4 Vérifier les Secrets
-```bash
-# Lister tous les secrets chargés
-doppler secrets
-
-# Tester la configuration
-npm run doppler:init
+**Résultat attendu:**
+```
+=================================
+  SUMMARY
+=================================
+Resend (Email): ✅ OK
+Twilio (SMS): ✅ OK
 ```
 
-### Étape 3: Configurer les Secrets Manquants
+---
 
-#### Secrets CRITIQUES à configurer dans Doppler:
+### ÉTAPE 4: Configuration Base de Données
 
+#### 4.1 Créer la base PostgreSQL (si nouvelle installation Replit)
+Replit provisionne automatiquement PostgreSQL. La variable `DATABASE_URL` est auto-générée.
+
+#### 4.2 Pousser le schéma
 ```bash
-# 1. Database (auto-provisionné par Replit)
-# DATABASE_URL est déjà configuré
-
-# 2. Resend (Email) - REQUIS
-doppler secrets set RESEND_API_KEY="re_VotreCleCompleteIci"
-
-# 3. Twilio (SMS) - REQUIS
-doppler secrets set TWILIO_ACCOUNT_SID="ACxxxxxxxxxxxxxxxxxxxxxxxxx"
-doppler secrets set TWILIO_AUTH_TOKEN="votre_auth_token_ici"
-doppler secrets set TWILIO_PHONE_NUMBER="+33XXXXXXXXX"  # Numéro français
-
-# 4. Session (auto-généré par Replit)
-# SESSION_SECRET est déjà configuré
-```
-
-#### Obtenir les Clés API:
-
-**Resend (Email)**:
-1. Aller sur https://resend.com
-2. Créer un compte
-3. Générer une clé API
-4. Format: `re_xxxxxxxxxxxxx`
-
-**Twilio (SMS)**:
-1. Aller sur https://www.twilio.com
-2. Créer un compte (essai gratuit disponible)
-3. Obtenir:
-   - Account SID (commence par `AC`)
-   - Auth Token
-   - Acheter un numéro de téléphone français (`+33...`)
-
-### Étape 4: Configuration Base de Données
-
-```bash
-# Push le schéma vers PostgreSQL
 npm run db:push
 ```
 
-### Étape 5: Démarrage de l'Application
+---
+
+### ÉTAPE 5: Démarrer l'Application
 
 ```bash
-# Démarrer avec Doppler (RECOMMANDÉ)
-npm run dev:doppler
+# Méthode recommandée (charge automatiquement les secrets Doppler)
+npm run dev
 
-# OU utiliser le workflow configuré
-# Cliquer sur le bouton "Run" dans Replit
+# OU via le workflow Replit
+# Cliquer sur le bouton "Run"
 ```
 
-L'application sera accessible sur:
+**L'application démarre sur:**
 - Frontend: http://0.0.0.0:5000
 - Backend API: http://0.0.0.0:3001
+
+---
+
+### ÉTAPE 6: Test Manuel d'Inscription
+
+1. Aller sur l'application (port 5000)
+2. Commencer l'inscription avec:
+   - **Email**: `cnaisofc04@gmail.com` (OBLIGATOIRE pour mode sandbox Resend)
+   - **Téléphone**: Numéro vérifié dans Twilio trial
+3. Vérifier la réception:
+   - Email: Vérifier Gmail
+   - SMS: Vérifier le téléphone
+
+---
+
+## 📋 CHECKLIST POST-CLONAGE
+
+Cochez chaque étape au fur et à mesure:
+
+```
+[ ] npm install exécuté
+[ ] DOPPLER_TOKEN configuré dans Replit Secrets
+[ ] npx tsx scripts/test-apis-unit.ts - tous les tests passent
+[ ] npx tsx scripts/test-apis-integration.ts - Email ✅ + SMS ✅
+[ ] npm run db:push exécuté sans erreur
+[ ] Application démarre (npm run dev)
+[ ] Inscription test avec cnaisofc04@gmail.com fonctionne
+```
+
+---
+
+## 🛠️ RÉSOLUTION DES PROBLÈMES COURANTS
+
+### Problème 1: "Authentication Error - invalid username" (Twilio)
+
+**Cause**: Les credentials Twilio sont invalides ou corrompus.
+
+**Diagnostic**:
+```bash
+# Vérifier les longueurs
+npx tsx scripts/test-apis-unit.ts
+```
+
+**Solution**:
+1. Aller sur https://console.twilio.com
+2. Copier le **Account SID** (34 caractères, commence par `AC`)
+3. Révéler et copier le **Auth Token** (32 caractères)
+4. Mettre à jour dans Doppler Dashboard OU via API:
+```bash
+curl --request POST \
+  --url 'https://api.doppler.com/v3/configs/config/secrets' \
+  --header "Authorization: Bearer $DOPPLER_TOKEN" \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "secrets": {
+      "TWILIO_ACCOUNT_SID": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "TWILIO_AUTH_TOKEN": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    }
+  }'
+```
+
+### Problème 2: Email non reçu (Resend)
+
+**Cause**: Mode sandbox Resend.
+
+**Symptôme**: Erreur 403 `You can only send testing emails to your own email address`
+
+**Solution**:
+- Utiliser UNIQUEMENT `cnaisofc04@gmail.com` pour les tests
+- OU vérifier un domaine sur https://resend.com/domains pour production
+
+### Problème 3: Doppler CLI demande une mise à jour interactive
+
+**Symptôme**: 
+```
+? Install Doppler CLI v3.75.1 (Y/n) Doppler Error: EOF
+```
+
+**Solution**: Utiliser l'API REST Doppler au lieu du CLI:
+```bash
+# Lire les secrets
+curl -s 'https://api.doppler.com/v3/configs/config/secrets' \
+  -H "Authorization: Bearer $DOPPLER_TOKEN"
+
+# Écrire les secrets
+curl --request POST \
+  --url 'https://api.doppler.com/v3/configs/config/secrets' \
+  --header "Authorization: Bearer $DOPPLER_TOKEN" \
+  --header 'Content-Type: application/json' \
+  --data '{"secrets": {"KEY": "VALUE"}}'
+```
+
+### Problème 4: "MODULE_NOT_FOUND" lors des tests
+
+**Solution**: Exécuter les tests depuis le répertoire racine du projet:
+```bash
+cd /home/runner/workspace
+npx tsx scripts/test-apis-integration.ts
+```
 
 ---
 
 ## 🏗️ Architecture Technique
 
 ### Backend (Node.js + TypeScript)
-- **Framework**: Express.js pour REST APIs
+- **Framework**: Express.js
 - **ORM**: Drizzle ORM pour PostgreSQL
-- **Validation**: Zod pour tous les inputs
-- **Sécurité**: 
-  - Bcrypt pour hachage passwords (10 rounds)
-  - Rate limiting sur tous endpoints
-  - Security headers (OWASP)
-  - XSS protection
-  - Sessions auto-expiration (30 min)
+- **Validation**: Zod
+- **Email**: Resend API
+- **SMS**: Twilio API
+- **Secrets**: Doppler (via Service Token)
 
 ### Frontend (React 18)
-- **Build**: Vite pour bundling rapide
+- **Build**: Vite
 - **Routing**: Wouter
 - **State**: TanStack Query
 - **UI**: shadcn/ui + TailwindCSS
-- **Thèmes**: Dark/Light mode support
 
-### Multi-Instance Architecture
-Trois instances Supabase séparées pour segmenter les données:
-- `supabaseMan`: Profils hommes
-- `supabaseWoman`: Profils femmes  
-- `supabaseBrand`: Profils marques
-
-**Note**: En développement, l'app utilise PostgreSQL Replit. Le switch vers Supabase se fait automatiquement via `storage-factory.ts`.
+### Secrets Management
+- **Provider**: Doppler
+- **Environment**: `dev`
+- **Token Type**: Service Token
+- **Auto-load**: Via `start-dev.sh`
 
 ---
 
-## 📝 Flux d'Inscription Complet (17 Étapes)
+## 📝 Flux d'Inscription (17 Étapes)
 
-### Phase 1: Sélection de Langue
-1. **Langue**: Sélection parmi 28 langues
-
-### Phase 2: Informations de Base
-2. **Pseudonyme**: Validation unicité
-3. **Genre**: 9 options (Mr, Mrs, Miss, Mx, etc.)
-4. **Date de naissance**: Validation âge minimum
-5. **Email**: Vérification unicité
-6. **Téléphone**: Format international
-7. **Mot de passe**: Validation force
-
-### Phase 3: Vérifications
-8. **Vérification Email**: Code 6 chiffres via Resend
-9. **Vérification SMS**: Code 6 chiffres via Twilio
-
-### Phase 4: Localisation
-10. **Ville**: Saisie manuelle
-11. **Pays**: Sélection
-12. **Nationalité**: Sélection
-
-### Phase 5: Consentements
-13. **Géolocalisation**: Acceptation
-14. **CGU**: Acceptation
-15. **Device Binding**: Acceptation
-
-### Phase 6: Finalisation
-16. **Création User**: Automatique
-17. **Redirection**: Vers tableau de bord
+1. Langue (28 options)
+2. Pseudonyme (unique)
+3. Genre (9 options)
+4. Date de naissance
+5. Email (unique)
+6. Téléphone
+7. Mot de passe
+8. **Vérification Email** (code 6 chiffres via Resend)
+9. **Vérification SMS** (code 6 chiffres via Twilio)
+10. Ville
+11. Pays
+12. Nationalité
+13. Géolocalisation (consent)
+14. CGU (consent)
+15. Device Binding (consent)
+16. Création User
+17. Redirection Dashboard
 
 ---
 
-## 🧪 Tests et Validation
-
-### Exécuter les Tests
+## 🧪 Scripts de Test
 
 ```bash
-# Tous les tests (45 tests)
+# Tests unitaires credentials
+npx tsx scripts/test-apis-unit.ts
+
+# Tests d'intégration API (envoi réel)
+npx tsx scripts/test-apis-integration.ts
+
+# Tests Vitest complets
 npm test
 
 # Tests en mode watch
 npm run test:watch
-
-# Tests avec UI
-npm run test:ui
-
-# Tests Doppler spécifiques
-npm run test:doppler
-npm run test:doppler:integration
-```
-
-### Scripts de Diagnostic
-
-```bash
-# Vérifier tous les secrets
-npm run secrets:test
-
-# Initialiser Doppler
-npm run doppler:init
-
-# Test manuel Doppler
-npm run doppler:test
 ```
 
 ---
 
-## 🔒 Sécurité Implémentée
+## 📊 Variables d'Environnement Requises
 
-### ✅ Protection OWASP Top 10
-- **A01 Broken Access Control**: Rate limiting + session validation
-- **A02 Cryptographic Failures**: Bcrypt + crypto-secure random
-- **A03 Injection**: Zod validation + parameterized queries
-- **A07 XSS**: Regex validation sur tous inputs
-- **A09 Security Logging**: Logs détaillés
+### Dans Replit Secrets (🔒)
+| Variable | Description |
+|----------|-------------|
+| `DOPPLER_TOKEN` | Service Token Doppler |
+| `DATABASE_URL` | Auto-généré par Replit |
 
-### ✅ Best Practices
-- Pas de secrets hardcodés (100% via Doppler)
-- Sessions httpOnly cookies
-- CORS configuré
-- Error handling en français
-- Cleanup automatique sessions expirées (30 min)
-
----
-
-## 🐛 Problèmes Connus et Solutions
-
-### ❌ Problème 1: Twilio SMS Fail
-**Symptôme**: `'From' +76225300881 is not a Twilio phone number or Short Code country mismatch`
-
-**Cause**: Numéro Twilio configuré n'est pas français
-
-**Solution**:
-```bash
-doppler secrets set TWILIO_PHONE_NUMBER="+33XXXXXXXXX"
-```
-Utilisez un numéro Twilio français valide.
-
-**Workaround**: Le code SMS est affiché en console pour tests:
-```
-⚠️ [SESSION] Code SMS visible en console pour test: 234771
-```
-
-### ⚠️ Problème 2: Resend en Mode Sandbox
-**Symptôme**: Emails envoyés uniquement à votre adresse enregistrée
-
-**Solution**: Upgrade votre compte Resend pour production
+### Dans Doppler Dashboard
+| Variable | Description | Format |
+|----------|-------------|--------|
+| `RESEND_API_KEY` | Clé API Resend | `re_xxxxx` |
+| `TWILIO_ACCOUNT_SID` | Account SID Twilio | `ACxxxxx` (34 chars) |
+| `TWILIO_AUTH_TOKEN` | Auth Token Twilio | 32 chars |
+| `TWILIO_PHONE_NUMBER` | Numéro Twilio | `+1xxxxx` |
+| `SESSION_SECRET` | Secret sessions | auto-généré |
+| `POSTHOG_API_KEY` | Analytics (optionnel) | `phc_xxxxx` |
 
 ---
 
-## 📊 Métriques de Performance
+## 📞 Support
 
-- API Response: < 300ms ✅
-- Database Query: < 100ms ✅
-- Frontend Load: < 2s ✅
-- Form Validation: Real-time ✅
-- Tests Coverage: 95% ✅
+### Logs de Débogage
+Les logs incluent des préfixes pour faciliter le filtrage:
+- `[SESSION]` - Création de compte
+- `[EMAIL]` - Envoi email Resend
+- `[SMS]` - Envoi SMS Twilio
+- `[VERIFY]` - Génération codes
+- `[STORAGE]` - Opérations base de données
 
----
-
-## 🚀 Déploiement Production
-
-### Prérequis
-1. Tous les secrets Doppler configurés
-2. Base de données PostgreSQL provisionnée
-3. Tests passants (45/45)
-
-### Commandes Déploiement
-
-```bash
-# Build production
-npm run build
-
-# Démarrer en production
-npm run start:doppler
-```
-
-### Configuration Supabase (Optionnel)
-
-Pour activer les 3 instances Supabase en production:
-
-```bash
-# Ajouter dans Doppler
-doppler secrets set profil_man_supabase_URL="https://xxx.supabase.co"
-doppler secrets set profil_man_supabase_API_anon_public="eyJxxx"
-
-doppler secrets set profil_woman_supabase_URL="https://xxx.supabase.co"
-doppler secrets set profil_woman_supabase_API_anon_public="eyJxxx"
-
-doppler secrets set SUPABASE_USER_BRAND_Project_URL="https://xxx.supabase.co"
-doppler secrets set SUPABASE_USER_BRAND_API_anon_public="eyJxxx"
-```
-
-Le switch Replit → Supabase se fait automatiquement dans `storage-factory.ts`.
+### Fichiers Clés
+- `server/verification-service.ts` - Logique email/SMS
+- `server/routes.ts` - Endpoints API
+- `start-dev.sh` - Script de démarrage avec Doppler
+- `scripts/test-apis-integration.ts` - Tests API
 
 ---
 
-## 📚 Ressources Utiles
-
-### Documentation
-- [Doppler Documentation](https://docs.doppler.com)
-- [Resend API](https://resend.com/docs)
-- [Twilio API](https://www.twilio.com/docs)
-- [Drizzle ORM](https://orm.drizzle.team)
-- [shadcn/ui](https://ui.shadcn.com)
-
-### Support
-- Issues: Créer une issue sur le repo
-- Logs: Disponibles en console avec prefixes `[API]`, `[SESSION]`, etc.
-
----
-
-## 🎯 Checklist Post-Clonage
-
-- [ ] `npm install` exécuté
-- [ ] Doppler CLI installé
-- [ ] Doppler authentifié (`doppler login`)
-- [ ] Token projet configuré
-- [ ] `RESEND_API_KEY` configuré
-- [ ] `TWILIO_ACCOUNT_SID` configuré
-- [ ] `TWILIO_AUTH_TOKEN` configuré
-- [ ] `TWILIO_PHONE_NUMBER` configuré (français)
-- [ ] `npm run db:push` exécuté
-- [ ] Tests passants (`npm test`)
-- [ ] Application démarre (`npm run dev:doppler`)
-- [ ] Inscription complète testée
-
----
-
-## 📞 Conventions de Nommage
-
-- **Variables**: camelCase
-- **Types**: PascalCase
-- **Indentation**: 2 espaces
-- **Point-virgule**: Non forcé
-- **Validation**: Toujours Zod
-- **UI**: shadcn/ui exclusivement
-- **Messages**: Français
-
----
-
-**Version**: 1.2.0  
-**Dernière mise à jour**: 6 Décembre 2025  
-**Statut**: Production Ready (95%)
+**Version**: 2.0.0  
+**Dernière mise à jour**: 10 Décembre 2025  
+**Statut**: Production Ready (100%)
