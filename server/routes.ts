@@ -13,6 +13,15 @@ import {
   updateLocationSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  personalitySchema,
+  relationshipGoalsSchema,
+  orientationPreferencesSchema,
+  religionSchema,
+  eyeColorSchema,
+  hairColorSchema,
+  detailedPreferencesSchema,
+  shadowZoneSchema,
+  profileCompleteSchema,
   type InsertUser, 
   type LoginUser,
   type VerifyEmail,
@@ -1367,6 +1376,362 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: "Erreur lors du rappel",
         details: error instanceof Error ? error.message : 'Unknown error'
       });
+    }
+  });
+
+  // ========================================
+  // ONBOARDING API ROUTES
+  // ========================================
+
+  // GET /api/onboarding/profile - Get user profile for onboarding
+  app.get("/api/onboarding/profile", async (req: Request, res: Response) => {
+    try {
+      const userId = req.query.userId as string;
+      
+      if (!userId) {
+        return res.status(400).json({ error: "userId est requis" });
+      }
+
+      console.log(`📖 [ONBOARDING] Récupération profil pour userId: ${userId}`);
+      
+      let profile = await storage.getUserProfileByUserId(userId);
+      
+      if (!profile) {
+        console.log(`📝 [ONBOARDING] Création nouveau profil pour userId: ${userId}`);
+        profile = await storage.createUserProfile(userId);
+      }
+
+      console.log(`✅ [ONBOARDING] Profil trouvé/créé, étape: ${profile.onboardingStep}`);
+      return res.status(200).json({ profile });
+    } catch (error) {
+      console.error("❌ [ONBOARDING] Erreur récupération profil:", error);
+      return res.status(500).json({ 
+        error: "Erreur lors de la récupération du profil",
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // PATCH /api/onboarding/personality - Save personality data (step 2)
+  app.patch("/api/onboarding/personality", async (req: Request, res: Response) => {
+    try {
+      const { userId, ...data } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ error: "userId est requis" });
+      }
+
+      const validationResult = personalitySchema.safeParse(data);
+      if (!validationResult.success) {
+        const validationError = fromZodError(validationResult.error);
+        return res.status(400).json({ error: validationError.message });
+      }
+
+      console.log(`🧠 [ONBOARDING] Sauvegarde personnalité pour userId: ${userId}`);
+
+      let profile = await storage.getUserProfileByUserId(userId);
+      if (!profile) {
+        profile = await storage.createUserProfile(userId);
+      }
+
+      const updatedProfile = await storage.updateUserProfile(userId, {
+        ...validationResult.data,
+        onboardingStep: Math.max(profile.onboardingStep || 1, 2),
+      });
+
+      console.log(`✅ [ONBOARDING] Personnalité sauvegardée`);
+      return res.status(200).json({ message: "Personnalité sauvegardée", profile: updatedProfile });
+    } catch (error) {
+      console.error("❌ [ONBOARDING] Erreur personnalité:", error);
+      return res.status(500).json({ error: "Erreur lors de la sauvegarde" });
+    }
+  });
+
+  // PATCH /api/onboarding/relationship-goals - Save relationship goals (step 3)
+  app.patch("/api/onboarding/relationship-goals", async (req: Request, res: Response) => {
+    try {
+      const { userId, ...data } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ error: "userId est requis" });
+      }
+
+      const validationResult = relationshipGoalsSchema.safeParse(data);
+      if (!validationResult.success) {
+        const validationError = fromZodError(validationResult.error);
+        return res.status(400).json({ error: validationError.message });
+      }
+
+      console.log(`💕 [ONBOARDING] Sauvegarde objectifs relationnels pour userId: ${userId}`);
+
+      let profile = await storage.getUserProfileByUserId(userId);
+      if (!profile) {
+        profile = await storage.createUserProfile(userId);
+      }
+
+      const updatedProfile = await storage.updateUserProfile(userId, {
+        ...validationResult.data,
+        onboardingStep: Math.max(profile.onboardingStep || 1, 3),
+      });
+
+      console.log(`✅ [ONBOARDING] Objectifs relationnels sauvegardés`);
+      return res.status(200).json({ message: "Objectifs relationnels sauvegardés", profile: updatedProfile });
+    } catch (error) {
+      console.error("❌ [ONBOARDING] Erreur objectifs:", error);
+      return res.status(500).json({ error: "Erreur lors de la sauvegarde" });
+    }
+  });
+
+  // PATCH /api/onboarding/orientation-preferences - Save orientation preferences (step 4)
+  app.patch("/api/onboarding/orientation-preferences", async (req: Request, res: Response) => {
+    try {
+      const { userId, ...data } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ error: "userId est requis" });
+      }
+
+      const validationResult = orientationPreferencesSchema.safeParse(data);
+      if (!validationResult.success) {
+        const validationError = fromZodError(validationResult.error);
+        return res.status(400).json({ error: validationError.message });
+      }
+
+      console.log(`🌈 [ONBOARDING] Sauvegarde préférences orientation pour userId: ${userId}`);
+
+      let profile = await storage.getUserProfileByUserId(userId);
+      if (!profile) {
+        profile = await storage.createUserProfile(userId);
+      }
+
+      const updatedProfile = await storage.updateUserProfile(userId, {
+        ...validationResult.data,
+        onboardingStep: Math.max(profile.onboardingStep || 1, 4),
+      });
+
+      console.log(`✅ [ONBOARDING] Préférences orientation sauvegardées`);
+      return res.status(200).json({ message: "Préférences orientation sauvegardées", profile: updatedProfile });
+    } catch (error) {
+      console.error("❌ [ONBOARDING] Erreur orientation:", error);
+      return res.status(500).json({ error: "Erreur lors de la sauvegarde" });
+    }
+  });
+
+  // PATCH /api/onboarding/religion - Save religion choice (step 5)
+  app.patch("/api/onboarding/religion", async (req: Request, res: Response) => {
+    try {
+      const { userId, ...data } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ error: "userId est requis" });
+      }
+
+      const validationResult = religionSchema.safeParse(data);
+      if (!validationResult.success) {
+        const validationError = fromZodError(validationResult.error);
+        return res.status(400).json({ error: validationError.message });
+      }
+
+      console.log(`🙏 [ONBOARDING] Sauvegarde religion pour userId: ${userId}`);
+
+      let profile = await storage.getUserProfileByUserId(userId);
+      if (!profile) {
+        profile = await storage.createUserProfile(userId);
+      }
+
+      const updatedProfile = await storage.updateUserProfile(userId, {
+        ...validationResult.data,
+        onboardingStep: Math.max(profile.onboardingStep || 1, 5),
+      });
+
+      console.log(`✅ [ONBOARDING] Religion sauvegardée`);
+      return res.status(200).json({ message: "Religion sauvegardée", profile: updatedProfile });
+    } catch (error) {
+      console.error("❌ [ONBOARDING] Erreur religion:", error);
+      return res.status(500).json({ error: "Erreur lors de la sauvegarde" });
+    }
+  });
+
+  // PATCH /api/onboarding/eye-color - Save eye color (step 6)
+  app.patch("/api/onboarding/eye-color", async (req: Request, res: Response) => {
+    try {
+      const { userId, ...data } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ error: "userId est requis" });
+      }
+
+      const validationResult = eyeColorSchema.safeParse(data);
+      if (!validationResult.success) {
+        const validationError = fromZodError(validationResult.error);
+        return res.status(400).json({ error: validationError.message });
+      }
+
+      console.log(`👁️ [ONBOARDING] Sauvegarde couleur yeux pour userId: ${userId}`);
+
+      let profile = await storage.getUserProfileByUserId(userId);
+      if (!profile) {
+        profile = await storage.createUserProfile(userId);
+      }
+
+      const updatedProfile = await storage.updateUserProfile(userId, {
+        ...validationResult.data,
+        onboardingStep: Math.max(profile.onboardingStep || 1, 6),
+      });
+
+      console.log(`✅ [ONBOARDING] Couleur yeux sauvegardée`);
+      return res.status(200).json({ message: "Couleur yeux sauvegardée", profile: updatedProfile });
+    } catch (error) {
+      console.error("❌ [ONBOARDING] Erreur couleur yeux:", error);
+      return res.status(500).json({ error: "Erreur lors de la sauvegarde" });
+    }
+  });
+
+  // PATCH /api/onboarding/hair-color - Save hair color (step 7)
+  app.patch("/api/onboarding/hair-color", async (req: Request, res: Response) => {
+    try {
+      const { userId, ...data } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ error: "userId est requis" });
+      }
+
+      const validationResult = hairColorSchema.safeParse(data);
+      if (!validationResult.success) {
+        const validationError = fromZodError(validationResult.error);
+        return res.status(400).json({ error: validationError.message });
+      }
+
+      console.log(`💇 [ONBOARDING] Sauvegarde couleur cheveux pour userId: ${userId}`);
+
+      let profile = await storage.getUserProfileByUserId(userId);
+      if (!profile) {
+        profile = await storage.createUserProfile(userId);
+      }
+
+      const updatedProfile = await storage.updateUserProfile(userId, {
+        ...validationResult.data,
+        onboardingStep: Math.max(profile.onboardingStep || 1, 7),
+      });
+
+      console.log(`✅ [ONBOARDING] Couleur cheveux sauvegardée`);
+      return res.status(200).json({ message: "Couleur cheveux sauvegardée", profile: updatedProfile });
+    } catch (error) {
+      console.error("❌ [ONBOARDING] Erreur couleur cheveux:", error);
+      return res.status(500).json({ error: "Erreur lors de la sauvegarde" });
+    }
+  });
+
+  // PATCH /api/onboarding/detailed-preferences - Save detailed preferences (step 8)
+  app.patch("/api/onboarding/detailed-preferences", async (req: Request, res: Response) => {
+    try {
+      const { userId, ...data } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ error: "userId est requis" });
+      }
+
+      const validationResult = detailedPreferencesSchema.safeParse(data);
+      if (!validationResult.success) {
+        const validationError = fromZodError(validationResult.error);
+        return res.status(400).json({ error: validationError.message });
+      }
+
+      console.log(`⚙️ [ONBOARDING] Sauvegarde préférences détaillées pour userId: ${userId}`);
+
+      let profile = await storage.getUserProfileByUserId(userId);
+      if (!profile) {
+        profile = await storage.createUserProfile(userId);
+      }
+
+      const updatedProfile = await storage.updateUserProfile(userId, {
+        ...validationResult.data,
+        onboardingStep: Math.max(profile.onboardingStep || 1, 8),
+      });
+
+      console.log(`✅ [ONBOARDING] Préférences détaillées sauvegardées`);
+      return res.status(200).json({ message: "Préférences détaillées sauvegardées", profile: updatedProfile });
+    } catch (error) {
+      console.error("❌ [ONBOARDING] Erreur préférences:", error);
+      return res.status(500).json({ error: "Erreur lors de la sauvegarde" });
+    }
+  });
+
+  // PATCH /api/onboarding/shadow-zone - Save shadow zone settings (step 8 alternative)
+  app.patch("/api/onboarding/shadow-zone", async (req: Request, res: Response) => {
+    try {
+      const { userId, ...data } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ error: "userId est requis" });
+      }
+
+      const validationResult = shadowZoneSchema.safeParse(data);
+      if (!validationResult.success) {
+        const validationError = fromZodError(validationResult.error);
+        return res.status(400).json({ error: validationError.message });
+      }
+
+      console.log(`🌑 [ONBOARDING] Sauvegarde zone d'ombre pour userId: ${userId}`);
+
+      let profile = await storage.getUserProfileByUserId(userId);
+      if (!profile) {
+        profile = await storage.createUserProfile(userId);
+      }
+
+      const updatedProfile = await storage.updateUserProfile(userId, {
+        ...validationResult.data,
+        onboardingStep: Math.max(profile.onboardingStep || 1, 9),
+      });
+
+      console.log(`✅ [ONBOARDING] Zone d'ombre sauvegardée`);
+      return res.status(200).json({ message: "Zone d'ombre sauvegardée", profile: updatedProfile });
+    } catch (error) {
+      console.error("❌ [ONBOARDING] Erreur zone d'ombre:", error);
+      return res.status(500).json({ error: "Erreur lors de la sauvegarde" });
+    }
+  });
+
+  // POST /api/onboarding/profile-complete - Complete profile (steps 9-11)
+  app.post("/api/onboarding/profile-complete", async (req: Request, res: Response) => {
+    try {
+      const { userId, ...data } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ error: "userId est requis" });
+      }
+
+      const validationResult = profileCompleteSchema.safeParse(data);
+      if (!validationResult.success) {
+        const validationError = fromZodError(validationResult.error);
+        return res.status(400).json({ 
+          error: validationError.message,
+          details: validationResult.error.flatten()
+        });
+      }
+
+      console.log(`🎉 [ONBOARDING] Finalisation profil pour userId: ${userId}`);
+
+      let profile = await storage.getUserProfileByUserId(userId);
+      if (!profile) {
+        profile = await storage.createUserProfile(userId);
+      }
+
+      const updatedProfile = await storage.updateUserProfile(userId, {
+        ...validationResult.data,
+        onboardingStep: 11,
+        onboardingCompleted: true,
+      });
+
+      console.log(`✅ [ONBOARDING] Profil complet! Onboarding terminé.`);
+      return res.status(200).json({ 
+        message: "Profil complété avec succès! Bienvenue sur OneTwo!",
+        profile: updatedProfile,
+        onboardingCompleted: true
+      });
+    } catch (error) {
+      console.error("❌ [ONBOARDING] Erreur finalisation:", error);
+      return res.status(500).json({ error: "Erreur lors de la finalisation du profil" });
     }
   });
 
