@@ -21,6 +21,16 @@ import ConsentTerms from "@/pages/consent-terms";
 import ConsentDevice from "@/pages/consent-device";
 import Complete from "@/pages/complete";
 import NotFound from "@/pages/not-found";
+import Personality from "@/pages/onboarding/personality";
+import RelationshipGoals from "@/pages/onboarding/relationship-goals";
+import OrientationPreferences from "@/pages/onboarding/orientation-preferences";
+import Religion from "@/pages/onboarding/religion";
+import EyeColor from "@/pages/onboarding/eye-color";
+import HairColor from "@/pages/onboarding/hair-color";
+import DetailedPreferences from "@/pages/onboarding/detailed-preferences";
+import ShadowZone from "@/pages/onboarding/shadow-zone";
+import ProfileComplete from "@/pages/onboarding/profile-complete";
+import OnboardingComplete from "@/pages/onboarding/onboarding-complete";
 
 function Router() {
   return (
@@ -41,6 +51,16 @@ function Router() {
       <Route path="/consent-terms" component={ConsentTerms} />
       <Route path="/consent-device" component={ConsentDevice} />
       <Route path="/complete" component={Complete} />
+      <Route path="/onboarding/personality" component={Personality} />
+      <Route path="/onboarding/relationship-goals" component={RelationshipGoals} />
+      <Route path="/onboarding/orientation-preferences" component={OrientationPreferences} />
+      <Route path="/onboarding/religion" component={Religion} />
+      <Route path="/onboarding/eye-color" component={EyeColor} />
+      <Route path="/onboarding/hair-color" component={HairColor} />
+      <Route path="/onboarding/detailed-preferences" component={DetailedPreferences} />
+      <Route path="/onboarding/shadow-zone" component={ShadowZone} />
+      <Route path="/onboarding/profile-complete" component={ProfileComplete} />
+      <Route path="/onboarding/complete" component={OnboardingComplete} />
       <Route component={NotFound} />
     </Switch>
   );
