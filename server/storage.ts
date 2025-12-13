@@ -1,6 +1,6 @@
-import { type User, type InsertUser, type SignupSession, type InsertSignupSession, type UpdateSignupSession, type UpdateConsents, type UpdateLocation } from "@shared/schema";
+import { type User, type InsertUser, type SignupSession, type InsertSignupSession, type UpdateSignupSession, type UpdateConsents, type UpdateLocation, type UserProfile } from "@shared/schema";
 import { db } from "./db";
-import { users, signupSessions } from "@shared/schema";
+import { users, signupSessions, userProfiles } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 
@@ -45,6 +45,11 @@ export interface IStorage {
   setPasswordResetToken(email: string, token: string, expiry: Date): Promise<boolean>;
   verifyPasswordResetToken(token: string): Promise<User | undefined>;
   resetPassword(token: string, newPassword: string): Promise<boolean>;
+
+  // User Profile methods (Onboarding)
+  createUserProfile(userId: string): Promise<UserProfile>;
+  getUserProfileByUserId(userId: string): Promise<UserProfile | undefined>;
+  updateUserProfile(userId: string, data: Partial<UserProfile>): Promise<UserProfile | undefined>;
 }
 
 // PostgreSQL Database Storage Implementation
@@ -445,6 +450,46 @@ export class DBStorage implements IStorage {
     } catch (error) {
       console.error('❌ [STORAGE] Error resetting password:', error);
       return false;
+    }
+  }
+
+  // ========================================
+  // USER PROFILE METHODS (Onboarding)
+  // ========================================
+
+  async createUserProfile(userId: string): Promise<UserProfile> {
+    console.log(`📝 [ONBOARDING] Création profil pour userId: ${userId}`);
+    const [profile] = await db
+      .insert(userProfiles)
+      .values({ userId })
+      .returning();
+    console.log(`✅ [ONBOARDING] Profil créé: ${profile.id}`);
+    return profile;
+  }
+
+  async getUserProfileByUserId(userId: string): Promise<UserProfile | undefined> {
+    console.log(`🔍 [ONBOARDING] Recherche profil userId: ${userId}`);
+    const [profile] = await db
+      .select()
+      .from(userProfiles)
+      .where(eq(userProfiles.userId, userId))
+      .limit(1);
+    return profile;
+  }
+
+  async updateUserProfile(userId: string, data: Partial<UserProfile>): Promise<UserProfile | undefined> {
+    try {
+      console.log(`📝 [ONBOARDING] Mise à jour profil userId: ${userId}`);
+      const [profile] = await db
+        .update(userProfiles)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(userProfiles.userId, userId))
+        .returning();
+      console.log(`✅ [ONBOARDING] Profil mis à jour`);
+      return profile;
+    } catch (error) {
+      console.error('❌ [ONBOARDING] Erreur mise à jour profil:', error);
+      return undefined;
     }
   }
 }
