@@ -220,7 +220,7 @@ Cette phase correspond aux mockups fournis (Étapes 2/11 à 11/11).
 
 | Élément | Design Attendu | Implémenté |
 |---------|----------------|------------|
-| Photos | 0/6, grid upload | ❌ |
+| Photos profil | 0/1, grid upload | ❌ |
 | Situation pro | Chips sélectionnables | ❌ |
 | Professions | Input + "Ajouter" | ❌ |
 | Centres intérêt | Chips prédéfinis + custom | ❌ |

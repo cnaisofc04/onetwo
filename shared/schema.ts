@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, date, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, date, boolean, timestamp, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -290,5 +290,183 @@ export const changePasswordSchema = z.object({
 
 export type ChangePassword = z.infer<typeof changePasswordSchema>;
 
+// ========================================
+// USER PROFILES TABLE - Onboarding Data
+// ========================================
+
+export const userProfiles = pgTable("user_profiles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  
+  // Identité (Étape 9-11/11) - REQUIS par l'utilisateur
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  
+  // Personnalité (Étape 2/11)
+  shyness: integer("shyness").default(50),
+  introversion: integer("introversion").default(50),
+  
+  // Objectifs relationnels (Étape 3/11)
+  seriousRelationship: integer("serious_relationship").default(50),
+  oneNightStand: integer("one_night_stand").default(50),
+  marriage: integer("marriage").default(50),
+  casual: integer("casual").default(50),
+  fun: integer("fun").default(50),
+  
+  // Préférences orientation (Étape 4/11)
+  heterosexualOpenness: integer("heterosexual_openness").default(50),
+  homosexualOpenness: integer("homosexual_openness").default(50),
+  bisexualOpenness: integer("bisexual_openness").default(50),
+  transgenderOpenness: integer("transgender_openness").default(50),
+  
+  // Religion (Étape 5/11)
+  religion: text("religion"),
+  
+  // Apparence physique (Étapes 6-7)
+  eyeColor: text("eye_color"),
+  hairColor: integer("hair_color").default(50),
+  
+  // Préférences détaillées (Étape 8/12)
+  tattooPreference: integer("tattoo_preference").default(50),
+  smokingPreference: integer("smoking_preference").default(50),
+  dietPreference: integer("diet_preference").default(50),
+  blondePreference: integer("blonde_preference").default(50),
+  brownHairPreference: integer("brown_hair_preference").default(50),
+  redHairPreference: integer("red_hair_preference").default(50),
+  heightPreference: integer("height_preference").default(50),
+  bodyHairPreference: integer("body_hair_preference").default(50),
+  morphologyPreference: integer("morphology_preference").default(50),
+  stylePreference: integer("style_preference").default(50),
+  
+  // Zone d'ombre (Étape 8/11)
+  shadowZoneEnabled: boolean("shadow_zone_enabled").default(false),
+  shadowAddresses: text("shadow_addresses").array(),
+  shadowRadius: integer("shadow_radius").default(5),
+  
+  // Profil complet (Étape 9-11/11)
+  photos: text("photos").array(),
+  professionalStatus: text("professional_status"),
+  professions: text("professions").array(),
+  interests: text("interests").array(),
+  favoriteBooks: text("favorite_books").array(),
+  favoriteMovies: text("favorite_movies").array(),
+  favoriteMusic: text("favorite_music").array(),
+  
+  // Méta
+  onboardingStep: integer("onboarding_step").default(1),
+  onboardingCompleted: boolean("onboarding_completed").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// ========================================
+// ONBOARDING SCHEMAS - Validation Zod
+// ========================================
+
+// Schéma pour personnalité (Étape 2/11)
+export const personalitySchema = z.object({
+  shyness: z.number().min(0).max(100),
+  introversion: z.number().min(0).max(100),
+});
+export type PersonalityData = z.infer<typeof personalitySchema>;
+
+// Schéma pour objectifs relationnels (Étape 3/11)
+export const relationshipGoalsSchema = z.object({
+  seriousRelationship: z.number().min(0).max(100),
+  oneNightStand: z.number().min(0).max(100),
+  marriage: z.number().min(0).max(100),
+  casual: z.number().min(0).max(100),
+  fun: z.number().min(0).max(100),
+});
+export type RelationshipGoalsData = z.infer<typeof relationshipGoalsSchema>;
+
+// Schéma pour préférences orientation (Étape 4/11)
+export const orientationPreferencesSchema = z.object({
+  heterosexualOpenness: z.number().min(0).max(100),
+  homosexualOpenness: z.number().min(0).max(100),
+  bisexualOpenness: z.number().min(0).max(100),
+  transgenderOpenness: z.number().min(0).max(100),
+});
+export type OrientationPreferencesData = z.infer<typeof orientationPreferencesSchema>;
+
+// Schéma pour religion (Étape 5/11)
+export const religionValues = [
+  "christianity", "islam", "judaism", "buddhism",
+  "hinduism", "atheist", "agnostic", "other"
+] as const;
+export const religionSchema = z.object({
+  religion: z.enum(religionValues),
+});
+export type ReligionData = z.infer<typeof religionSchema>;
+
+// Schéma pour couleur yeux (Étape 6/11)
+export const eyeColorValues = ["brown", "blue", "green", "hazel", "grey", "black", "other"] as const;
+export const eyeColorSchema = z.object({
+  eyeColor: z.enum(eyeColorValues),
+});
+export type EyeColorData = z.infer<typeof eyeColorSchema>;
+
+// Schéma pour couleur cheveux (Étape 7/12)
+export const hairColorSchema = z.object({
+  hairColor: z.number().min(0).max(100),
+});
+export type HairColorData = z.infer<typeof hairColorSchema>;
+
+// Schéma pour préférences détaillées (Étape 8/12)
+export const detailedPreferencesSchema = z.object({
+  tattooPreference: z.number().min(0).max(100),
+  smokingPreference: z.number().min(0).max(100),
+  dietPreference: z.number().min(0).max(100),
+  blondePreference: z.number().min(0).max(100),
+  brownHairPreference: z.number().min(0).max(100),
+  redHairPreference: z.number().min(0).max(100),
+  heightPreference: z.number().min(0).max(100),
+  bodyHairPreference: z.number().min(0).max(100),
+  morphologyPreference: z.number().min(0).max(100),
+  stylePreference: z.number().min(0).max(100),
+});
+export type DetailedPreferencesData = z.infer<typeof detailedPreferencesSchema>;
+
+// Schéma pour zone d'ombre (Étape 8/11)
+export const shadowZoneSchema = z.object({
+  shadowZoneEnabled: z.boolean(),
+  shadowAddresses: z.array(z.string().max(200)).max(5).optional(),
+  shadowRadius: z.number().min(1).max(50).optional(),
+});
+export type ShadowZoneData = z.infer<typeof shadowZoneSchema>;
+
+// Schéma pour profil complet (Étape 9-11/11) - INCLUT firstName et lastName
+export const professionalStatusValues = [
+  "student", "employed", "searching", "retired", "entrepreneur", "freelance"
+] as const;
+export const profileCompleteSchema = z.object({
+  firstName: z.string().min(1, "Le prénom est requis").max(50),
+  lastName: z.string().min(1, "Le nom est requis").max(50),
+  photos: z.array(z.string().url()).min(1, "Au moins une photo est requise").max(6),
+  professionalStatus: z.enum(professionalStatusValues),
+  professions: z.array(z.string().max(50)).min(1, "Au moins une profession requise").max(5),
+  interests: z.array(z.string().max(50)).max(20).optional(),
+  favoriteBooks: z.array(z.string().max(100)).max(10).optional(),
+  favoriteMovies: z.array(z.string().max(100)).max(10).optional(),
+  favoriteMusic: z.array(z.string().max(100)).max(10).optional(),
+});
+export type ProfileCompleteData = z.infer<typeof profileCompleteSchema>;
+
+// Schéma pour statut onboarding
+export const onboardingStatusSchema = z.object({
+  onboardingStep: z.number().min(1).max(11),
+  onboardingCompleted: z.boolean(),
+});
+export type OnboardingStatus = z.infer<typeof onboardingStatusSchema>;
+
+// Insert schema for user profile
+export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
+
 export type User = InferSelectModel<typeof users>;
 export type SignupSession = InferSelectModel<typeof signupSessions>;
+export type UserProfile = InferSelectModel<typeof userProfiles>;
