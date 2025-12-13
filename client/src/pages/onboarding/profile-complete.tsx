@@ -40,7 +40,7 @@ export default function ProfileComplete() {
 
   const getUserId = () => {
     const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get("userId") || localStorage.getItem("signup_user_id") || localStorage.getItem("signup_session_id");
+    return urlParams.get("userId") || localStorage.getItem("signup_user_id");
   };
 
   const handleAddProfession = () => {
@@ -65,6 +65,9 @@ export default function ProfileComplete() {
   const mutation = useMutation({
     mutationFn: async () => {
       const userId = getUserId();
+      if (!userId) {
+        throw new Error("Veuillez vous connecter pour continuer");
+      }
       return apiRequest("/api/onboarding/profile-complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

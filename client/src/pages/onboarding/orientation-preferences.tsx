@@ -47,12 +47,15 @@ export default function OrientationPreferences() {
 
   const getUserId = () => {
     const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get("userId") || localStorage.getItem("signup_user_id") || localStorage.getItem("signup_session_id");
+    return urlParams.get("userId") || localStorage.getItem("signup_user_id");
   };
 
   const mutation = useMutation({
     mutationFn: async () => {
       const userId = getUserId();
+      if (!userId) {
+        throw new Error("Veuillez vous connecter pour continuer");
+      }
       return apiRequest("/api/onboarding/orientation-preferences", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },

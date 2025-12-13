@@ -24,18 +24,27 @@ export default function Complete() {
         headers: { "Content-Type": "application/json" },
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       console.log('✅ [COMPLETE] Inscription finalisée avec succès');
+      console.log('📝 [COMPLETE] User data:', data);
+      
+      // Store user ID for onboarding
+      if (data?.user?.id) {
+        localStorage.setItem("signup_user_id", data.user.id);
+        console.log('💾 [COMPLETE] userId stocké:', data.user.id);
+      }
+      
       localStorage.removeItem("signup_session_id");
 
       toast({
-        title: "Bienvenue sur OneTwo ! 🎉",
-        description: "Votre compte a été créé avec succès. Vous pouvez maintenant vous connecter.",
+        title: "Bienvenue sur OneTwo !",
+        description: "Votre compte a été créé. Complétez maintenant votre profil.",
       });
 
+      // Redirect to onboarding instead of login
       setTimeout(() => {
-        setLocation("/login");
-      }, 2000);
+        setLocation("/onboarding/personality");
+      }, 1500);
     },
     onError: (error: any) => {
       console.error('❌ [COMPLETE] Erreur finalisation:', error);
