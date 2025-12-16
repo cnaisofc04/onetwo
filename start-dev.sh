@@ -62,7 +62,7 @@ export VITE_POSTHOG_API_KEY="${POSTHOG_API_KEY:-}"
 
 # Démarrer backend en arrière-plan avec les secrets Doppler
 echo "🔧 Démarrage backend (port 3001)..."
-NODE_ENV=development tsx server/index.ts &
+NODE_ENV=development npx tsx server/index.ts &
 BACKEND_PID=$!
 echo "✅ Backend PID: $BACKEND_PID"
 
@@ -71,7 +71,7 @@ sleep 3
 
 # Démarrer frontend au premier plan
 echo "🎨 Démarrage frontend (port 5000)..."
-vite --host 0.0.0.0 --port 5000
+npx vite --host 0.0.0.0 --port 5000
 
 # Si Vite s'arrête, tuer le backend aussi
 kill $BACKEND_PID 2>/dev/null || true
