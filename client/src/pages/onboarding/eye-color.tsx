@@ -3,8 +3,9 @@ import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useOnboardingUser } from "@/hooks/use-onboarding-user";
 import { Card } from "@/components/ui/card";
-import { HelpCircle } from "lucide-react";
+import { HelpCircle, Loader2 } from "lucide-react";
 import OnboardingLayout from "./OnboardingLayout";
 
 const EYE_COLORS = [
@@ -20,20 +21,15 @@ const EYE_COLORS = [
 export default function EyeColor() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { userId, isLoading: isUserLoading } = useOnboardingUser();
   const [selected, setSelected] = useState<string | null>(null);
-
-  const getUserId = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get("userId") || localStorage.getItem("signup_user_id");
-  };
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const userId = getUserId();
       if (!userId) {
-        throw new Error("Veuillez vous connecter pour continuer");
+        throw new Error("Session expirée");
       }
-      return apiRequest("/api/onboarding/eye-color", {
+      const response = await apiRequest("/api/onboarding/eye-color", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -41,12 +37,13 @@ export default function EyeColor() {
           eyeColor: selected,
         }),
       });
+      return response.json();
     },
     onSuccess: () => {
       console.log("✅ [EYE_COLOR] Données sauvegardées");
       setLocation("/onboarding/hair-color");
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error("❌ [EYE_COLOR] Erreur:", error);
       toast({
         title: "Erreur",
@@ -55,6 +52,14 @@ export default function EyeColor() {
       });
     },
   });
+
+  if (isUserLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <OnboardingLayout

@@ -3,28 +3,25 @@ import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useOnboardingUser } from "@/hooks/use-onboarding-user";
 import { Slider } from "@/components/ui/slider";
+import { Loader2 } from "lucide-react";
 import OnboardingLayout from "./OnboardingLayout";
 
 export default function Personality() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { userId, isLoading: isUserLoading } = useOnboardingUser();
 
   const [shyness, setShyness] = useState(50);
   const [introversion, setIntroversion] = useState(50);
 
-  const getUserId = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get("userId") || localStorage.getItem("signup_user_id");
-  };
-
   const mutation = useMutation({
     mutationFn: async () => {
-      const userId = getUserId();
       if (!userId) {
-        throw new Error("Veuillez vous connecter pour continuer");
+        throw new Error("Session expirée");
       }
-      return apiRequest("/api/onboarding/personality", {
+      const response = await apiRequest("/api/onboarding/personality", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -33,12 +30,13 @@ export default function Personality() {
           introversion,
         }),
       });
+      return response.json();
     },
     onSuccess: () => {
       console.log("✅ [PERSONALITY] Données sauvegardées");
       setLocation("/onboarding/relationship-goals");
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error("❌ [PERSONALITY] Erreur:", error);
       toast({
         title: "Erreur",
@@ -47,6 +45,14 @@ export default function Personality() {
       });
     },
   });
+
+  if (isUserLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <OnboardingLayout

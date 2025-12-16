@@ -3,8 +3,9 @@ import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useOnboardingUser } from "@/hooks/use-onboarding-user";
 import { Card } from "@/components/ui/card";
-import { Cross, Moon, Star, Flower, Sun, Atom, HelpCircle, MoreHorizontal } from "lucide-react";
+import { Cross, Moon, Star, Flower, Sun, Atom, HelpCircle, MoreHorizontal, Loader2 } from "lucide-react";
 import OnboardingLayout from "./OnboardingLayout";
 
 const RELIGIONS = [
@@ -21,20 +22,15 @@ const RELIGIONS = [
 export default function Religion() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { userId, isLoading: isUserLoading } = useOnboardingUser();
   const [selected, setSelected] = useState<string | null>(null);
-
-  const getUserId = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get("userId") || localStorage.getItem("signup_user_id");
-  };
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const userId = getUserId();
       if (!userId) {
-        throw new Error("Veuillez vous connecter pour continuer");
+        throw new Error("Session expirée");
       }
-      return apiRequest("/api/onboarding/religion", {
+      const response = await apiRequest("/api/onboarding/religion", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -42,12 +38,13 @@ export default function Religion() {
           religion: selected,
         }),
       });
+      return response.json();
     },
     onSuccess: () => {
       console.log("✅ [RELIGION] Données sauvegardées");
       setLocation("/onboarding/eye-color");
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error("❌ [RELIGION] Erreur:", error);
       toast({
         title: "Erreur",
@@ -56,6 +53,14 @@ export default function Religion() {
       });
     },
   });
+
+  if (isUserLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <OnboardingLayout

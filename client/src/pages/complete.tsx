@@ -19,19 +19,24 @@ export default function Complete() {
       console.log('🎯 [COMPLETE] Finalisation inscription...');
       console.log('📝 [COMPLETE] Session ID:', sessionId);
 
-      return apiRequest(`/api/auth/signup/session/${sessionId}/complete`, {
+      const response = await apiRequest(`/api/auth/signup/session/${sessionId}/complete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
+      
+      const data = await response.json();
+      console.log('📥 [COMPLETE] Response data:', data);
+      return data;
     },
-    onSuccess: (data: any) => {
+    onSuccess: (data: { message: string; user: { id: string; email: string; pseudonyme: string } }) => {
       console.log('✅ [COMPLETE] Inscription finalisée avec succès');
       console.log('📝 [COMPLETE] User data:', data);
       
-      // Store user ID for onboarding
       if (data?.user?.id) {
         localStorage.setItem("signup_user_id", data.user.id);
         console.log('💾 [COMPLETE] userId stocké:', data.user.id);
+      } else {
+        console.error('❌ [COMPLETE] userId manquant dans la réponse');
       }
       
       localStorage.removeItem("signup_session_id");
@@ -41,7 +46,6 @@ export default function Complete() {
         description: "Votre compte a été créé. Complétez maintenant votre profil.",
       });
 
-      // Redirect to onboarding instead of login
       setTimeout(() => {
         setLocation("/onboarding/personality");
       }, 1500);

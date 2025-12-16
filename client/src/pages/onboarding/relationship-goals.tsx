@@ -3,8 +3,9 @@ import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useOnboardingUser } from "@/hooks/use-onboarding-user";
 import { Slider } from "@/components/ui/slider";
-import { Heart, Moon, HeartHandshake, Smile, PartyPopper } from "lucide-react";
+import { Heart, Moon, HeartHandshake, Smile, PartyPopper, Loader2 } from "lucide-react";
 import OnboardingLayout from "./OnboardingLayout";
 
 interface SliderItemProps {
@@ -46,25 +47,20 @@ function SliderItem({ icon, label, value, onChange, testId }: SliderItemProps) {
 export default function RelationshipGoals() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { userId, isLoading: isUserLoading } = useOnboardingUser();
 
   const [seriousRelationship, setSeriousRelationship] = useState(50);
   const [oneNightStand, setOneNightStand] = useState(50);
   const [marriage, setMarriage] = useState(50);
-  const [nothingSerious, setNothingSerious] = useState(50);
-  const [entertainment, setEntertainment] = useState(50);
-
-  const getUserId = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get("userId") || localStorage.getItem("signup_user_id");
-  };
+  const [casual, setCasual] = useState(50);
+  const [fun, setFun] = useState(50);
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const userId = getUserId();
       if (!userId) {
-        throw new Error("Veuillez vous connecter pour continuer");
+        throw new Error("Session expirée");
       }
-      return apiRequest("/api/onboarding/relationship-goals", {
+      const response = await apiRequest("/api/onboarding/relationship-goals", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -72,16 +68,17 @@ export default function RelationshipGoals() {
           seriousRelationship,
           oneNightStand,
           marriage,
-          nothingSerious,
-          entertainment,
+          casual,
+          fun,
         }),
       });
+      return response.json();
     },
     onSuccess: () => {
       console.log("✅ [RELATIONSHIP-GOALS] Données sauvegardées");
       setLocation("/onboarding/orientation-preferences");
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error("❌ [RELATIONSHIP-GOALS] Erreur:", error);
       toast({
         title: "Erreur",
@@ -90,6 +87,14 @@ export default function RelationshipGoals() {
       });
     },
   });
+
+  if (isUserLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <OnboardingLayout
@@ -128,17 +133,17 @@ export default function RelationshipGoals() {
         <SliderItem
           icon={<Smile className="h-5 w-5" />}
           label="Rien de sérieux"
-          value={nothingSerious}
-          onChange={setNothingSerious}
-          testId="slider-nothing-serious"
+          value={casual}
+          onChange={setCasual}
+          testId="slider-casual"
         />
         
         <SliderItem
           icon={<PartyPopper className="h-5 w-5" />}
           label="Me divertir"
-          value={entertainment}
-          onChange={setEntertainment}
-          testId="slider-entertainment"
+          value={fun}
+          onChange={setFun}
+          testId="slider-fun"
         />
       </div>
     </OnboardingLayout>

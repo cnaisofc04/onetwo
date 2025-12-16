@@ -18,17 +18,18 @@ interface RateLimitConfig {
 
 class RateLimiter {
   private stores = new Map<string, Map<string, RateLimitEntry>>();
-  private cleanupInterval: NodeJS.Timer;
+  private cleanupInterval: ReturnType<typeof setInterval>;
 
   constructor() {
-    // Cleanup expired entries every minute
     this.cleanupInterval = setInterval(() => this.cleanup(), 60 * 1000);
   }
 
   private cleanup() {
     const now = Date.now();
-    for (const store of this.stores.values()) {
-      for (const [key, entry] of store.entries()) {
+    const storeValues = Array.from(this.stores.values());
+    for (const store of storeValues) {
+      const entries = Array.from(store.entries());
+      for (const [key, entry] of entries) {
         if (now > entry.resetTime) {
           store.delete(key);
         }

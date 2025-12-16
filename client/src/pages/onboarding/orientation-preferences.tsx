@@ -3,7 +3,9 @@ import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useOnboardingUser } from "@/hooks/use-onboarding-user";
 import { Slider } from "@/components/ui/slider";
+import { Loader2 } from "lucide-react";
 import OnboardingLayout from "./OnboardingLayout";
 
 interface OrientationSliderProps {
@@ -39,40 +41,36 @@ function OrientationSlider({ label, value, onChange, testId }: OrientationSlider
 export default function OrientationPreferences() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { userId, isLoading: isUserLoading } = useOnboardingUser();
 
-  const [heterosexual, setHeterosexual] = useState(50);
-  const [homosexual, setHomosexual] = useState(50);
-  const [bisexual, setBisexual] = useState(50);
-  const [transgender, setTransgender] = useState(50);
-
-  const getUserId = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get("userId") || localStorage.getItem("signup_user_id");
-  };
+  const [heterosexualOpenness, setHeterosexualOpenness] = useState(50);
+  const [homosexualOpenness, setHomosexualOpenness] = useState(50);
+  const [bisexualOpenness, setBisexualOpenness] = useState(50);
+  const [transgenderOpenness, setTransgenderOpenness] = useState(50);
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const userId = getUserId();
       if (!userId) {
-        throw new Error("Veuillez vous connecter pour continuer");
+        throw new Error("Session expirée");
       }
-      return apiRequest("/api/onboarding/orientation-preferences", {
+      const response = await apiRequest("/api/onboarding/orientation-preferences", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId,
-          heterosexual,
-          homosexual,
-          bisexual,
-          transgender,
+          heterosexualOpenness,
+          homosexualOpenness,
+          bisexualOpenness,
+          transgenderOpenness,
         }),
       });
+      return response.json();
     },
     onSuccess: () => {
       console.log("✅ [ORIENTATION-PREFERENCES] Données sauvegardées");
       setLocation("/onboarding/religion");
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error("❌ [ORIENTATION-PREFERENCES] Erreur:", error);
       toast({
         title: "Erreur",
@@ -81,6 +79,14 @@ export default function OrientationPreferences() {
       });
     },
   });
+
+  if (isUserLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <OnboardingLayout
@@ -94,30 +100,30 @@ export default function OrientationPreferences() {
       <div className="space-y-6">
         <OrientationSlider
           label="Hétérosexuel(le)"
-          value={heterosexual}
-          onChange={setHeterosexual}
-          testId="slider-heterosexual"
+          value={heterosexualOpenness}
+          onChange={setHeterosexualOpenness}
+          testId="slider-heterosexual-openness"
         />
         
         <OrientationSlider
           label="Homosexuel(le)"
-          value={homosexual}
-          onChange={setHomosexual}
-          testId="slider-homosexual"
+          value={homosexualOpenness}
+          onChange={setHomosexualOpenness}
+          testId="slider-homosexual-openness"
         />
         
         <OrientationSlider
           label="Bisexuel(le)"
-          value={bisexual}
-          onChange={setBisexual}
-          testId="slider-bisexual"
+          value={bisexualOpenness}
+          onChange={setBisexualOpenness}
+          testId="slider-bisexual-openness"
         />
         
         <OrientationSlider
           label="Transgenre"
-          value={transgender}
-          onChange={setTransgender}
-          testId="slider-transgender"
+          value={transgenderOpenness}
+          onChange={setTransgenderOpenness}
+          testId="slider-transgender-openness"
         />
       </div>
     </OnboardingLayout>
