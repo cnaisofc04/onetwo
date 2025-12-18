@@ -5,11 +5,17 @@ async function throwIfResNotOk(res: Response) {
     const text = (await res.text()) || res.statusText;
     console.error(`❌ [API] Erreur HTTP ${res.status}:`, text);
     
-    // Parser le JSON si possible pour extraire le message d'erreur
+    // Parser le JSON si possible
     let errorMessage = text;
     try {
       const json = JSON.parse(text);
-      errorMessage = json.error || json.message || text;
+      // Si c'est une erreur de vérification incomplète, inclure toutes les données
+      if (json.requiresVerification && json.nextStep) {
+        // Inclure le JSON complet dans le message pour que le frontend puisse le parser
+        errorMessage = `${json.error || json.message}: ${JSON.stringify(json)}`;
+      } else {
+        errorMessage = json.error || json.message || text;
+      }
     } catch {
       // Si ce n'est pas du JSON, garder le texte brut
     }

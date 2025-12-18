@@ -39,17 +39,7 @@ export default function Login() {
     onSuccess: async (response: Response) => {
       const data = await response.json();
 
-      // Check if account is verified
-      if (data.requiresVerification) {
-        localStorage.setItem("verification_email", data.user.email);
-        toast({
-          title: "Compte non vérifié",
-          description: "Veuillez vérifier votre email et téléphone",
-          variant: "destructive",
-        });
-        setLocation("/verify-email");
-        return;
-      }
+      // Connexion réussie - pas de vérification requise
 
       toast({
         title: "Connexion réussie!",
@@ -58,41 +48,54 @@ export default function Login() {
       // TODO: Redirect to main app (Phase 2)
     },
     onError: (error: any) => {
-      // Si le compte nécessite une vérification, rediriger vers la bonne étape
-      if (error.message.includes("non vérifié")) {
-        // Essayer d'extraire les informations de l'erreur
+      // Vérifier si c'est une erreur d'inscription incomplète
+      const errorMessage = error.message || "";
+      
+      if (errorMessage.includes("incomplète") || errorMessage.includes("non vérifié")) {
+        // Essayer d'extraire les informations JSON de l'erreur
         try {
-          const errorData = JSON.parse(error.message.split(': ')[1] || '{}');
+          // Le message d'erreur peut contenir du JSON après le texte
+          const jsonMatch = errorMessage.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const errorData = JSON.parse(jsonMatch[0]);
 
-          if (errorData.user) {
-            // Sauvegarder les informations pour la reprise
-            localStorage.setItem("verification_email", errorData.user.email);
-            if (errorData.user.phone) {
-              localStorage.setItem("verification_phone", errorData.user.phone);
+            if (errorData.user) {
+              // Sauvegarder les informations pour la reprise
+              localStorage.setItem("verification_email", errorData.user.email);
+              localStorage.setItem("signup_user_id", errorData.user.id);
+              if (errorData.user.phone) {
+                localStorage.setItem("verification_phone", errorData.user.phone);
+              }
+
+              toast({
+                title: "Inscription incomplète",
+                description: "Reprise de votre inscription...",
+              });
+
+              // Rediriger vers l'étape appropriée
+              const nextStep = errorData.nextStep || "/verify-email";
+              console.log(`🔄 [LOGIN] Redirection vers: ${nextStep}`);
+              setTimeout(() => {
+                setLocation(nextStep);
+              }, 1000);
+              return;
             }
-
-            toast({
-              title: "Inscription incomplète",
-              description: "Reprise de la vérification de votre compte...",
-            });
-
-            // Rediriger vers l'étape appropriée
-            const nextStep = errorData.nextStep || "/verify-email";
-            setTimeout(() => {
-              setLocation(nextStep);
-            }, 1500);
           }
         } catch (parseError) {
-          toast({
-            title: "Compte non vérifié",
-            description: "Veuillez compléter votre inscription",
-            variant: "destructive",
-          });
+          console.error("Erreur parsing JSON:", parseError);
         }
+        
+        // Fallback si parsing échoue
+        toast({
+          title: "Inscription incomplète",
+          description: "Veuillez compléter votre inscription",
+          variant: "destructive",
+        });
+        setLocation("/verify-email");
       } else {
         toast({
           title: "Erreur de connexion",
-          description: error.message,
+          description: errorMessage || "Identifiants incorrects",
           variant: "destructive",
         });
       }

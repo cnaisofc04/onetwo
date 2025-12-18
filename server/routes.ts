@@ -852,11 +852,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let nextStep = "/verify-email";
         if (user.emailVerified && !user.phoneVerified) {
           nextStep = "/verify-phone";
+        } else if (user.emailVerified && user.phoneVerified) {
+          // Vérifier si le profil est complet
+          const userProfile = await storage.getUserProfileByUserId(user.id);
+          if (!userProfile || !userProfile.firstName) {
+            nextStep = `/onboarding/profile-complete?userId=${user.id}`;
+          }
         }
 
+        // Retourner 403 avec requiresVerification et nextStep pour redirection
         return res.status(403).json({ 
-          error: "Compte non vérifié",
-          message: "Veuillez compléter la vérification de votre compte",
+          error: "Inscription incomplète",
+          message: "Veuillez compléter votre inscription",
           user: userWithoutPassword,
           requiresVerification: true,
           nextStep: nextStep
