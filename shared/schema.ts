@@ -442,7 +442,7 @@ export const professionalStatusValues = [
 export const profileCompleteSchema = z.object({
   firstName: z.string().min(1, "Le prénom est requis").max(50),
   lastName: z.string().min(1, "Le nom est requis").max(50),
-  photos: z.array(z.string().url()).min(1, "Au moins une photo est requise").max(6),
+  photos: z.array(z.string().url()).max(6).optional(),
   professionalStatus: z.enum(professionalStatusValues),
   professions: z.array(z.string().max(50)).min(1, "Au moins une profession requise").max(5),
   interests: z.array(z.string().max(50)).max(20).optional(),

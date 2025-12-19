@@ -151,7 +151,8 @@ export default function ProfileComplete() {
       }
       
       // TODO: Upload photo to storage and get URL
-      const photoUrl = photoPreview ? "uploaded-photo-url" : null;
+      // For now, photo upload is optional - only include if a valid URL is available
+      const photoUrl = null; // Placeholder until photo upload is implemented
       
       return apiRequest("/api/onboarding/profile-complete", {
         method: "POST",
@@ -160,7 +161,7 @@ export default function ProfileComplete() {
           userId,
           firstName,
           lastName,
-          photos: photoUrl ? [photoUrl] : [],
+          photos: photoUrl ? [photoUrl] : undefined,
           professionalStatus,
           professions,
           interests: interests.length > 0 ? interests : undefined,
