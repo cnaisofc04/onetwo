@@ -1,0 +1,218 @@
+
+> rest-express@1.0.0 dev
+> bash start-dev.sh
+
+Starting ONETWO - Backend + Frontend
+=====================================
+Loading Doppler secrets...
+Doppler secrets loaded
+  - RESEND_API_KEY: OK
+  - TWILIO_ACCOUNT_SID: OK
+  - TWILIO_AUTH_TOKEN: OK
+  - TWILIO_PHONE_NUMBER: OK
+Starting backend (port 3001)...
+Backend PID: 765
+📧 Secrets chargés:
+  - RESEND_API_KEY: [CONFIGURED]
+  - TWILIO_ACCOUNT_SID: [CONFIGURED]
+  - TWILIO_AUTH_TOKEN: [CONFIGURED]
+  - TWILIO_PHONE_NUMBER: [CONFIGURED]
+📧 Services de verification:
+  - Resend (Email): ✅ CONFIGURE
+  - Twilio (SMS): ✅ CONFIGURE
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+🏭 [STARTUP] Initialisation layer storage...
+
+🏭 [STORAGE] Initialisation Factory Storage
+✅ [STORAGE] Backend: REPLIT (Neon PostgreSQL)
+📊 [STORAGE] Backend actif: REPLIT
+
+
+🔐 [STARTUP] Vérification des secrets Doppler...
+📧 RESEND_API_KEY: ✅ CHARGÉ (re_3giC8Gv...)
+📱 TWILIO_ACCOUNT_SID: ✅ CHARGÉ
+📱 TWILIO_AUTH_TOKEN: ✅ CHARGÉ
+📱 TWILIO_PHONE_NUMBER: ✅ CHARGÉ
+⏱️ [CLEANUP] Interval de nettoyage: 5 minutes
+
+✅ [BACKEND] Démarré sur http://0.0.0.0:3001
+📡 [PROXY] Frontend sur 5000 → API sur 3001
+🚀 OneTwo application ready!
+
+Starting frontend (port 5000)...
+
+  VITE v6.4.1  ready in 221 ms
+
+  ➜  Local:   http://localhost:5000/
+  ➜  Network: http://172.31.70.2:5000/
+  ➜  press h + enter to show help
+
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+👤 [CHECK-PSEUDO] Vérification: Gabriel
+✅ [CHECK-PSEUDO] Pseudonyme disponible
+📧 [CHECK-EMAIL] Vérification: cnaisofc04@gmail.com
+✅ [CHECK-EMAIL] Email disponible
+
+🟢 [SESSION] Début création session
+📝 [SESSION] Body: {
+  "language": "pt-BR",
+  "pseudonyme": "Gabriel",
+  "dateOfBirth": "1989-12-07",
+  "email": "cnaisofc04@gmail.com",
+  "phone": "+33624041138",
+  "gender": "Mr",
+  "password": "@Pass2025"
+}
+🌍 [SESSION] Langue: pt-BR
+✅ [SESSION] Validation réussie
+📧 [SESSION] Email: cnaisofc04@gmail.com
+👤 [SESSION] Pseudonyme: Gabriel
+🔍 [SESSION] Vérification email existant...
+✅ [SESSION] Email disponible
+🔍 [SESSION] Vérification pseudonyme existant...
+✅ [SESSION] Pseudonyme disponible
+🔐 [SESSION] Hachage du mot de passe...
+✅ [SESSION] Mot de passe haché
+💾 [SESSION] Création en base de données...
+✅ [SESSION] Session créée: 00d8714b-9e7e-4b7f-9891-7e53cb044e89
+📱 [SESSION] Téléphone enregistré: +33624041138
+👤 [SESSION] Genre enregistré: Mr
+🔑 [SESSION] Génération code email...
+🔑 [VERIFY] Code généré: 401750 (✅ crypto-secure)
+📬 [SESSION] Code: 401750 (expire: 2025-12-19T16:21:11.937Z)
+💾 [SESSION] Enregistrement code en base...
+✅ [SESSION] Code enregistré
+📧 [SESSION] Envoi email...
+📧 [EMAIL] Tentative envoi RÉEL à cnaisofc04@gmail.com avec code 401750
+✅ [EMAIL] Envoyé avec succès via Resend: b306f9dc-18b0-42ea-a77c-74c5e9d33dd3
+✅ [SESSION] Email envoyé
+🔑 [SESSION] Génération code SMS...
+🔑 [VERIFY] Code généré: 962113 (✅ crypto-secure)
+📬 [SESSION] Code SMS: 962113 (expire: 2025-12-19T16:21:12.261Z)
+💾 [SESSION] Enregistrement code SMS en base...
+✅ [SESSION] Code SMS enregistré
+📱 [SESSION] Envoi SMS...
+📱 [SMS] Tentative envoi RÉEL à +33624041138 avec code 962113
+✅ [SMS] Envoyé avec succès via Twilio: SMda3cf8ab490d7009200ccb9e3cab89af
+✅ [SESSION] SMS envoyé
+🎉 [SESSION] Réponse envoyée au client
+
+
+🔵 [VERIFY-EMAIL-API] Début vérification email
+🔵 [VERIFY-EMAIL-API] SessionId: 00d8714b-9e7e-4b7f-9891-7e53cb044e89
+🔵 [VERIFY-EMAIL-API] Body: {
+  "code": "401750"
+}
+🔍 [VERIFY-EMAIL-API] Vérification du code: 401750
+✅ [VERIFY-EMAIL-API] Email vérifié avec succès!
+📖 [GET-SESSION] Récupération session: 00d8714b-9e7e-4b7f-9891-7e53cb044e89
+✅ [GET-SESSION] Session trouvée
+
+🌍 [LOCATION] Début mise à jour localisation
+📝 [LOCATION] Body: {
+  "city": "Paris"
+}
+🆔 [LOCATION] SessionId: 00d8714b-9e7e-4b7f-9891-7e53cb044e89
+✅ [LOCATION] Validation réussie
+💾 [LOCATION] Mise à jour en base...
+💾 [STORAGE] Mise à jour location session 00d8714b-9e7e-4b7f-9891-7e53cb044e89: { city: 'Paris' }
+✅ [STORAGE] Location mise à jour pour session 00d8714b-9e7e-4b7f-9891-7e53cb044e89
+✅ [LOCATION] Localisation mise à jour
+🏙️ [LOCATION] Ville: Paris
+🌍 [LOCATION] Pays: non défini
+🛂 [LOCATION] Nationalité: non définie
+
+🌍 [LOCATION] Début mise à jour localisation
+📝 [LOCATION] Body: {
+  "country": "France"
+}
+🆔 [LOCATION] SessionId: 00d8714b-9e7e-4b7f-9891-7e53cb044e89
+✅ [LOCATION] Validation réussie
+💾 [LOCATION] Mise à jour en base...
+💾 [STORAGE] Mise à jour location session 00d8714b-9e7e-4b7f-9891-7e53cb044e89: { country: 'France' }
+✅ [STORAGE] Location mise à jour pour session 00d8714b-9e7e-4b7f-9891-7e53cb044e89
+✅ [LOCATION] Localisation mise à jour
+🏙️ [LOCATION] Ville: Paris
+🌍 [LOCATION] Pays: France
+🛂 [LOCATION] Nationalité: non définie
+
+🌍 [LOCATION] Début mise à jour localisation
+📝 [LOCATION] Body: {
+  "nationality": "Bresilienne"
+}
+🆔 [LOCATION] SessionId: 00d8714b-9e7e-4b7f-9891-7e53cb044e89
+✅ [LOCATION] Validation réussie
+💾 [LOCATION] Mise à jour en base...
+💾 [STORAGE] Mise à jour location session 00d8714b-9e7e-4b7f-9891-7e53cb044e89: { nationality: 'Bresilienne' }
+✅ [STORAGE] Location mise à jour pour session 00d8714b-9e7e-4b7f-9891-7e53cb044e89
+✅ [LOCATION] Localisation mise à jour
+🏙️ [LOCATION] Ville: Paris
+🌍 [LOCATION] Pays: France
+🛂 [LOCATION] Nationalité: Bresilienne
+
+🎯 [COMPLETE] Début finalisation inscription
+🆔 [COMPLETE] SessionId: 00d8714b-9e7e-4b7f-9891-7e53cb044e89
+✅ [COMPLETE] Session trouvée
+📋 [COMPLETE] État de session avant vérifications:
+  - emailVerified: true
+  - phoneVerified: true
+  - gender: Mr
+  - password: ***
+  - phone: +33624041138
+  - geolocationConsent: true
+  - termsAccepted: true
+  - deviceBindingConsent: true
+🔍 [COMPLETE] Vérification consentements: true
+✅ [COMPLETE] Toutes les vérifications OK - CRÉATION USER
+💾 [COMPLETE] Création utilisateur final...
+✅ [COMPLETE] Utilisateur créé: 39165470-db5d-4e10-96d6-71e5c777df9f
+🏙️ [COMPLETE] Ville: Paris
+🌍 [COMPLETE] Pays: France
+🛂 [COMPLETE] Nationalité: Bresilienne
+🗑️ [COMPLETE] Suppression session temporaire...
+✅ [COMPLETE] Session supprimée
+🎉 [COMPLETE] Inscription finalisée avec succès!
+
+🧠 [ONBOARDING] Sauvegarde personnalité pour userId: 39165470-db5d-4e10-96d6-71e5c777df9f
+🔍 [ONBOARDING] Recherche profil userId: 39165470-db5d-4e10-96d6-71e5c777df9f
+📝 [ONBOARDING] Création profil pour userId: 39165470-db5d-4e10-96d6-71e5c777df9f
+✅ [ONBOARDING] Profil créé: bdb2170f-a20e-416a-a6d0-cf99f2a923f2
+📝 [ONBOARDING] Mise à jour profil userId: 39165470-db5d-4e10-96d6-71e5c777df9f
+✅ [ONBOARDING] Profil mis à jour
+✅ [ONBOARDING] Personnalité sauvegardée
+💕 [ONBOARDING] Sauvegarde objectifs relationnels pour userId: 39165470-db5d-4e10-96d6-71e5c777df9f
+🔍 [ONBOARDING] Recherche profil userId: 39165470-db5d-4e10-96d6-71e5c777df9f
+📝 [ONBOARDING] Mise à jour profil userId: 39165470-db5d-4e10-96d6-71e5c777df9f
+✅ [ONBOARDING] Profil mis à jour
+✅ [ONBOARDING] Objectifs relationnels sauvegardés
+🌈 [ONBOARDING] Sauvegarde préférences orientation pour userId: 39165470-db5d-4e10-96d6-71e5c777df9f
+🔍 [ONBOARDING] Recherche profil userId: 39165470-db5d-4e10-96d6-71e5c777df9f
+📝 [ONBOARDING] Mise à jour profil userId: 39165470-db5d-4e10-96d6-71e5c777df9f
+✅ [ONBOARDING] Profil mis à jour
+✅ [ONBOARDING] Préférences orientation sauvegardées
+🙏 [ONBOARDING] Sauvegarde religion pour userId: 39165470-db5d-4e10-96d6-71e5c777df9f
+🔍 [ONBOARDING] Recherche profil userId: 39165470-db5d-4e10-96d6-71e5c777df9f
+📝 [ONBOARDING] Mise à jour profil userId: 39165470-db5d-4e10-96d6-71e5c777df9f
+✅ [ONBOARDING] Profil mis à jour
+✅ [ONBOARDING] Religion sauvegardée
+👁️ [ONBOARDING] Sauvegarde couleur yeux pour userId: 39165470-db5d-4e10-96d6-71e5c777df9f
+🔍 [ONBOARDING] Recherche profil userId: 39165470-db5d-4e10-96d6-71e5c777df9f
+📝 [ONBOARDING] Mise à jour profil userId: 39165470-db5d-4e10-96d6-71e5c777df9f
+✅ [ONBOARDING] Profil mis à jour
+✅ [ONBOARDING] Couleur yeux sauvegardée
+💇 [ONBOARDING] Sauvegarde couleur cheveux pour userId: 39165470-db5d-4e10-96d6-71e5c777df9f
+🔍 [ONBOARDING] Recherche profil userId: 39165470-db5d-4e10-96d6-71e5c777df9f
+📝 [ONBOARDING] Mise à jour profil userId: 39165470-db5d-4e10-96d6-71e5c777df9f
+✅ [ONBOARDING] Profil mis à jour
+✅ [ONBOARDING] Couleur cheveux sauvegardée
+⚙️ [ONBOARDING] Sauvegarde préférences détaillées pour userId: 39165470-db5d-4e10-96d6-71e5c777df9f
+🔍 [ONBOARDING] Recherche profil userId: 39165470-db5d-4e10-96d6-71e5c777df9f
+📝 [ONBOARDING] Mise à jour profil userId: 39165470-db5d-4e10-96d6-71e5c777df9f
+✅ [ONBOARDING] Profil mis à jour
+✅ [ONBOARDING] Préférences détaillées sauvegardées
+🌑 [ONBOARDING] Sauvegarde zone d'ombre pour userId: 39165470-db5d-4e10-96d6-71e5c777df9f
+🔍 [ONBOARDING] Recherche profil userId: 39165470-db5d-4e10-96d6-71e5c777df9f
+📝 [ONBOARDING] Mise à jour profil userId: 39165470-db5d-4e10-96d6-71e5c777df9f
+✅ [ONBOARDING] Profil mis à jour
+✅ [ONBOARDING] Zone d'ombre sauvegardée

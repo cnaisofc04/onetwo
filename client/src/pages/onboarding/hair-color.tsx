@@ -9,19 +9,21 @@ import { Loader2 } from "lucide-react";
 import OnboardingLayout from "./OnboardingLayout";
 
 const getHairColorLabel = (value: number): string => {
-  if (value <= 16) return "Noir";
-  if (value <= 33) return "Brun foncé";
-  if (value <= 50) return "Châtain";
-  if (value <= 67) return "Châtain clair";
+  if (value <= 14) return "Noir";
+  if (value <= 28) return "Brun foncé";
+  if (value <= 42) return "Châtain";
+  if (value <= 56) return "Roux";
+  if (value <= 70) return "Châtain clair";
   if (value <= 84) return "Blond";
   return "Blond platine";
 };
 
 const getHairColorValue = (value: number): string => {
-  if (value <= 16) return "black";
-  if (value <= 33) return "dark_brown";
-  if (value <= 50) return "brown";
-  if (value <= 67) return "light_brown";
+  if (value <= 14) return "black";
+  if (value <= 28) return "dark_brown";
+  if (value <= 42) return "brown";
+  if (value <= 56) return "red";
+  if (value <= 70) return "light_brown";
   if (value <= 84) return "blonde";
   return "platinum_blonde";
 };
@@ -102,7 +104,7 @@ export default function HairColor() {
           <div 
             className="h-4 rounded-full"
             style={{
-              background: "linear-gradient(to right, #1a1a1a 0%, #3d2314 17%, #5c3317 33%, #8b5a2b 50%, #c19a6b 67%, #e6c88a 84%, #f5e6c8 100%)"
+              background: "linear-gradient(to right, #1a1a1a 0%, #3d2314 14%, #5c3317 28%, #8b5a2b 42%, #c85a17 56%, #d4a574 70%, #e6c88a 84%, #f5e6c8 100%)"
             }}
             data-testid="gradient-hair-color"
           />
