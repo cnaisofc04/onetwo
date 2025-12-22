@@ -31,11 +31,13 @@ import DetailedPreferences from "@/pages/onboarding/detailed-preferences";
 import ShadowZone from "@/pages/onboarding/shadow-zone";
 import ProfileComplete from "@/pages/onboarding/profile-complete";
 import OnboardingComplete from "@/pages/onboarding/onboarding-complete";
+import Settings from "@/pages/settings";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/settings" component={Settings} />
       <Route path="/language-selection" component={LanguageSelection} />
       <Route path="/signup" component={Signup} />
       <Route path="/login" component={Login} />

@@ -39,6 +39,7 @@ import { VerificationService } from "./verification-service";
 import { SupermemoryService } from "./supermemory-service";
 import { MemoryContext } from "./memory-context";
 import { CleanupService } from "./cleanup-service";
+import { EmailNotificationService } from "./email-notifications";
 import {
   loginLimiter,
   signupLimiter,
@@ -1741,6 +1742,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ error: "Erreur lors de la finalisation du profil" });
     }
   });
+
+  // POST /api/notifications/settings-changed - Send settings change notification email
+  app.post("/api/notifications/settings-changed", asyncHandler(async (req: Request, res: Response) => {
+    try {
+      const { changes, affectedTab, totalChanges } = req.body;
+      
+      if (!Array.isArray(changes) || changes.length === 0) {
+        return res.status(400).json({ error: "Aucune modification à notifier" });
+      }
+
+      // Get user email from session/JWT
+      const userId = (req as any).userId || (req as any).user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Non authentifié" });
+      }
+
+      const user = await storage.getUserById(userId);
+      if (!user) {
+        return res.status(404).json({ error: "Utilisateur non trouvé" });
+      }
+
+      const emailSent = await EmailNotificationService.sendSettingsChangedEmail(
+        user.email,
+        changes,
+        affectedTab || "Paramètres"
+      );
+
+      if (emailSent) {
+        return res.status(200).json({
+          message: "Notification email envoyée",
+          totalChanges,
+          affectedTab,
+        });
+      } else {
+        return res.status(500).json({ error: "Impossible d'envoyer l'email de notification" });
+      }
+    } catch (error) {
+      console.error("❌ [NOTIFICATIONS] Erreur:", error);
+      return res.status(500).json({ error: "Erreur lors de l'envoi de la notification" });
+    }
+  }));
 
   const httpServer = createServer(app);
 
