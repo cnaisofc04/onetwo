@@ -65,7 +65,7 @@ export function csrfMiddleware() {
       // Skip validation for specific safe endpoints (health checks, public APIs)
       const safeEndpoints = [
         '/health',
-        '/api/auth/signup-session',
+        '/api/auth/signup/session',
         '/api/auth/login',
         '/api/auth/forgot-password',
         '/api/auth/check-email',
