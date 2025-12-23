@@ -12,6 +12,7 @@ import {
   requestValidationMiddleware,
   securityContextMiddleware,
 } from './security-middleware';
+import { csrfMiddleware, csrfCleanupMiddleware } from './csrf-middleware';
 import { globalErrorHandler } from './error-handler';
 import { storageFactory } from './storage-factory';
 import { testAllSupabaseConnections } from './supabase-client';
@@ -28,6 +29,8 @@ app.use(...securityHeadersMiddleware());
 app.use(requestValidationMiddleware());
 app.use(express.json({ limit: '1mb' }));
 app.use(secureCorsMiddleware());
+app.use(...csrfMiddleware());
+app.use(csrfCleanupMiddleware());
 
 // Startup
 (async () => {
