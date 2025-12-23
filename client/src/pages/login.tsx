@@ -45,7 +45,11 @@ export default function Login() {
         title: "Connexion réussie!",
         description: `Bienvenue ${data.user.pseudonyme}`,
       });
-      // TODO: Redirect to main app (Phase 2)
+      
+      // Redirection vers Settings après 1.5 secondes
+      setTimeout(() => {
+        setLocation("/settings");
+      }, 1500);
     },
     onError: (error: any) => {
       // Vérifier si c'est une erreur d'inscription incomplète
