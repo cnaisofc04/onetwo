@@ -859,20 +859,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Email ou mot de passe incorrect" });
       }
 
-      // Check if user is fully verified
+      // Check if user is fully verified (email + phone + onboarding)
       const isVerified = await storage.isUserFullyVerified(user.id);
       if (!isVerified) {
         const { password: _, ...userWithoutPassword } = user;
 
         // Déterminer quelle étape n'est pas complétée
         let nextStep = "/verify-email";
+        
         if (user.emailVerified && !user.phoneVerified) {
+          // Email verified but phone not verified
           nextStep = "/verify-phone";
         } else if (user.emailVerified && user.phoneVerified) {
-          // Vérifier si le profil est complet
+          // Both email and phone verified - check if onboarding is complete
           const userProfile = await storage.getUserProfileByUserId(user.id);
           if (!userProfile || !userProfile.firstName) {
-            nextStep = `/onboarding/profile-complete?userId=${user.id}`;
+            // Onboarding not started - send to first step (personality)
+            nextStep = `/onboarding/personality?userId=${user.id}`;
+            console.log(`🔄 [LOGIN] User ${user.id} needs onboarding - redirecting to: ${nextStep}`);
           }
         }
 
@@ -1432,6 +1436,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: "Erreur lors de la récupération du profil",
         details: error instanceof Error ? error.message : String(error)
       });
+    }
+  });
+
+  // PATCH /api/onboarding/profile - Generic profile update for Settings page
+  app.patch("/api/onboarding/profile", async (req: Request, res: Response) => {
+    try {
+      const { userId, ...data } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ error: "userId est requis" });
+      }
+
+      console.log(`📝 [ONBOARDING] Mise à jour profil générique pour userId: ${userId}`);
+      
+      let profile = await storage.getUserProfileByUserId(userId);
+      if (!profile) {
+        profile = await storage.createUserProfile(userId);
+      }
+
+      const updatedProfile = await storage.updateUserProfile(userId, data);
+
+      console.log(`✅ [ONBOARDING] Profil mis à jour`);
+      return res.status(200).json({ message: "Profil mis à jour", profile: updatedProfile });
+    } catch (error) {
+      console.error("❌ [ONBOARDING] Erreur mise à jour profil:", error);
+      return res.status(500).json({ error: "Erreur lors de la mise à jour du profil" });
     }
   });
 

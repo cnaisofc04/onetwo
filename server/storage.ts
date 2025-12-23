@@ -192,7 +192,19 @@ export class DBStorage implements IStorage {
   async isUserFullyVerified(userId: string): Promise<boolean> {
     const user = await this.getUserById(userId);
     if (!user) return false;
-    return user.emailVerified && user.phoneVerified;
+    
+    // Check email and phone are verified
+    if (!user.emailVerified || !user.phoneVerified) {
+      return false;
+    }
+    
+    // Check onboarding is complete (profile must exist with firstName filled)
+    const profile = await this.getUserProfileByUserId(userId);
+    if (!profile || !profile.firstName) {
+      return false;
+    }
+    
+    return true;
   }
 
   async createSignupSession(data: InsertSignupSession): Promise<SignupSession> {
