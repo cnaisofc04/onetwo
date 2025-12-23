@@ -68,6 +68,8 @@ export function csrfMiddleware() {
         '/api/auth/signup-session',
         '/api/auth/login',
         '/api/auth/forgot-password',
+        '/api/auth/check-email',
+        '/api/auth/check-pseudonyme',
       ];
       
       if (safeEndpoints.some(ep => req.path.startsWith(ep))) {
