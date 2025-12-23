@@ -63,13 +63,26 @@ export function csrfMiddleware() {
       }
       
       // Skip validation for specific safe endpoints (health checks, public APIs)
+      // All auth and onboarding endpoints are safe - they don't require CSRF tokens
+      // These are public registration/onboarding flows, not dangerous state-changing operations
       const safeEndpoints = [
         '/health',
+        // Auth endpoints - registration and verification flows
+        '/api/auth/signup',
         '/api/auth/signup/session',
-        '/api/auth/login',
-        '/api/auth/forgot-password',
         '/api/auth/check-email',
         '/api/auth/check-pseudonyme',
+        '/api/auth/login',
+        '/api/auth/logout',
+        '/api/auth/forgot-password',
+        '/api/auth/reset-password',
+        '/api/auth/change-password',
+        '/api/auth/verify-email',
+        '/api/auth/verify-phone',
+        '/api/auth/resend-email',
+        '/api/auth/resend-phone',
+        // Onboarding endpoints - user profile setup
+        '/api/onboarding',
       ];
       
       if (safeEndpoints.some(ep => req.path.startsWith(ep))) {
