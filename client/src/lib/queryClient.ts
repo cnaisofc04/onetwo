@@ -1,5 +1,43 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+// 🔐 Global CSRF token storage + Promise for initialization
+let csrfToken: string | null = null;
+let csrfInitialized = false;
+let csrfPromise: Promise<void> | null = null;
+
+// Initialize CSRF token on app startup
+async function initializeCsrfToken() {
+  if (csrfInitialized) return;
+  if (csrfPromise) return csrfPromise;
+  
+  csrfPromise = (async () => {
+    try {
+      const response = await fetch('/api/csrf-init', { 
+        credentials: 'include',
+        method: 'GET'
+      });
+      
+      // Récupérer token depuis l'en-tête de réponse
+      const token = response.headers.get('x-csrf-token');
+      if (token) {
+        csrfToken = token;
+        console.log('✅ [CSRF] Token initialisé:', token.substring(0, 8) + '...');
+      } else {
+        console.warn('⚠️  [CSRF] Aucun token dans la réponse');
+      }
+    } catch (error) {
+      console.error('❌ [CSRF] Erreur initialisation:', error);
+    } finally {
+      csrfInitialized = true;
+    }
+  })();
+  
+  return csrfPromise;
+}
+
+// Initialiser le token au chargement (sans await)
+initializeCsrfToken();
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -28,6 +66,11 @@ export async function apiRequest(endpoint: string, options?: RequestInit) {
   // ✅ UTILISER /api directement (proxy Vite handle)
   // Vite proxy redirige: /api/* → http://127.0.0.1:3001/api/*
   
+  // 🔐 WAIT for CSRF token to be initialized before making requests
+  if (csrfPromise) {
+    await csrfPromise;
+  }
+  
   console.log(`📤 [API] ${options?.method || 'POST'} ${endpoint}`);
   
   if (options?.body) {
@@ -40,13 +83,37 @@ export async function apiRequest(endpoint: string, options?: RequestInit) {
   }
   
   try {
+    // Préparer les headers
+    const headers = {
+      ...(options?.headers as Record<string, string>),
+    };
+    
+    // Ajouter le CSRF token à TOUTES les requêtes POST/PUT/PATCH/DELETE
+    const method = options?.method || 'POST';
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+      if (csrfToken) {
+        headers['x-csrf-token'] = csrfToken;
+        console.log('🔐 [CSRF] Token ajouté au header');
+      } else {
+        console.warn('⚠️  [CSRF] Token non disponible, requête sans token');
+      }
+    }
+    
     const response = await fetch(endpoint, {
-      method: options?.method || 'POST',
+      method,
       credentials: 'include',
+      headers,
       ...options,
     });
 
     console.log(`📥 [API] Réponse: ${response.status} ${response.statusText}`);
+    
+    // Mettre à jour le CSRF token depuis la réponse
+    const newToken = response.headers.get('x-csrf-token');
+    if (newToken && newToken !== csrfToken) {
+      csrfToken = newToken;
+      console.log('🔄 [CSRF] Token mis à jour');
+    }
     
     await throwIfResNotOk(response);
     return response;

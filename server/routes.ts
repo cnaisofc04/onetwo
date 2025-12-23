@@ -65,6 +65,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   CleanupService.startCleanupInterval(5 * 60 * 1000);
 
+  // Import CSRF middleware for routes that need it
+  const { csrfMiddleware } = await import('./csrf-middleware');
+
+  // GET /api/csrf-init - Initialize CSRF token
+  app.get("/api/csrf-init", ...csrfMiddleware(), async (req: Request, res: Response) => {
+    try {
+      // Le middleware CSRF a déjà généré et envoyé le token dans l'en-tête x-csrf-token
+      console.log('✅ [CSRF] Token initialisé et envoyé au client');
+      return res.status(200).json({ message: 'CSRF token initialized' });
+    } catch (error) {
+      console.error('❌ [CSRF] Erreur init:', error);
+      return res.status(500).json({ error: 'Erreur initialisation CSRF' });
+    }
+  });
+
   // New Signup Session Flow Routes
 
   // POST /api/auth/signup/session - Create signup session with ALL data from steps 1-6
